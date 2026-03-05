@@ -18,17 +18,20 @@ try:
     from huggingface_hub import snapshot_download
 except ImportError:
     import subprocess
-    try:
-        print("Installing huggingface_hub...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "huggingface_hub"])
-    except subprocess.CalledProcessError:
-        print("ERROR: Could not install huggingface_hub automatically.")
-        print("Install it manually first:")
-        print("  pip3 install huggingface_hub")
-        print("or:")
-        print("  sudo apt install python3-pip && pip3 install huggingface_hub")
-        sys.exit(1)
-    from huggingface_hub import snapshot_download
+    import venv
+
+    venv_dir = Path(__file__).resolve().parent.parent / ".dl-venv"
+    venv_python = venv_dir / "bin" / "python"
+
+    if not venv_python.exists():
+        print(f"Creating temporary venv at {venv_dir}...")
+        venv.create(venv_dir, with_pip=True)
+
+    print("Installing huggingface_hub...")
+    subprocess.check_call([str(venv_python), "-m", "pip", "install", "-q", "huggingface_hub"])
+
+    # Re-exec the script inside the venv so the import works
+    os.execv(str(venv_python), [str(venv_python)] + sys.argv)
 
 # Load HF_TOKEN from .env if not already set in environment
 env_file = Path(__file__).resolve().parent.parent / ".env"
