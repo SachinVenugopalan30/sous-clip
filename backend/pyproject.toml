@@ -1,0 +1,42 @@
+[project]
+name = "sous-clip"
+version = "0.1.0"
+description = "Self-hosted recipe extractor for short-form cooking videos"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "sqlmodel>=0.0.22",
+    "pydantic-settings>=2.7.0",
+    "yt-dlp>=2024.12.0",
+    "faster-whisper>=1.1.0",
+    "httpx>=0.28.0",
+    "anthropic>=0.42.0",
+    "openai>=1.60.0",
+    "temporalio>=1.9.0",
+    "redis>=5.2.0",
+    "sse-starlette>=2.2.0",
+    "python-jose[cryptography]>=3.3.0",
+    "opentelemetry-api>=1.29.0",
+    "opentelemetry-sdk>=1.29.0",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.29.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "httpx>=0.28.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

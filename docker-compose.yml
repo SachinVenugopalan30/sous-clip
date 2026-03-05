@@ -1,0 +1,93 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file: .env
+    depends_on:
+      valkey:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    volumes:
+      - app-data:/app/data
+    restart: unless-stopped
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  temporal:
+    image: temporalio/auto-setup:latest
+    expose:
+      - "7233"
+    environment:
+      - DB=postgres12
+      - POSTGRES_SEEDS=temporal-db
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - DBNAME=temporal
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z $(hostname -i) 7233"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  temporal-db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+      - POSTGRES_DB=temporal
+    volumes:
+      - temporal-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    expose:
+      - "6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: python -m backend.worker
+    env_file: .env
+    environment:
+      - WHISPER_MODELS_DIR=/app/models
+    depends_on:
+      valkey:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    volumes:
+      - app-data:/app/data
+      - ./data/whisper-models:/app/models:ro
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  temporal-data:
+  valkey-data:
