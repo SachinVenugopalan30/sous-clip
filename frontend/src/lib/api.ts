@@ -46,6 +46,22 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ ids }),
       }),
+    share: (id: number) =>
+      fetchAPI<{ share_token: string; share_url: string }>(`/recipes/${id}/share`, {
+        method: "POST",
+      }),
+    unshare: (id: number) =>
+      fetchAPI<void>(`/recipes/${id}/share`, { method: "DELETE" }),
+  },
+  share: {
+    get: (token: string) =>
+      fetch(`/api/share/${token}`).then(async (res) => {
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({ detail: res.statusText }));
+          throw new Error(error.detail || "Not found");
+        }
+        return res.json() as Promise<Recipe>;
+      }),
   },
   extract: {
     submit: (url: string, userId: string) =>
@@ -98,6 +114,7 @@ export interface Recipe {
   servings: number | null;
   tags: string[];
   notes: string | null;
+  share_token: string | null;
   created_at: string;
 }
 

@@ -30,6 +30,7 @@ class RecipeResponse(BaseModel):
     servings: int | None = None
     tags: list[str] = []
     notes: str | None = None
+    share_token: str | None = None
     created_at: str
 
 

@@ -1,16 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { Clock, Users, Tag } from "lucide-react";
+import { CheckSquare, Clock, Link as LinkIcon, Square, Tag, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import type { Recipe } from "../lib/api";
 
 interface RecipeCardProps {
   recipe: Recipe;
-  selectable?: boolean;
   selected?: boolean;
   onToggle?: (id: number) => void;
+  onShare?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }
 
-export function RecipeCard({ recipe, selectable, selected, onToggle }: RecipeCardProps) {
+export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete }: RecipeCardProps) {
   const totalTime =
     (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
 
@@ -18,30 +19,12 @@ export function RecipeCard({ recipe, selectable, selected, onToggle }: RecipeCar
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
-      className="relative"
+      className="relative flex flex-col"
     >
-      {selectable && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onToggle?.(recipe.id);
-          }}
-          className="absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border-2 border-border bg-surface transition-colors hover:border-primary"
-          aria-label={selected ? "Deselect recipe" : "Select recipe"}
-        >
-          {selected && (
-            <svg className="h-4 w-4 text-primary" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" />
-            </svg>
-          )}
-        </button>
-      )}
       <Link
         to="/recipe/$recipeId"
         params={{ recipeId: String(recipe.id) }}
-        className={`block rounded-xl border bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${selectable ? "pl-10" : ""} ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}
+        className={`block flex-1 rounded-t-xl border border-b-0 bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}
       >
         <h3 className="font-display text-lg font-bold leading-tight">
           {recipe.title}
@@ -80,6 +63,49 @@ export function RecipeCard({ recipe, selectable, selected, onToggle }: RecipeCar
           </div>
         )}
       </Link>
+
+      {/* Bottom action bar */}
+      <div className={`flex items-center justify-around rounded-b-xl border bg-surface/80 px-2 py-1.5 ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle?.(recipe.id);
+          }}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${selected ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-bg"}`}
+          aria-label={selected ? "Deselect recipe" : "Select recipe"}
+        >
+          {selected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+          Select
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onShare?.(recipe.id);
+          }}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
+          aria-label="Share recipe"
+        >
+          <LinkIcon className="h-4 w-4" />
+          Share
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete?.(recipe.id);
+          }}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-500/10"
+          aria-label="Delete recipe"
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </button>
+      </div>
     </motion.div>
   );
 }
