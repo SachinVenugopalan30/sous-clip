@@ -2,15 +2,21 @@
 
 > Your recipes. Your server. Forever.
 
-<!-- TODO: Replace with actual demo GIF -->
-![Demo](docs/demo.gif)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-compose-blue)](docker-compose.yml)
 
 You're scrolling. A recipe catches your eye — someone's making a garlic butter pasta that looks incredible. They rattle off the ingredients, the technique, the timing. You fumble for Notes. By the time you've paused the video, you've already lost half of it.
 
 Every recipe app out there will happily save it for you — on their server, behind their paywall, until they shut down. **Sous Clip** is the only self-hostable, privacy-first recipe extractor built for the short-form video era.
+
+<p align="center">
+  <img src="docs/screenshots/library.png" width="100%" alt="Recipe library" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/extraction.png" width="49%" alt="Extraction in progress" />
+  <img src="docs/screenshots/recipe.png" width="49%" alt="Recipe detail" />
+</p>
 
 ## Features
 
