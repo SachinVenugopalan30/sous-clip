@@ -1,5 +1,5 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { BookOpen, ChefHat, LogOut, Moon, Plus, Settings, Sun } from "lucide-react";
+import { BookOpen, ChefHat, Github, LogOut, Moon, Plus, Settings, Sun } from "lucide-react";
 import { useAuthStore } from "../stores/auth";
 import { useThemeStore } from "../stores/theme";
 
@@ -45,6 +45,15 @@ export function Layout() {
             >
               <Settings className="h-4 w-4" />
             </Link>
+            <a
+              href="https://github.com/SachinVenugopalan30/sous-clip"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-text"
+              title="GitHub"
+            >
+              <Github className="h-4 w-4" />
+            </a>
             <button
               onClick={toggleTheme}
               className="text-muted-foreground transition-colors hover:text-text"
@@ -72,6 +81,15 @@ export function Layout() {
             <span className="font-display text-lg font-bold">SC</span>
           </Link>
           <div className="flex items-center gap-3">
+            <a
+              href="https://github.com/SachinVenugopalan30/sous-clip"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-text"
+              title="GitHub"
+            >
+              <Github className="h-4 w-4" />
+            </a>
             <button
               onClick={toggleTheme}
               className="text-muted-foreground transition-colors hover:text-text"

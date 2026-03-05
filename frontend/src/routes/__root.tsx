@@ -9,18 +9,20 @@ function RootComponent() {
   const location = useLocation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)();
   const isLoginPage = location.pathname === "/login";
+  const isSharePage = location.pathname.startsWith("/share/");
+  const isPublicPage = isLoginPage || isSharePage;
 
   useEffect(() => {
-    if (!isAuthenticated && !isLoginPage) {
+    if (!isAuthenticated && !isPublicPage) {
       navigate({ to: "/login" });
     }
-  }, [isAuthenticated, isLoginPage, navigate]);
+  }, [isAuthenticated, isPublicPage, navigate]);
 
-  if (!isAuthenticated && !isLoginPage) {
+  if (!isAuthenticated && !isPublicPage) {
     return null;
   }
 
-  if (isLoginPage) {
+  if (isPublicPage && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-bg font-sans text-text">
         <Outlet />

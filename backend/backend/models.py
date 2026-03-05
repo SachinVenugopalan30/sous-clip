@@ -15,6 +15,7 @@ class Recipe(SQLModel, table=True):
     tags_json: str = "[]"  # JSON string of list[str]
     notes: str | None = None
     transcript: str | None = None
+    share_token: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

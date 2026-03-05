@@ -13,6 +13,7 @@ import { Route as SubmitRouteImport } from './routes/submit'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShareTokenRouteImport } from './routes/share.$token'
 import { Route as RecipeRecipeIdRouteImport } from './routes/recipe.$recipeId'
 
 const SubmitRoute = SubmitRouteImport.update({
@@ -35,6 +36,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipeRecipeIdRoute = RecipeRecipeIdRouteImport.update({
   id: '/recipe/$recipeId',
   path: '/recipe/$recipeId',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/submit': typeof SubmitRoute
   '/recipe/$recipeId': typeof RecipeRecipeIdRoute
+  '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/submit': typeof SubmitRoute
   '/recipe/$recipeId': typeof RecipeRecipeIdRoute
+  '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,12 +70,25 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/submit': typeof SubmitRoute
   '/recipe/$recipeId': typeof RecipeRecipeIdRoute
+  '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/settings' | '/submit' | '/recipe/$recipeId'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/settings'
+    | '/submit'
+    | '/recipe/$recipeId'
+    | '/share/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/settings' | '/submit' | '/recipe/$recipeId'
+  to:
+    | '/'
+    | '/login'
+    | '/settings'
+    | '/submit'
+    | '/recipe/$recipeId'
+    | '/share/$token'
   id:
     | '__root__'
     | '/'
@@ -75,6 +96,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/submit'
     | '/recipe/$recipeId'
+    | '/share/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,6 +105,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SubmitRoute: typeof SubmitRoute
   RecipeRecipeIdRoute: typeof RecipeRecipeIdRoute
+  ShareTokenRoute: typeof ShareTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -115,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/share/$token': {
+      id: '/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipe/$recipeId': {
       id: '/recipe/$recipeId'
       path: '/recipe/$recipeId'
@@ -131,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SubmitRoute: SubmitRoute,
   RecipeRecipeIdRoute: RecipeRecipeIdRoute,
+  ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

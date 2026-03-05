@@ -3,8 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Search, BookOpen, Trash2, X, CheckSquare } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
 import { RecipeCard } from "../components/RecipeCard";
-import { useRecipes, useBulkDeleteRecipes } from "../hooks/useRecipes";
+import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useRecipes";
+import { api } from "../lib/api";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
 
@@ -20,6 +22,7 @@ function HomePage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { data, isLoading } = useRecipes(debouncedSearch || undefined);
   const bulkDelete = useBulkDeleteRecipes();
+  const singleDelete = useDeleteRecipe();
   const [gridRef] = useAutoAnimate();
 
   // Collect all unique tags from loaded recipes
@@ -31,8 +34,6 @@ function HomePage() {
   const filteredRecipes = data?.recipes.filter(
     (r) => selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t))
   );
-
-  const hasRecipes = (filteredRecipes?.length ?? 0) > 0;
 
   // Simple debounce
   const handleSearch = (value: string) => {
@@ -73,6 +74,24 @@ function HomePage() {
       onSuccess: () => {
         clearSelection();
       },
+    });
+  };
+
+  const handleShare = async (id: number) => {
+    try {
+      const { share_url } = await api.recipes.share(id);
+      const fullUrl = `${window.location.origin}${share_url}`;
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success("Share link copied to clipboard");
+    } catch {
+      toast.error("Failed to share recipe");
+    }
+  };
+
+  const handleSingleDelete = (id: number) => {
+    if (!confirm("Delete this recipe?")) return;
+    singleDelete.mutate(id, {
+      onSuccess: () => toast.success("Recipe deleted"),
     });
   };
 
@@ -169,9 +188,10 @@ function HomePage() {
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
-              selectable={hasRecipes}
               selected={selectedIds.has(recipe.id)}
               onToggle={toggleSelect}
+              onShare={handleShare}
+              onDelete={handleSingleDelete}
             />
           ))}
         </div>

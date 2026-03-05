@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sous Clip Banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #e5e0d8;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .banner {
+    width: 1200px;
+    height: 630px;
+    background: #FDFAF5;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Subtle noise texture overlay */
+  .banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Left content area */
+  .content {
+    padding: 72px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Top-left decorative line */
+  .content::before {
+    content: '';
+    position: absolute;
+    top: 48px;
+    left: 56px;
+    width: 48px;
+    height: 3px;
+    background: #C2410C;
+    border-radius: 2px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: #C2410C;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg {
+    width: 26px;
+    height: 26px;
+    color: white;
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.65rem;
+    color: #1C1917;
+    letter-spacing: -0.02em;
+  }
+
+  .headline {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 3.2rem;
+    line-height: 1.08;
+    color: #1C1917;
+    margin-top: 28px;
+    letter-spacing: -0.03em;
+  }
+
+  .headline em {
+    font-style: italic;
+    color: #C2410C;
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: #78716C;
+    margin-top: 20px;
+    max-width: 400px;
+    font-weight: 400;
+  }
+
+  .tags {
+    display: flex;
+    gap: 8px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    padding: 6px 14px;
+    border-radius: 6px;
+    background: #F5F0E8;
+    color: #78716C;
+    border: 1px solid #E2D9CC;
+    letter-spacing: 0.02em;
+  }
+
+  .tag.accent {
+    background: #C2410C;
+    color: white;
+    border-color: #C2410C;
+  }
+
+  /* Right visual area */
+  .visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Warm gradient backdrop */
+  .visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(194, 65, 12, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 70%, rgba(194, 65, 12, 0.05) 0%, transparent 50%),
+      linear-gradient(135deg, #F5F0E8 0%, #FDFAF5 100%);
+  }
+
+  /* Decorative geometric elements */
+  .geo-ring {
+    position: absolute;
+    border: 1.5px solid rgba(194, 65, 12, 0.12);
+    border-radius: 50%;
+  }
+  .geo-ring.r1 { width: 340px; height: 340px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .geo-ring.r2 { width: 240px; height: 240px; top: 50%; left: 50%; transform: translate(-50%, -50%); border-style: dashed; }
+  .geo-ring.r3 { width: 140px; height: 140px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+  /* Floating recipe card mockup */
+  .recipe-card {
+    position: relative;
+    z-index: 2;
+    width: 320px;
+    background: white;
+    border-radius: 14px;
+    box-shadow:
+      0 1px 3px rgba(28, 25, 23, 0.04),
+      0 8px 24px rgba(28, 25, 23, 0.08),
+      0 24px 48px rgba(28, 25, 23, 0.06);
+    padding: 28px;
+    transform: rotate(-2deg) translateY(-8px);
+    border: 1px solid #E2D9CC;
+  }
+
+  .recipe-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .recipe-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #15803D;
+  }
+
+  .recipe-card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #15803D;
+    font-weight: 700;
+  }
+
+  .recipe-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #1C1917;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .recipe-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: #78716C;
+  }
+
+  .recipe-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .recipe-divider {
+    height: 1px;
+    background: #E2D9CC;
+    margin: 16px 0;
+  }
+
+  .recipe-ingredients {
+    list-style: none;
+    font-size: 0.82rem;
+    color: #44403C;
+    line-height: 1.9;
+  }
+
+  .recipe-ingredients li::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #C2410C;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  /* Pipeline strip at bottom-right */
+  .pipeline {
+    position: absolute;
+    bottom: 48px;
+    right: 36px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    z-index: 3;
+  }
+
+  .pipeline-step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background: rgba(28, 25, 23, 0.06);
+    color: #78716C;
+    letter-spacing: 0.01em;
+  }
+
+  .pipeline-step.done {
+    background: #C2410C;
+    color: white;
+  }
+
+  .pipeline-arrow {
+    font-size: 0.55rem;
+    color: #bbb5aa;
+  }
+
+  /* Corner accent */
+  .corner-accent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle at 0% 100%, rgba(194, 65, 12, 0.04) 0%, transparent 70%);
+    z-index: 1;
+  }
+
+  /* Top-right decorative dots */
+  .dot-grid {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: grid;
+    grid-template-columns: repeat(4, 6px);
+    gap: 10px;
+    z-index: 1;
+  }
+  .dot-grid span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(194, 65, 12, 0.15);
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="corner-accent"></div>
+
+  <!-- Left: Text content -->
+  <div class="content">
+    <div class="logo-row">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"/>
+          <path d="M6 17h12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Sous Clip</span>
+    </div>
+
+    <h1 class="headline">
+      Rescue recipes<br/>from the <em>feed.</em>
+    </h1>
+
+    <p class="subtitle">
+      Turn any YouTube Short, Instagram Reel, or TikTok into a clean, structured recipe — on your own server.
+    </p>
+
+    <div class="tags">
+      <span class="tag accent">self-hosted</span>
+      <span class="tag">open-source</span>
+      <span class="tag">MIT license</span>
+      <span class="tag">bring your own AI</span>
+    </div>
+  </div>
+
+  <!-- Right: Visual -->
+  <div class="visual">
+    <div class="geo-ring r1"></div>
+    <div class="geo-ring r2"></div>
+    <div class="geo-ring r3"></div>
+
+    <div class="dot-grid">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <div class="recipe-dot"></div>
+        <span class="recipe-card-label">Extracted</span>
+      </div>
+      <h3>Garlic Butter Pasta</h3>
+      <div class="recipe-meta">
+        <span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          15 min
+        </span>
+        <span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          2 servings
+        </span>
+      </div>
+      <div class="recipe-divider"></div>
+      <ul class="recipe-ingredients">
+        <li>200g spaghetti</li>
+        <li>4 cloves garlic, minced</li>
+        <li>3 tbsp butter</li>
+        <li>Red pepper flakes</li>
+        <li>Fresh parsley, chopped</li>
+      </ul>
+    </div>
+
+    <div class="pipeline">
+      <span class="pipeline-step done">download</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step done">transcribe</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step done">extract</span>
+      <span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-step done">saved</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
