@@ -1,5 +1,9 @@
 # Sous Clip
 
+<p align="center">
+  <img src="docs/screenshots/banner.png" width="100%" alt="Sous Clip" />
+</p>
+
 > Your recipes. Your server. Forever.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
