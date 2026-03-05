@@ -17,9 +17,17 @@ from pathlib import Path
 try:
     from huggingface_hub import snapshot_download
 except ImportError:
-    print("Installing huggingface_hub...")
     import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "huggingface_hub"])
+    try:
+        print("Installing huggingface_hub...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "huggingface_hub"])
+    except subprocess.CalledProcessError:
+        print("ERROR: Could not install huggingface_hub automatically.")
+        print("Install it manually first:")
+        print("  pip3 install huggingface_hub")
+        print("or:")
+        print("  sudo apt install python3-pip && pip3 install huggingface_hub")
+        sys.exit(1)
     from huggingface_hub import snapshot_download
 
 # Load HF_TOKEN from .env if not already set in environment
