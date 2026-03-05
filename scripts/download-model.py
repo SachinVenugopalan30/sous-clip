@@ -25,7 +25,14 @@ except ImportError:
 
     if not venv_python.exists():
         print(f"Creating temporary venv at {venv_dir}...")
-        venv.create(venv_dir, with_pip=True)
+        try:
+            venv.create(venv_dir, with_pip=True)
+        except Exception:
+            venv.create(venv_dir, with_pip=False)
+
+    # Ensure pip is available inside the venv
+    subprocess.call([str(venv_python), "-m", "ensurepip", "--upgrade"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     print("Installing huggingface_hub...")
     subprocess.check_call([str(venv_python), "-m", "pip", "install", "-q", "huggingface_hub"])

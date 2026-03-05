@@ -15,7 +15,10 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       username: null,
       setAuth: (token, username) => set({ token, username }),
-      logout: () => set({ token: null, username: null }),
+      logout: () => {
+        set({ token: null, username: null });
+        window.location.href = "/login";
+      },
       isAuthenticated: () => get().token !== null,
     }),
     { name: "sc-auth" }

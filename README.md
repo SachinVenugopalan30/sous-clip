@@ -38,9 +38,18 @@ docker compose up -d
 
 Open **http://localhost:3000**
 
-> The model download script requires Python 3 and will auto-install `huggingface_hub` if needed. To download a different model size: `python scripts/download-model.py medium`
+> **Whisper model download notes:**
 >
-> For faster downloads, add a free [Hugging Face token](https://huggingface.co/settings/tokens) as `HF_TOKEN=hf_...` in your `.env` before running the script. The script reads it automatically.
+> The script requires Python 3 and creates a temporary venv to install `huggingface_hub`. If it fails, make sure `python3-venv` is installed:
+>
+> ```bash
+> # Debian/Ubuntu — required if you see "No module named pip" or "externally-managed-environment"
+> sudo apt install python3-venv
+> ```
+>
+> To download a different model size: `python3 scripts/download-model.py medium`
+>
+> For faster downloads, add a free [Hugging Face token](https://huggingface.co/settings/tokens) as `HF_TOKEN=hf_...` in your `.env` before running the script.
 
 ## AI Providers
 
