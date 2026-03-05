@@ -5,9 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-compose-blue)](docker-compose.yml)
 
-You're scrolling. A recipe catches your eye — someone's making a garlic butter pasta that looks incredible. They rattle off the ingredients, the technique, the timing. You fumble for Notes. By the time you've paused the video, you've already lost half of it.
+Let's face it. Most of us now just watch short form videos. You're scrolling. A certain someone's making a garlic butter pasta that looks incredible. They rattle off the ingredients, the technique, the timing. You juggle between noting things down and watching the video again. By the time you've paused the video, you've already lost half of it.
 
-Every recipe app out there will happily save it for you — on their server, behind their paywall, until they shut down. **Sous Clip** is the only self-hostable, privacy-first recipe extractor built for the short-form video era.
+Every recipe app out there will happily save it for you, on their server, behind their paywall, until they shut down. **Sous Clip** is the only self-hostable, privacy-first recipe extractor built for the short-form video era. The idea is you own the content you save. I know that sounds like the opposite of what I'm talking about, given we still rely on third party LLM providers for the AI stuff, but there is an option to run it through locally hosted systems as well! I plan to add support for other LLM providers in the future, and I'm open to suggestions!
 
 <p align="center">
   <img src="docs/screenshots/library.png" width="100%" alt="Recipe library" />
@@ -20,9 +20,9 @@ Every recipe app out there will happily save it for you — on their server, beh
 
 ## Features
 
-- **Any short-form video** — YouTube Shorts, Instagram Reels, TikTok via yt-dlp
+- **Any short-form video** — YouTube Shorts, Instagram Reels, TikTok via yt-dlp (could support long form, haven't tested it yet)
 - **Local transcription** — Whisper runs on your server (GPU or CPU, auto-detected)
-- **Your AI, your key** — Claude, OpenAI, or local Ollama
+- **Your AI, your key** — Claude, OpenAI, or local Ollama (more coming soon!)
 - **Mobile share sheet** — Install as PWA, share directly from any app
 - **Personal recipe library** — Search, tag, browse all your saved recipes
 - **Self-hosted forever** — SQLite database, your data never leaves your server
@@ -30,8 +30,8 @@ Every recipe app out there will happily save it for you — on their server, beh
 ## Quick Start
 
 ```bash
-git clone https://github.com/yourname/Sous Clip
-cd Sous Clip
+git clone https://github.com/SachinVenugopalan30/sous-clip.git
+cd sous-clip
 cp .env.example .env
 # Edit .env — set APP_PASSWORD, JWT_SECRET, and your AI API key
 
@@ -77,7 +77,7 @@ URL → yt-dlp → faster-whisper → AI (Claude/GPT/Ollama) → SQLite
 
 - **Backend:** Python + FastAPI
 - **Frontend:** React + Vite + TanStack Router + shadcn/ui
-- **Queue:** Temporal + Valkey (Redis fork)
+- **Queue:** Temporal + Valkey
 - **Database:** SQLite (single file, zero config)
 - **Observability:** OpenTelemetry (opt-in)
 
@@ -103,6 +103,8 @@ WHISPER_MODEL_SIZE=base    # tiny, base, small, medium, large-v3
 WHISPER_DEVICE=auto        # auto, cpu, cuda
 WHISPER_COMPUTE_TYPE=auto  # auto, int8, float16, float32
 ```
+
+You can also update these settings in the UI under Settings → Whisper Transcription.
 
 ## Documentation
 

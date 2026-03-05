@@ -39,6 +39,7 @@ Under the **SSL** tab:
 That's it. Open `https://recipes.yourdomain.com` and you should see the login page.
 
 > **Note:** If Nginx Proxy Manager runs in Docker on the same host, you may need to use the host's Docker bridge IP (often `172.17.0.1`) or the container name instead of `127.0.0.1`, depending on your network setup. Test with `curl http://127.0.0.1:3000/health` from the NPM container to verify connectivity.
+> **Note 2:** You may need to update the `docker-compose.yml` of Sous Clip to ensure that the `app` service is on the same Docker network as Nginx Proxy Manager if both are containerized. This allows you to use the container name (`sous-clip-app-1` in most cases) as the hostname in the proxy configuration.
 
 ---
 

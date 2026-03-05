@@ -75,7 +75,7 @@ This is the fastest way to save recipes — no need to copy/paste URLs.
 The PWA uses a service worker that caches assets. After an update:
 
 1. Open the app
-2. Wait a few seconds — the service worker updates in the background
+2. Wait a few seconds while the service worker updates in the background
 3. Close and reopen the app to see the new version
 
 If that doesn't work, you can clear the cache:
