@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Download, FileText, Link as LinkIcon, Link2Off, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardCopy, Download, FileText, Link as LinkIcon, Link2Off, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { RecipeView } from "../components/RecipeView";
 import { useRecipe, useDeleteRecipe } from "../hooks/useRecipes";
@@ -35,18 +35,34 @@ function RecipePage() {
     if (!recipe) return;
     setSharing(true);
     try {
-      if (recipe.share_token) {
-        await api.recipes.unshare(recipe.id);
-        toast.success("Share link removed");
-      } else {
-        const { share_url } = await api.recipes.share(recipe.id);
-        const fullUrl = `${window.location.origin}${share_url}`;
-        await navigator.clipboard.writeText(fullUrl);
-        toast.success("Share link copied to clipboard");
-      }
+      const { share_url } = await api.recipes.share(recipe.id);
+      const fullUrl = `${window.location.origin}${share_url}`;
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success("Share link copied to clipboard");
       queryClient.invalidateQueries({ queryKey: ["recipe", recipe.id] });
     } catch {
-      toast.error("Failed to update sharing");
+      toast.error("Failed to share recipe");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!recipe?.share_token) return;
+    const fullUrl = `${window.location.origin}/share/${recipe.share_token}`;
+    await navigator.clipboard.writeText(fullUrl);
+    toast.success("Share link copied to clipboard");
+  };
+
+  const handleUnshare = async () => {
+    if (!recipe) return;
+    setSharing(true);
+    try {
+      await api.recipes.unshare(recipe.id);
+      toast.success("Share link removed");
+      queryClient.invalidateQueries({ queryKey: ["recipe", recipe.id] });
+    } catch {
+      toast.error("Failed to unshare recipe");
     } finally {
       setSharing(false);
     }
@@ -88,16 +104,29 @@ function RecipePage() {
           Back to library
         </Link>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShare}
-            disabled={sharing}
-            className={recipe.share_token ? "text-accent" : ""}
-          >
-            {recipe.share_token ? <Link2Off className="mr-1 h-4 w-4" /> : <LinkIcon className="mr-1 h-4 w-4" />}
-            {recipe.share_token ? "Unshare" : "Share"}
-          </Button>
+          {recipe.share_token ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={handleCopyLink}>
+                <ClipboardCopy className="mr-1 h-4 w-4" />
+                Copy link
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleUnshare}
+                disabled={sharing}
+                className="text-muted-foreground"
+              >
+                <Link2Off className="mr-1 h-4 w-4" />
+                Unshare
+              </Button>
+            </>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={handleShare} disabled={sharing}>
+              <LinkIcon className="mr-1 h-4 w-4" />
+              Share
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={handleExportMarkdown}>
             <Download className="mr-1 h-4 w-4" />
             .md
