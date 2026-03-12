@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import sys
 
@@ -11,23 +12,26 @@ from temporalio.worker.workflow_sandbox import (
 
 from backend.config import settings
 
+logger = logging.getLogger(__name__)
+
 
 def check_whisper_model():
     models_dir = os.environ.get("WHISPER_MODELS_DIR", "./data/whisper-models")
     model_path = os.path.join(models_dir, f"faster-whisper-{settings.whisper_model_size}")
     if not os.path.isdir(model_path):
-        print(
-            f"ERROR: Whisper model not found at {model_path}\n"
-            f"Run 'python scripts/download-model.py {settings.whisper_model_size}' before starting the worker.",
-            file=sys.stderr,
+        logger.error(
+            "Whisper model not found at %s. "
+            "Run 'python scripts/download-model.py %s' before starting the worker.",
+            model_path, settings.whisper_model_size,
         )
         sys.exit(1)
-    print(f"Whisper model found: {model_path}")
+    logger.info("Whisper model found: %s", model_path)
 from backend.workflows.extraction import (
     ExtractionWorkflow,
     download_activity,
     extract_activity,
     fail_queue_item_activity,
+    forward_to_mealie_activity,
     save_recipe_activity,
     transcribe_activity,
 )
@@ -45,6 +49,7 @@ async def run_worker():
             transcribe_activity,
             extract_activity,
             save_recipe_activity,
+            forward_to_mealie_activity,
             fail_queue_item_activity,
         ],
         workflow_runner=SandboxedWorkflowRunner(
@@ -53,7 +58,7 @@ async def run_worker():
             ),
         ),
     )
-    print("Temporal worker started, listening on 'extraction-queue'")
+    logger.info("Temporal worker started, listening on 'extraction-queue'")
     await worker.run()
 
 

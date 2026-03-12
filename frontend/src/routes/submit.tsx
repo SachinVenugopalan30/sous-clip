@@ -12,6 +12,7 @@ import { useExtractRecipe } from "../hooks/useExtract";
 import { useQueue } from "../hooks/useQueue";
 import { useProgress } from "../hooks/useProgress";
 import { useVisibilityTimer } from "../hooks/useVisibilityTimer";
+import { useSettings } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/submit")({
   component: SubmitPage,
@@ -19,9 +20,12 @@ export const Route = createFileRoute("/submit")({
 
 function SubmitPage() {
   const [url, setUrl] = useState("");
+  const [forwardToMealie, setForwardToMealie] = useState(false);
   const userId = "default";
   const extract = useExtractRecipe();
   const { data: queueData } = useQueue(userId);
+  const { data: settings } = useSettings();
+  const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
   const queryClient = useQueryClient();
   const hasHandledShare = useRef(false);
 
@@ -66,7 +70,7 @@ function SubmitPage() {
       if (urlMatch) {
         setUrl(urlMatch[0]);
         extract.mutate(
-          { url: urlMatch[0], userId },
+          { url: urlMatch[0], userId, forwardToMealie },
           {
             onSuccess: () => {
               toast.success("Video queued for extraction");
@@ -86,7 +90,7 @@ function SubmitPage() {
     if (!url.trim()) return;
 
     extract.mutate(
-      { url: url.trim(), userId },
+      { url: url.trim(), userId, forwardToMealie },
       {
         onSuccess: () => {
           toast.success("Video queued for extraction");
@@ -131,6 +135,33 @@ function SubmitPage() {
           Extract
         </Button>
       </form>
+
+      {mealieConfigured && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={forwardToMealie}
+          onClick={() => setForwardToMealie(!forwardToMealie)}
+          className="mt-3 flex items-center gap-2.5 cursor-pointer select-none group"
+        >
+          <span
+            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors duration-200 ${
+              forwardToMealie
+                ? "border-accent bg-accent"
+                : "border-border bg-border/50"
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                forwardToMealie ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </span>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            Also send to Mealie
+          </span>
+        </button>
+      )}
 
       {queueData && queueData.items.length > 0 && (
         <div className="mt-8">

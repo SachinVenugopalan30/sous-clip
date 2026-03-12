@@ -14,6 +14,7 @@ router = APIRouter(prefix="/api", tags=["extract"])
 class ExtractRequest(BaseModel):
     url: str
     user_id: str = "default"
+    forward_to_mealie: bool = False
 
 
 class ExtractResponse(BaseModel):
@@ -37,6 +38,7 @@ async def extract_recipe(request: ExtractRequest, _user: CurrentUser = Depends(g
                 url=request.url,
                 user_id=request.user_id,
                 queue_item_id=item.id,
+                forward_to_mealie=request.forward_to_mealie,
             ),
             id=f"extraction-{item.id}",
             task_queue="extraction-queue",

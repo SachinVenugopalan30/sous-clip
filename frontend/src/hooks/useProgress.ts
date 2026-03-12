@@ -10,7 +10,7 @@ export interface VideoMeta {
 
 export interface PipelineProgress {
   item_id: string;
-  step: "downloading" | "transcribing" | "extracting" | "saved";
+  step: "downloading" | "transcribing" | "extracting" | "saved" | "mealie";
   status: "pending" | "active" | "complete" | "error";
   percent?: number;
   meta?: VideoMeta;

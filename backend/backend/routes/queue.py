@@ -15,6 +15,7 @@ def get_queue() -> ExtractionQueue:
 class EnqueueRequest(BaseModel):
     urls: list[str]
     user_id: str
+    forward_to_mealie: bool = False
 
 
 class QueueItemResponse(BaseModel):
