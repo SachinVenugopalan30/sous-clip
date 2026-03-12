@@ -23,6 +23,7 @@ class ExtractionWorkflowInput:
     url: str
     user_id: str
     queue_item_id: str
+    forward_to_mealie: bool = False
 
 
 @activity.defn
@@ -147,6 +148,39 @@ async def save_recipe_activity(
 
 
 @activity.defn
+async def forward_to_mealie_activity(
+    extraction_data: dict, source_url: str, user_id: str, queue_item_id: str,
+    forward_to_mealie: bool,
+) -> None:
+    if not forward_to_mealie:
+        return
+
+    from backend.database import engine
+    from backend.services.mealie import MealieClient
+    from backend.services.settings import SettingsService
+    from sqlmodel import Session
+
+    with Session(engine) as session:
+        svc = SettingsService(session)
+        mealie_url = svc.get("mealie_url", "")
+        mealie_api_key = svc.get("mealie_api_key", "")
+
+    if not mealie_url or not mealie_api_key:
+        return
+
+    queue = _get_queue()
+    queue.publish_progress(user_id, queue_item_id, "mealie", "active")
+
+    try:
+        client = MealieClient(mealie_url, mealie_api_key)
+        await client.forward_recipe(extraction_data, source_url)
+        queue.publish_progress(user_id, queue_item_id, "mealie", "complete")
+    except Exception as e:
+        queue.publish_progress(user_id, queue_item_id, "mealie", "error")
+        activity.logger.warning(f"Mealie forwarding failed: {e}")
+
+
+@activity.defn
 async def fail_queue_item_activity(user_id: str, queue_item_id: str, error: str) -> None:
     queue = _get_queue()
     queue.fail(queue_item_id, user_id, error)
@@ -188,6 +222,16 @@ class ExtractionWorkflow:
                 args=[input.url, transcribe_result["text"], extraction_data, user_id, item_id],
                 start_to_close_timeout=timedelta(seconds=30),
             )
+
+            # Step 5: Forward to Mealie (non-blocking)
+            try:
+                await workflow.execute_activity(
+                    forward_to_mealie_activity,
+                    args=[extraction_data, input.url, user_id, item_id, input.forward_to_mealie],
+                    start_to_close_timeout=timedelta(seconds=30),
+                )
+            except Exception:
+                pass  # Mealie failure must not fail the workflow
 
             return recipe_id
         except Exception as e:

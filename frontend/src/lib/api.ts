@@ -52,6 +52,10 @@ export const api = {
       }),
     unshare: (id: number) =>
       fetchAPI<void>(`/recipes/${id}/share`, { method: "DELETE" }),
+    sendToMealie: (id: number) =>
+      fetchAPI<{ ok: boolean; slug?: string; error?: string }>(`/recipes/${id}/send-to-mealie`, {
+        method: "POST",
+      }),
   },
   share: {
     get: (token: string) =>
@@ -64,10 +68,10 @@ export const api = {
       }),
   },
   extract: {
-    submit: (url: string, userId: string) =>
+    submit: (url: string, userId: string, forwardToMealie: boolean = false) =>
       fetchAPI<{ queue_item: QueueItem; message: string }>("/extract", {
         method: "POST",
-        body: JSON.stringify({ url, user_id: userId }),
+        body: JSON.stringify({ url, user_id: userId, forward_to_mealie: forwardToMealie }),
       }),
   },
   settings: {
@@ -76,6 +80,11 @@ export const api = {
       fetchAPI<Record<string, string>>("/settings", {
         method: "PUT",
         body: JSON.stringify(updates),
+      }),
+    testMealie: (mealieUrl: string, mealieApiKey: string) =>
+      fetchAPI<{ ok: boolean; version?: string; error?: string }>("/settings/test-mealie", {
+        method: "POST",
+        body: JSON.stringify({ mealie_url: mealieUrl, mealie_api_key: mealieApiKey }),
       }),
   },
   queue: {

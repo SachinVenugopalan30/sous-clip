@@ -29,6 +29,7 @@ Every recipe app out there will happily save it for you, on their server, behind
 - **Your AI, your key** — Claude, OpenAI, or local Ollama (more coming soon!)
 - **Mobile share sheet** — Install as PWA, share directly from any app
 - **Personal recipe library** — Search, tag, browse all your saved recipes
+- **Mealie integration** — Optionally forward recipes to your [Mealie](https://mealie.io/) instance
 - **Self-hosted forever** — SQLite database, your data never leaves your server
 
 ## Quick Start
@@ -84,6 +85,18 @@ URL → yt-dlp → faster-whisper → AI (Claude/GPT/Ollama) → SQLite
 - **Queue:** Temporal + Valkey
 - **Database:** SQLite (single file, zero config)
 - **Observability:** OpenTelemetry (opt-in)
+
+## Mealie Integration (Optional)
+
+If you use [Mealie](https://mealie.io/) as your recipe manager, Sous Clip can automatically forward extracted recipes to it.
+
+1. In Mealie, go to **User Profile → API Tokens** and generate a long-lived token
+2. In Sous Clip, go to **Settings → Mealie Integration**
+3. Enter your Mealie URL (e.g. `https://mealie.example.com`) and the API token
+4. Click **Test Connection** to verify
+5. When extracting a recipe, check **"Also send to Mealie"** to forward it
+
+If Mealie is not configured, no Mealie UI elements are shown. If forwarding fails (Mealie down, bad token, etc.), the recipe is still saved in Sous Clip — the error is shown in the queue progress but does not block the extraction.
 
 ## GPU Support
 

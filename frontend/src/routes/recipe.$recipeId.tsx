@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ClipboardCopy, Download, FileText, Link as LinkIcon, Link2Off, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardCopy, Download, FileText, Link as LinkIcon, Link2Off, Loader2, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { RecipeView } from "../components/RecipeView";
 import { useRecipe, useDeleteRecipe } from "../hooks/useRecipes";
+import { useSettings } from "../hooks/useSettings";
 import { api } from "../lib/api";
 import { formatAsMarkdown, formatAsText, downloadFile } from "../lib/export";
 import { Button } from "../components/ui/button";
@@ -20,7 +21,10 @@ function RecipePage() {
   const queryClient = useQueryClient();
   const { data: recipe, isLoading } = useRecipe(Number(recipeId));
   const deleteRecipe = useDeleteRecipe();
+  const { data: settings } = useSettings();
+  const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
   const [sharing, setSharing] = useState(false);
+  const [sendingToMealie, setSendingToMealie] = useState(false);
 
   const handleDelete = () => {
     deleteRecipe.mutate(Number(recipeId), {
@@ -65,6 +69,23 @@ function RecipePage() {
       toast.error("Failed to unshare recipe");
     } finally {
       setSharing(false);
+    }
+  };
+
+  const handleSendToMealie = async () => {
+    if (!recipe) return;
+    setSendingToMealie(true);
+    try {
+      const result = await api.recipes.sendToMealie(recipe.id);
+      if (result.ok) {
+        toast.success("Recipe sent to Mealie");
+      } else {
+        toast.error(result.error || "Failed to send to Mealie");
+      }
+    } catch {
+      toast.error("Failed to send to Mealie");
+    } finally {
+      setSendingToMealie(false);
     }
   };
 
@@ -135,6 +156,16 @@ function RecipePage() {
             <FileText className="mr-1 h-4 w-4" />
             .txt
           </Button>
+          {mealieConfigured && (
+            <Button variant="ghost" size="sm" onClick={handleSendToMealie} disabled={sendingToMealie}>
+              {sendingToMealie ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-1 h-4 w-4" />
+              )}
+              Mealie
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

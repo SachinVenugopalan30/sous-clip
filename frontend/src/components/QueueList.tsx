@@ -313,6 +313,7 @@ export function QueueList({
                         <PipelineSteps
                           currentStep={prog?.step ?? "downloading"}
                           percent={prog?.percent}
+                          showMealie={prog?.step === "mealie"}
                         />
                       </motion.div>
                     )}

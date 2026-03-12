@@ -12,10 +12,12 @@ DEFAULTS = {
     "whisper_model_size": env_settings.whisper_model_size,
     "whisper_device": env_settings.whisper_device,
     "whisper_compute_type": env_settings.whisper_compute_type,
+    "mealie_url": "",
+    "mealie_api_key": "",
 }
 
 # Keys that should never be returned to the frontend in plain text
-SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key"}
+SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key", "mealie_api_key"}
 
 
 class SettingsService:

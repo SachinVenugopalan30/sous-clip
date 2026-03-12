@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Save } from "lucide-react";
+import { Save, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Separator } from "../components/ui/separator";
@@ -180,6 +181,11 @@ function SettingsPage() {
         </div>
       </section>
 
+      <Separator className="my-8" />
+
+      {/* Mealie Integration */}
+      <MealieSection form={form} setForm={setForm} />
+
       <div className="mt-8">
         <Button
           onClick={handleSave}
@@ -191,5 +197,108 @@ function SettingsPage() {
         </Button>
       </div>
     </motion.div>
+  );
+}
+
+function MealieSection({
+  form,
+  setForm,
+}: {
+  form: Record<string, string>;
+  setForm: (f: Record<string, string>) => void;
+}) {
+  const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [testMessage, setTestMessage] = useState("");
+
+  const handleTest = async () => {
+    const url = form.mealie_url || "";
+    const key = form.mealie_api_key || "";
+    if (!url || !key) {
+      toast.error("Enter both Mealie URL and API key first");
+      return;
+    }
+    setTestStatus("loading");
+    try {
+      const result = await api.settings.testMealie(url, key);
+      if (result.ok) {
+        setTestStatus("success");
+        setTestMessage(`Connected (v${result.version})`);
+      } else {
+        setTestStatus("error");
+        setTestMessage(result.error || "Connection failed");
+      }
+    } catch {
+      setTestStatus("error");
+      setTestMessage("Connection failed");
+    }
+  };
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Mealie Integration</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Optionally forward extracted recipes to a{" "}
+        <a href="https://mealie.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent">
+          Mealie
+        </a>{" "}
+        instance. Leave blank to skip.
+      </p>
+      <div className="mt-4 space-y-4">
+        <div>
+          <label className="text-sm font-medium">Mealie URL</label>
+          <Input
+            value={form.mealie_url || ""}
+            onChange={(e) => {
+              setForm({ ...form, mealie_url: e.target.value });
+              setTestStatus("idle");
+            }}
+            placeholder="https://mealie.example.com"
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Mealie API Key</label>
+          <Input
+            type="password"
+            value={form.mealie_api_key || ""}
+            onChange={(e) => {
+              setForm({ ...form, mealie_api_key: e.target.value });
+              setTestStatus("idle");
+            }}
+            placeholder="Your Mealie API token"
+            className="mt-1"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Generate a token in Mealie at User Profile → API Tokens.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleTest}
+            disabled={testStatus === "loading"}
+          >
+            {testStatus === "loading" ? (
+              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+            ) : null}
+            Test Connection
+          </Button>
+          {testStatus === "success" && (
+            <span className="flex items-center gap-1 text-xs text-green-600">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {testMessage}
+            </span>
+          )}
+          {testStatus === "error" && (
+            <span className="flex items-center gap-1 text-xs text-red-600">
+              <XCircle className="h-3.5 w-3.5" />
+              {testMessage}
+            </span>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

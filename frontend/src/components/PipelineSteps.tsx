@@ -1,20 +1,23 @@
-import { Download, Mic, ChefHat, Check } from "lucide-react";
+import { Download, Mic, ChefHat, Check, Send } from "lucide-react";
 import { motion } from "motion/react";
 
-const STEPS = [
+const BASE_STEPS = [
   { key: "downloading", label: "Download", icon: Download },
   { key: "transcribing", label: "Transcribe", icon: Mic },
   { key: "extracting", label: "Extract", icon: ChefHat },
   { key: "saved", label: "Saved", icon: Check },
 ] as const;
 
-type StepKey = (typeof STEPS)[number]["key"];
+const MEALIE_STEP = { key: "mealie" as const, label: "Mealie", icon: Send };
+
+export type StepKey = (typeof BASE_STEPS)[number]["key"] | "mealie";
 
 interface PipelineStepsProps {
   currentStep: StepKey | null;
   error?: boolean;
   percent?: number;
   isComplete?: boolean;
+  showMealie?: boolean;
 }
 
 export function PipelineSteps({
@@ -22,21 +25,24 @@ export function PipelineSteps({
   error,
   percent,
   isComplete,
+  showMealie,
 }: PipelineStepsProps) {
+  const steps = showMealie ? [...BASE_STEPS, MEALIE_STEP] : [...BASE_STEPS];
+
   const currentIndex = currentStep
-    ? STEPS.findIndex((s) => s.key === currentStep)
+    ? steps.findIndex((s) => s.key === currentStep)
     : -1;
 
   // When fully complete, all steps are done
-  const effectiveIndex = isComplete ? STEPS.length : currentIndex;
+  const effectiveIndex = isComplete ? steps.length : currentIndex;
 
   return (
     <div className="flex items-center gap-0">
-      {STEPS.map((step, i) => {
+      {steps.map((step, i) => {
         const Icon = step.icon;
         const isDone = i < effectiveIndex;
         const isActive = i === effectiveIndex && !isComplete;
-        const isLast = i === STEPS.length - 1;
+        const isLast = i === steps.length - 1;
 
         return (
           <div key={step.key} className="flex items-center">
