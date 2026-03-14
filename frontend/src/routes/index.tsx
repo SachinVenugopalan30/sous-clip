@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Search, BookOpen, Trash2, X, CheckSquare } from "lucide-react";
+import { Search, BookOpen, Trash2, X, CheckSquare, Send } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { RecipeCard } from "../components/RecipeCard";
 import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useRecipes";
+import { useSettings } from "../hooks/useSettings";
 import { api } from "../lib/api";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
@@ -20,7 +21,10 @@ function HomePage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [bulkSendingToMealie, setBulkSendingToMealie] = useState(false);
   const { data, isLoading } = useRecipes(debouncedSearch || undefined);
+  const { data: settings } = useSettings();
+  const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
   const bulkDelete = useBulkDeleteRecipes();
   const singleDelete = useDeleteRecipe();
   const [gridRef] = useAutoAnimate();
@@ -85,6 +89,30 @@ function HomePage() {
       toast.success("Share link copied to clipboard");
     } catch {
       toast.error("Failed to share recipe");
+    }
+  };
+
+  const handleSendToMealie = async (id: number) => {
+    try {
+      const result = await api.recipes.sendToMealie(id);
+      if (result.ok) toast.success("Recipe sent to Mealie");
+      else toast.error(result.error || "Failed to send to Mealie");
+    } catch {
+      toast.error("Failed to send to Mealie");
+    }
+  };
+
+  const handleBulkSendToMealie = async () => {
+    setBulkSendingToMealie(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const results = await Promise.allSettled(ids.map((id) => api.recipes.sendToMealie(id)));
+      const succeeded = results.filter((r) => r.status === "fulfilled" && (r as PromiseFulfilledResult<any>).value.ok).length;
+      const failed = results.length - succeeded;
+      if (succeeded > 0) toast.success(`${succeeded} recipe${succeeded !== 1 ? "s" : ""} sent to Mealie`);
+      if (failed > 0) toast.error(`${failed} recipe${failed !== 1 ? "s" : ""} failed to send`);
+    } finally {
+      setBulkSendingToMealie(false);
     }
   };
 
@@ -192,6 +220,8 @@ function HomePage() {
               onToggle={toggleSelect}
               onShare={handleShare}
               onDelete={handleSingleDelete}
+              mealieConfigured={mealieConfigured}
+              onSendToMealie={handleSendToMealie}
             />
           ))}
         </div>
@@ -226,6 +256,17 @@ function HomePage() {
               <X className="h-4 w-4" />
               Deselect
             </button>
+            {mealieConfigured && (
+              <button
+                type="button"
+                onClick={handleBulkSendToMealie}
+                disabled={bulkSendingToMealie}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-bg"
+              >
+                <Send className="h-4 w-4" />
+                {bulkSendingToMealie ? "Sending..." : "Send to Mealie"}
+              </button>
+            )}
             <button
               type="button"
               onClick={handleBulkDelete}
