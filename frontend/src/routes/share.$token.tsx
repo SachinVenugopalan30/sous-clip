@@ -14,6 +14,7 @@ function SharePage() {
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ["shared-recipe", token],
     queryFn: () => api.share.get(token),
+    retry: false,
   });
 
   if (isLoading) {

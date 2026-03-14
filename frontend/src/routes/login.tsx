@@ -18,17 +18,19 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     try {
       const data = await api.auth.login(username, password);
       setAuth(data.token, data.username);
       toast.success("Welcome!");
       navigate({ to: "/" });
     } catch {
-      toast.error("Invalid credentials");
+      setError("Invalid username or password");
     } finally {
       setLoading(false);
     }
@@ -59,6 +61,9 @@ function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
         <Button
           type="submit"
           disabled={loading || !username || !password}

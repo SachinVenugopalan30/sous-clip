@@ -27,6 +27,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             background: "var(--card)",
             border: "1px solid var(--border)",
             color: "var(--foreground)",
+            borderRadius: "0.75rem",
+            overflow: "hidden",
           },
         }}
       />

@@ -31,7 +31,15 @@ class MealieClient:
             get_resp.raise_for_status()
             full_recipe = get_resp.json()
 
-            # Step 3: Update only the fields we care about
+            # Step 3: Build a clean update payload from the fetched recipe
+            # Only carry over safe top-level fields to avoid 400/422/500 from Mealie
+            CARRY_OVER = {
+                "id", "slug", "userId", "groupId", "householdId",
+                "recipeCategory", "tags", "tools", "dateAdded", "dateUpdated",
+                "createdAt", "updateAt",
+            }
+            full_recipe = {k: v for k, v in full_recipe.items() if k in CARRY_OVER}
+
             ingredients = recipe_data.get("ingredients", [])
             recipe_ingredient = []
             for ing in ingredients:
@@ -47,29 +55,18 @@ class MealieClient:
                     recipe_ingredient.append({"note": str(ing)})
 
             instructions = recipe_data.get("instructions", [])
-            recipe_instructions = [
-                {"text": step}
-                for step in instructions
-            ]
+            recipe_instructions = [{"text": step} for step in instructions]
 
             full_recipe["name"] = title
+            full_recipe["slug"] = slug
             full_recipe["recipeIngredient"] = recipe_ingredient
             full_recipe["recipeInstructions"] = recipe_instructions
-
-            if recipe_data.get("prep_time_minutes"):
-                full_recipe["prepTime"] = f"PT{recipe_data['prep_time_minutes']}M"
-            if recipe_data.get("cook_time_minutes"):
-                full_recipe["performTime"] = f"PT{recipe_data['cook_time_minutes']}M"
-            if recipe_data.get("servings"):
-                full_recipe["recipeYield"] = str(recipe_data["servings"])
-            if source_url:
-                full_recipe["orgURL"] = source_url
-            if recipe_data.get("notes"):
-                full_recipe["notes"] = [{"title": "Notes", "text": recipe_data["notes"]}]
-
-            # Remove fields that cause Mealie 500 errors when sent back
-            for key in ["comments", "extras"]:
-                full_recipe.pop(key, None)
+            full_recipe["recipeYield"] = str(recipe_data["servings"]) if recipe_data.get("servings") else ""
+            full_recipe["prepTime"] = f"PT{recipe_data['prep_time_minutes']}M" if recipe_data.get("prep_time_minutes") else ""
+            full_recipe["performTime"] = f"PT{recipe_data['cook_time_minutes']}M" if recipe_data.get("cook_time_minutes") else ""
+            full_recipe["orgURL"] = source_url
+            full_recipe["notes"] = [{"title": "Notes", "text": recipe_data["notes"]}] if recipe_data.get("notes") else []
+            full_recipe["settings"] = full_recipe.get("settings", {})
 
             # Step 4: PUT the complete updated recipe
             put_resp = await client.put(
@@ -77,7 +74,7 @@ class MealieClient:
                 json=full_recipe,
                 headers=self.headers,
             )
-            if put_resp.status_code in (422, 500):
+            if put_resp.status_code in (400, 422, 500):
                 body = put_resp.text
                 raise httpx.HTTPStatusError(
                     f"{put_resp.status_code}: {body}",
