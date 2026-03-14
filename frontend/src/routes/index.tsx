@@ -184,10 +184,25 @@ function HomePage() {
       {isLoading ? (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="h-40 animate-pulse rounded-xl bg-surface"
-            />
+            <div key={i} className="flex flex-col rounded-xl border border-border overflow-hidden">
+              <div className="flex-1 bg-surface p-5 space-y-3">
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                <Skeleton className="h-3.5 w-1/4 rounded-md" />
+                <div className="space-y-1.5 pt-1">
+                  <Skeleton className="h-3 w-full rounded-md" />
+                  <Skeleton className="h-3 w-5/6 rounded-md" />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              </div>
+              <div className="bg-surface/80 border-t border-border px-2 py-2 flex justify-around">
+                <Skeleton className="h-6 w-12 rounded-md" />
+                <Skeleton className="h-6 w-12 rounded-md" />
+                <Skeleton className="h-6 w-12 rounded-md" />
+              </div>
+            </div>
           ))}
         </div>
       ) : filteredRecipes?.length === 0 ? (

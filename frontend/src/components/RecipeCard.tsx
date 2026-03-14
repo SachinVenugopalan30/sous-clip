@@ -67,7 +67,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
       </Link>
 
       {/* Bottom action bar */}
-      <div className={`flex items-center justify-around rounded-b-xl border bg-surface/80 px-2 py-1.5 ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}>
+      <div className={`flex items-center justify-around rounded-b-xl border bg-surface/80 px-1 py-1.5 ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}>
         <button
           type="button"
           onClick={(e) => {
@@ -75,7 +75,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onToggle?.(recipe.id);
           }}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${selected ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-bg"}`}
+          className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs transition-colors ${selected ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-bg"}`}
           aria-label={selected ? "Deselect recipe" : "Select recipe"}
         >
           {selected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
@@ -88,7 +88,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onShare?.(recipe.id);
           }}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
+          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
           aria-label="Share recipe"
         >
           <LinkIcon className="h-4 w-4" />
@@ -98,7 +98,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSendToMealie?.(recipe.id); }}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
+            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
             aria-label="Send to Mealie"
           >
             <Send className="h-4 w-4" />
@@ -112,7 +112,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onDelete?.(recipe.id);
           }}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-500/10"
+          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-500/10"
           aria-label="Delete recipe"
         >
           <Trash2 className="h-4 w-4" />
