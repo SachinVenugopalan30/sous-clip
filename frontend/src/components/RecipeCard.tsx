@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckSquare, Clock, Link as LinkIcon, Square, Tag, Trash2, Users } from "lucide-react";
+import { CheckSquare, Clock, Link as LinkIcon, Send, Square, Tag, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import type { Recipe } from "../lib/api";
 
@@ -9,9 +9,11 @@ interface RecipeCardProps {
   onToggle?: (id: number) => void;
   onShare?: (id: number) => void;
   onDelete?: (id: number) => void;
+  mealieConfigured?: boolean;
+  onSendToMealie?: (id: number) => void;
 }
 
-export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete }: RecipeCardProps) {
+export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, mealieConfigured, onSendToMealie }: RecipeCardProps) {
   const totalTime =
     (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
 
@@ -92,6 +94,17 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete }: Re
           <LinkIcon className="h-4 w-4" />
           Share
         </button>
+        {mealieConfigured && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSendToMealie?.(recipe.id); }}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
+            aria-label="Send to Mealie"
+          >
+            <Send className="h-4 w-4" />
+            Mealie
+          </button>
+        )}
         <button
           type="button"
           onClick={(e) => {
