@@ -34,7 +34,9 @@ async def test_download_activity(mock_dl_cls, mock_get_queue):
 @pytest.mark.asyncio
 @patch("backend.workflows.extraction._get_queue")
 @patch("backend.workflows.extraction.Transcriber")
-async def test_transcribe_activity(mock_tr_cls, mock_get_queue, db_engine, db_session):
+async def test_transcribe_activity(mock_tr_cls, mock_get_queue, db_engine, db_session, tmp_path):
+    audio = tmp_path / "a.mp3"
+    audio.write_bytes(b"")
     db_session.add(AppSetting(key="whisper_model_size", value="small"))
     db_session.commit()
     mock_queue = MagicMock()
@@ -44,7 +46,8 @@ async def test_transcribe_activity(mock_tr_cls, mock_get_queue, db_engine, db_se
     mock_tr_cls.return_value = mock_tr
 
     with patch("backend.database.engine", db_engine):
-        result = await transcribe_activity("/tmp/a.mp3", "user-1", "q-123")
+        result = await transcribe_activity(str(audio), "user-1", "q-123")
+    assert not audio.exists()
     assert mock_tr_cls.call_args.kwargs["model_size"] == "small"
     assert result["text"] == "pasta recipe"
     assert result["language"] == "en"
