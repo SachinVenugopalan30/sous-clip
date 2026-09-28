@@ -71,6 +71,7 @@ async def download_activity(url: str, user_id: str, queue_item_id: str) -> dict:
             "title": result.title,
             "channel": result.channel,
             "duration": result.duration,
+            "caption": result.caption,
         }
 
 
@@ -95,7 +96,7 @@ async def transcribe_activity(audio_path: str, user_id: str, queue_item_id: str)
 
 
 @activity.defn
-async def extract_activity(transcript: str, user_id: str, queue_item_id: str) -> dict:
+async def extract_activity(transcript: str, user_id: str, queue_item_id: str, caption: str = "") -> dict:
     cfg = _app_settings()
     provider = cfg["ai_provider"]
     with tracer.start_as_current_span("pipeline.ai_extract", attributes={
@@ -111,7 +112,7 @@ async def extract_activity(transcript: str, user_id: str, queue_item_id: str) ->
             model=cfg["ai_model"],
             base_url=cfg["ollama_base_url"] if provider == "ollama" else None,
         )
-        result = await extractor.extract(transcript)
+        result = await extractor.extract(transcript, caption)
         return {
             "title": result.title,
             "ingredients": [i.model_dump() for i in result.ingredients],
@@ -230,7 +231,8 @@ class ExtractionWorkflow:
             # Step 3: Extract recipe via AI
             extraction_data = await workflow.execute_activity(
                 extract_activity,
-                args=[transcribe_result["text"], user_id, item_id],
+                # .get: histories recorded before v1.3.0 have no caption
+                args=[transcribe_result["text"], user_id, item_id, download_result.get("caption", "")],
                 start_to_close_timeout=timedelta(minutes=2),
                 retry_policy=RETRY,
             )

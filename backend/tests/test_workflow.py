@@ -116,3 +116,30 @@ async def test_save_retry_is_idempotent_and_keeps_first_result(mock_get_queue, d
     assert first == second
     recipes = db_session.exec(select(Recipe)).all()
     assert [r.title for r in recipes] == ["First"]
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction.workflow.execute_activity", new_callable=AsyncMock)
+async def test_workflow_passes_caption_and_tolerates_old_download_results(mock_execute):
+    # Histories recorded before v1.3.0 replay download results without "caption"
+    results = {download_activity: {"audio_path": "a"}, transcribe_activity: {"text": "t"}}
+    mock_execute.side_effect = lambda fn, **kw: results.get(fn, {})
+
+    await ExtractionWorkflow().run(ExtractionWorkflowInput(url="u", user_id="u1", queue_item_id="q1"))
+
+    extract_call = next(c for c in mock_execute.call_args_list if c.args[0] is extract_activity)
+    assert extract_call.kwargs["args"][-1] == ""
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction._get_queue")
+@patch("backend.workflows.extraction.RecipeExtractor")
+async def test_extract_activity_forwards_caption(mock_ex_cls, mock_get_queue, db_engine):
+    mock_ex_cls.return_value.extract = AsyncMock(return_value=ExtractionResult(
+        title="P", ingredients=[], instructions=[], prep_time_minutes=None,
+        cook_time_minutes=None, servings=None, notes=None, tags=[],
+    ))
+    with patch("backend.database.engine", db_engine):
+        await extract_activity("talk", "user-1", "q-1", "200g spaghetti")
+
+    mock_ex_cls.return_value.extract.assert_awaited_once_with("talk", "200g spaghetti")

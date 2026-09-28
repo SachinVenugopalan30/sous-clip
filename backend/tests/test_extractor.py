@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from backend.schemas import Ingredient
-from backend.services.extractor import RecipeExtractor, ExtractionResult
+from backend.services.extractor import SYSTEM_PROMPT, RecipeExtractor, ExtractionResult
 
 
 def test_extraction_result():
@@ -110,3 +110,10 @@ async def test_ollama_base_url_gets_v1_once(mock_openai_class, base_url):
     await extractor.extract("pasta")
 
     assert mock_openai_class.call_args.kwargs["base_url"] == "http://ollama:11434/v1"
+
+
+def test_prompt_delimits_caption_and_omits_it_when_empty():
+    extractor = RecipeExtractor(provider="anthropic", api_key="k", model="m")
+    assert "<caption>\n200g spaghetti\n</caption>" in extractor._build_prompt("talk", "200g spaghetti")
+    assert "<caption>" not in extractor._build_prompt("talk", "")
+    assert "untrusted" in SYSTEM_PROMPT

@@ -16,6 +16,7 @@ class DownloadResult:
     channel: str | None = None
     duration: int | None = None  # seconds
     thumbnail: str | None = None  # URL
+    caption: str = ""
 
 
 class Downloader:
@@ -65,4 +66,5 @@ class Downloader:
             channel=info.get("channel") or info.get("uploader"),
             duration=info.get("duration"),
             thumbnail=info.get("thumbnail"),
+            caption=(info.get("description") or "")[:800],  # long descriptions are mostly links and hashtags
         )

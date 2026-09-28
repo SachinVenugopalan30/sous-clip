@@ -39,3 +39,14 @@ def test_download_rejects_invalid_url():
     downloader = Downloader(media_dir="/tmp")
     with pytest.raises(ValueError, match="Invalid URL"):
         downloader.download("not-a-url")
+
+
+@pytest.mark.parametrize("description, caption", [("x" * 2000, "x" * 800), (None, "")], ids=["long", "missing"])
+@patch("backend.services.downloader.yt_dlp.YoutubeDL")
+def test_download_keeps_truncated_caption(mock_ydl_class, tmp_path, description, caption):
+    mock_ydl = mock_ydl_class.return_value.__enter__.return_value
+    mock_ydl.extract_info.return_value = {"title": "t", "id": "abc", "description": description}
+
+    result = Downloader(media_dir=str(tmp_path)).download("https://youtube.com/shorts/abc")
+
+    assert result.caption == caption
