@@ -14,6 +14,7 @@ DEFAULTS = {
     "whisper_compute_type": env_settings.whisper_compute_type,
     "mealie_url": "",
     "mealie_api_key": "",
+    "update_check": "true",  # hourly GitHub release check; "false" turns it off
 }
 
 # Keys that should never be returned to the frontend in plain text

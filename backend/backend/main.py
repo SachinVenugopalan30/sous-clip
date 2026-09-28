@@ -18,6 +18,7 @@ from backend.routes.queue import router as queue_router
 from backend.routes.auth import router as auth_router
 from backend.routes.recipes import router as recipes_router, share_router
 from backend.routes.settings import router as settings_router
+from backend.routes.updates import router as updates_router
 from backend.services.queue import ExtractionQueue
 from backend.workflows.extraction import ExtractionWorkflow, ExtractionWorkflowInput
 
@@ -108,6 +109,7 @@ app.include_router(progress_router)
 app.include_router(queue_router)
 app.include_router(settings_router)
 app.include_router(share_router)
+app.include_router(updates_router)
 
 
 @app.get("/health")
