@@ -5,6 +5,7 @@ import pytest
 
 from sqlmodel import select
 
+from backend.config import settings
 from backend.models import AppSetting, Recipe
 from backend.schemas import Ingredient
 from backend.services.extractor import ExtractionResult
@@ -143,3 +144,22 @@ async def test_extract_activity_forwards_caption(mock_ex_cls, mock_get_queue, db
         await extract_activity("talk", "user-1", "q-1", "200g spaghetti")
 
     mock_ex_cls.return_value.extract.assert_awaited_once_with("talk", "200g spaghetti")
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction._get_queue")
+async def test_save_stores_one_thumbnail_even_on_retry(mock_get_queue, db_engine, db_session, tmp_path, monkeypatch):
+    thumbs = tmp_path / "thumbs"
+    monkeypatch.setattr(settings, "thumbnails_dir", str(thumbs))
+    first_src, retry_src = tmp_path / "abc.webp", tmp_path / "abc2.webp"
+    first_src.write_bytes(b"img")
+    retry_src.write_bytes(b"img")
+
+    with patch("backend.database.engine", db_engine):
+        await save_recipe_activity("u", "t", _extraction("P"), "user-1", "q-1", str(first_src))
+        await save_recipe_activity("u", "t", _extraction("P"), "user-1", "q-1", str(retry_src))
+
+    stored = list(thumbs.iterdir())
+    assert len(stored) == 1 and stored[0].suffix == ".webp" and stored[0].read_bytes() == b"img"
+    assert not first_src.exists() and not retry_src.exists()
+    assert db_session.exec(select(Recipe)).one().thumbnail == stored[0].name

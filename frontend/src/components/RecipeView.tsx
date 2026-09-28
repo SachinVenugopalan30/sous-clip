@@ -17,6 +17,9 @@ export function RecipeView({ recipe }: RecipeViewProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
+      {recipe.thumbnail_url && (
+        <img src={recipe.thumbnail_url} alt="" className="mb-6 max-h-80 w-full rounded-xl object-cover" />
+      )}
       <h1 className="font-display text-2xl font-bold sm:text-3xl">{recipe.title}</h1>
 
       <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">

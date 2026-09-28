@@ -1,10 +1,12 @@
 import json
 import secrets
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from backend.config import settings
 from backend.database import get_session
 from backend.dependencies import CurrentUser, get_current_user
 from backend.models import Recipe
@@ -28,8 +30,15 @@ def _recipe_to_response(recipe: Recipe) -> RecipeResponse:
         tags=json.loads(recipe.tags_json),
         notes=recipe.notes,
         share_token=recipe.share_token,
+        thumbnail_url=f"/thumbnails/{recipe.thumbnail}" if recipe.thumbnail else None,
         created_at=recipe.created_at.isoformat(),
     )
+
+
+def _delete_recipe(session: Session, recipe: Recipe) -> None:
+    if recipe.thumbnail:
+        Path(settings.thumbnails_dir, recipe.thumbnail).unlink(missing_ok=True)
+    session.delete(recipe)
 
 
 @router.get("", response_model=RecipeListResponse)
@@ -65,7 +74,7 @@ def delete_recipe(recipe_id: int, session: Session = Depends(get_session), _user
     recipe = session.get(Recipe, recipe_id)
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    session.delete(recipe)
+    _delete_recipe(session, recipe)
     session.commit()
 
 
@@ -83,7 +92,7 @@ def bulk_delete_recipes(
     recipes = session.exec(statement).all()
     count = len(recipes)
     for recipe in recipes:
-        session.delete(recipe)
+        _delete_recipe(session, recipe)
     session.commit()
     return {"deleted": count}
 

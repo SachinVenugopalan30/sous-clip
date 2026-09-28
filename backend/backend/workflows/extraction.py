@@ -72,6 +72,7 @@ async def download_activity(url: str, user_id: str, queue_item_id: str) -> dict:
             "channel": result.channel,
             "duration": result.duration,
             "caption": result.caption,
+            "thumbnail_path": result.thumbnail_path,
         }
 
 
@@ -127,11 +128,15 @@ async def extract_activity(transcript: str, user_id: str, queue_item_id: str, ca
 
 @activity.defn
 async def save_recipe_activity(
-    url: str, transcript: str, extraction_data: dict, user_id: str, queue_item_id: str
+    url: str, transcript: str, extraction_data: dict, user_id: str, queue_item_id: str,
+    thumbnail_path: str | None = None,
 ) -> int:
     with tracer.start_as_current_span("pipeline.save"):
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "saved", "active")
+
+        import secrets
+        import shutil
 
         from backend.database import engine
         from backend.models import Recipe
@@ -142,24 +147,33 @@ async def save_recipe_activity(
             existing = session.exec(select(Recipe).where(Recipe.queue_item_id == queue_item_id)).first()
             recipe_id = existing.id if existing else None
 
-        recipe = Recipe(
-            title=extraction_data["title"],
-            source_url=url,
-            ingredients_json=json.dumps(extraction_data["ingredients"]),
-            instructions_json=json.dumps(extraction_data["instructions"]),
-            prep_time_minutes=extraction_data.get("prep_time_minutes"),
-            cook_time_minutes=extraction_data.get("cook_time_minutes"),
-            servings=extraction_data.get("servings"),
-            notes=extraction_data.get("notes"),
-            tags_json=json.dumps(extraction_data.get("tags", [])),
-            transcript=transcript,
-            queue_item_id=queue_item_id,
-        )
         if recipe_id is None:
+            thumbnail = None
+            if thumbnail_path and Path(thumbnail_path).exists():
+                # Copy, commit, then unlink: a failed commit never leaves a dangling reference
+                thumbnail = secrets.token_urlsafe(12) + Path(thumbnail_path).suffix
+                Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(thumbnail_path, Path(settings.thumbnails_dir) / thumbnail)
+            recipe = Recipe(
+                title=extraction_data["title"],
+                source_url=url,
+                ingredients_json=json.dumps(extraction_data["ingredients"]),
+                instructions_json=json.dumps(extraction_data["instructions"]),
+                prep_time_minutes=extraction_data.get("prep_time_minutes"),
+                cook_time_minutes=extraction_data.get("cook_time_minutes"),
+                servings=extraction_data.get("servings"),
+                notes=extraction_data.get("notes"),
+                tags_json=json.dumps(extraction_data.get("tags", [])),
+                transcript=transcript,
+                queue_item_id=queue_item_id,
+                thumbnail=thumbnail,
+            )
             with Session(engine) as session:
                 session.add(recipe)
                 session.commit()
                 recipe_id = recipe.id
+        if thumbnail_path:
+            Path(thumbnail_path).unlink(missing_ok=True)
 
         # Mark queue item completed and publish final event
         queue.complete(queue_item_id, user_id)
@@ -240,7 +254,10 @@ class ExtractionWorkflow:
             # Step 4: Save to database
             recipe_id = await workflow.execute_activity(
                 save_recipe_activity,
-                args=[input.url, transcribe_result["text"], extraction_data, user_id, item_id],
+                args=[
+                    input.url, transcribe_result["text"], extraction_data, user_id, item_id,
+                    download_result.get("thumbnail_path"),
+                ],
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RETRY,
             )

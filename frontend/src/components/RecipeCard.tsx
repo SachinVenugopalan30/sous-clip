@@ -28,6 +28,9 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
         params={{ recipeId: String(recipe.id) }}
         className={`block flex-1 rounded-t-xl border border-b-0 bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}
       >
+        {recipe.thumbnail_url && (
+          <img src={recipe.thumbnail_url} alt="" loading="lazy" className="-mx-5 -mt-5 mb-4 aspect-video w-[calc(100%+2.5rem)] max-w-none rounded-t-xl object-cover" />
+        )}
         <h3 className="font-display text-lg font-bold leading-tight">
           {recipe.title}
         </h3>

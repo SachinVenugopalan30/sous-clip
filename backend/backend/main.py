@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -113,6 +114,10 @@ app.include_router(share_router)
 async def health():
     return {"status": "ok", "version": settings.app_version}
 
+
+# Created here too: the app can start before the worker has saved any thumbnail
+Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)
+app.mount("/thumbnails", StaticFiles(directory=settings.thumbnails_dir, check_dir=False), name="thumbnails")
 
 # Serve frontend static files in production
 _static_dir = os.path.join(os.path.dirname(__file__), "..", "static")

@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     valkey_url: str = "redis://localhost:6379/0"
 
     media_dir: str = "./data/media"
+    thumbnails_dir: str = "./data/thumbnails"
 
     app_username: str = "admin"
     app_password: str = "changeme"

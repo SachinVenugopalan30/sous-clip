@@ -31,6 +31,7 @@ class RecipeResponse(BaseModel):
     tags: list[str] = []
     notes: str | None = None
     share_token: str | None = None
+    thumbnail_url: str | None = None
     created_at: str
 
 

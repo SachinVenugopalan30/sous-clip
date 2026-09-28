@@ -50,3 +50,16 @@ def test_download_keeps_truncated_caption(mock_ydl_class, tmp_path, description,
     result = Downloader(media_dir=str(tmp_path)).download("https://youtube.com/shorts/abc")
 
     assert result.caption == caption
+
+
+@pytest.mark.parametrize("files, expected", [(["abc.mp3", "abc.webp"], "abc.webp"), (["abc.mp3"], None)], ids=["webp", "none"])
+@patch("backend.services.downloader.yt_dlp.YoutubeDL")
+def test_download_writes_thumbnail_keeping_its_extension(mock_ydl_class, tmp_path, files, expected):
+    mock_ydl_class.return_value.__enter__.return_value.extract_info.return_value = {"title": "t", "id": "abc"}
+    for name in files:
+        (tmp_path / name).touch()
+
+    result = Downloader(media_dir=str(tmp_path)).download("https://youtube.com/shorts/abc")
+
+    assert mock_ydl_class.call_args.args[0]["writethumbnail"] is True
+    assert result.thumbnail_path == (str(tmp_path / expected) if expected else None)

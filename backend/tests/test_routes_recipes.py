@@ -107,3 +107,43 @@ def test_search_recipes(client, seeded_db, auth_headers):
 def test_list_recipes_requires_auth(client):
     response = client.get("/api/recipes")
     assert response.status_code == 401
+
+
+@pytest.fixture
+def thumb_recipe(test_db, tmp_path, monkeypatch):
+    from backend.config import settings
+    monkeypatch.setattr(settings, "thumbnails_dir", str(tmp_path))
+    thumb = tmp_path / "abc.webp"
+    thumb.write_bytes(b"img")
+    with Session(test_db) as session:
+        recipe = Recipe(title="T", source_url="u", ingredients_json="[]", instructions_json="[]", thumbnail="abc.webp")
+        session.add(recipe)
+        session.commit()
+        return recipe.id, thumb
+
+
+def test_recipe_response_includes_thumbnail_url(client, auth_headers, thumb_recipe):
+    recipe_id, _ = thumb_recipe
+    assert client.get(f"/api/recipes/{recipe_id}", headers=auth_headers).json()["thumbnail_url"] == "/thumbnails/abc.webp"
+
+
+@pytest.mark.parametrize("bulk", [False, True], ids=["single", "bulk"])
+def test_delete_removes_thumbnail_file(client, auth_headers, thumb_recipe, bulk):
+    recipe_id, thumb = thumb_recipe
+    if bulk:
+        client.post("/api/recipes/bulk-delete", json={"ids": [recipe_id]}, headers=auth_headers)
+    else:
+        client.delete(f"/api/recipes/{recipe_id}", headers=auth_headers)
+    assert not thumb.exists()
+
+
+def test_thumbnails_are_served_on_fresh_install(client):
+    from pathlib import Path
+    from backend.config import settings
+    served = Path(settings.thumbnails_dir) / "test-served.webp"  # dir must exist before any extraction
+    served.write_bytes(b"img")
+    try:
+        response = client.get("/thumbnails/test-served.webp")
+        assert response.status_code == 200 and response.content == b"img"
+    finally:
+        served.unlink()

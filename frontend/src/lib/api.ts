@@ -124,6 +124,7 @@ export interface Recipe {
   tags: string[];
   notes: string | null;
   share_token: string | null;
+  thumbnail_url: string | null;
   created_at: string;
 }
 

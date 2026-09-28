@@ -17,6 +17,7 @@ def _migrate(engine):
     migrations = [
         ("recipe", "share_token", "ALTER TABLE recipe ADD COLUMN share_token VARCHAR"),
         ("recipe", "queue_item_id", "ALTER TABLE recipe ADD COLUMN queue_item_id VARCHAR"),
+        ("recipe", "thumbnail", "ALTER TABLE recipe ADD COLUMN thumbnail VARCHAR"),
     ]
     with Session(engine) as session:
         for table, column, sql in migrations:
