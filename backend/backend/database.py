@@ -16,6 +16,7 @@ def _migrate(engine):
     """Add columns that create_all() won't add to existing tables."""
     migrations = [
         ("recipe", "share_token", "ALTER TABLE recipe ADD COLUMN share_token VARCHAR"),
+        ("recipe", "queue_item_id", "ALTER TABLE recipe ADD COLUMN queue_item_id VARCHAR"),
     ]
     with Session(engine) as session:
         for table, column, sql in migrations:

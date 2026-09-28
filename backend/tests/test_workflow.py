@@ -3,7 +3,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backend.models import AppSetting
+from sqlmodel import select
+
+from backend.models import AppSetting, Recipe
 from backend.schemas import Ingredient
 from backend.services.extractor import ExtractionResult
 from backend.workflows.extraction import (
@@ -97,3 +99,20 @@ async def test_pipeline_steps_have_bounded_retries(mock_execute):
     steps = {c.args[0]: c.kwargs.get("retry_policy") for c in mock_execute.call_args_list}
     for step in (download_activity, transcribe_activity, extract_activity, save_recipe_activity):
         assert steps[step] is not None and steps[step].maximum_attempts == 3, step.__name__
+
+
+def _extraction(title):
+    return {"title": title, "ingredients": [], "instructions": ["Boil"], "tags": []}
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction._get_queue")
+async def test_save_retry_is_idempotent_and_keeps_first_result(mock_get_queue, db_engine, db_session):
+    # A container kill after commit but before queue.complete makes Temporal retry the save
+    with patch("backend.database.engine", db_engine):
+        first = await save_recipe_activity("u", "t", _extraction("First"), "user-1", "q-1")
+        second = await save_recipe_activity("u", "t", _extraction("Second"), "user-1", "q-1")
+
+    assert first == second
+    recipes = db_session.exec(select(Recipe)).all()
+    assert [r.title for r in recipes] == ["First"]

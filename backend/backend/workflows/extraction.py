@@ -16,7 +16,6 @@ from backend.telemetry import get_tracer
 tracer = get_tracer("extraction-pipeline")
 
 # ponytail: flat 3 attempts per step; mark permanent errors non_retryable if retries waste time.
-# save_recipe can duplicate a recipe if its commit succeeds but queue.complete fails; make it idempotent if seen.
 RETRY = RetryPolicy(maximum_attempts=3)
 
 
@@ -135,7 +134,12 @@ async def save_recipe_activity(
 
         from backend.database import engine
         from backend.models import Recipe
-        from sqlmodel import Session
+        from sqlmodel import Session, select
+
+        with Session(engine) as session:
+            # A retry after a successful commit must not insert a second recipe
+            existing = session.exec(select(Recipe).where(Recipe.queue_item_id == queue_item_id)).first()
+            recipe_id = existing.id if existing else None
 
         recipe = Recipe(
             title=extraction_data["title"],
@@ -148,17 +152,19 @@ async def save_recipe_activity(
             notes=extraction_data.get("notes"),
             tags_json=json.dumps(extraction_data.get("tags", [])),
             transcript=transcript,
+            queue_item_id=queue_item_id,
         )
-        with Session(engine) as session:
-            session.add(recipe)
-            session.commit()
-            session.refresh(recipe)
+        if recipe_id is None:
+            with Session(engine) as session:
+                session.add(recipe)
+                session.commit()
+                recipe_id = recipe.id
 
         # Mark queue item completed and publish final event
         queue.complete(queue_item_id, user_id)
         queue.publish_progress(user_id, queue_item_id, "saved", "complete")
 
-        return recipe.id
+        return recipe_id
 
 
 @activity.defn

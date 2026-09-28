@@ -16,6 +16,7 @@ class Recipe(SQLModel, table=True):
     notes: str | None = None
     transcript: str | None = None
     share_token: str | None = None
+    queue_item_id: str | None = None  # makes save_recipe_activity retry-safe
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
