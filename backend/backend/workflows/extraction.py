@@ -1,8 +1,10 @@
 import json
 from dataclasses import dataclass
 from datetime import timedelta
+from pathlib import Path
 
 from temporalio import activity, workflow
+from temporalio.common import RetryPolicy
 
 from backend.config import settings
 from backend.services.downloader import Downloader
@@ -13,9 +15,23 @@ from backend.telemetry import get_tracer
 
 tracer = get_tracer("extraction-pipeline")
 
+# ponytail: flat 3 attempts per step; mark permanent errors non_retryable if retries waste time.
+# save_recipe can duplicate a recipe if its commit succeeds but queue.complete fails; make it idempotent if seen.
+RETRY = RetryPolicy(maximum_attempts=3)
+
 
 def _get_queue() -> ExtractionQueue:
     return ExtractionQueue(settings.valkey_url)
+
+
+def _app_settings() -> dict[str, str]:
+    """Settings saved in the UI, falling back to env defaults."""
+    from backend.database import engine
+    from backend.services.settings import SettingsService
+    from sqlmodel import Session
+
+    with Session(engine) as session:
+        return SettingsService(session).get_all()
 
 
 @dataclass
@@ -61,42 +77,40 @@ async def download_activity(url: str, user_id: str, queue_item_id: str) -> dict:
 
 @activity.defn
 async def transcribe_activity(audio_path: str, user_id: str, queue_item_id: str) -> dict:
+    cfg = _app_settings()
     with tracer.start_as_current_span("pipeline.transcribe", attributes={
-        "model_size": settings.whisper_model_size,
-        "device": settings.whisper_device,
+        "model_size": cfg["whisper_model_size"],
+        "device": cfg["whisper_device"],
     }):
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "transcribing", "active")
 
         transcriber = Transcriber(
-            model_size=settings.whisper_model_size,
-            device=settings.whisper_device,
-            compute_type=settings.whisper_compute_type,
+            model_size=cfg["whisper_model_size"],
+            device=cfg["whisper_device"],
+            compute_type=cfg["whisper_compute_type"],
         )
         result = transcriber.transcribe(audio_path)
+        Path(audio_path).unlink(missing_ok=True)  # audio is only needed for transcription
         return {"text": result.text, "language": result.language}
 
 
 @activity.defn
 async def extract_activity(transcript: str, user_id: str, queue_item_id: str) -> dict:
+    cfg = _app_settings()
+    provider = cfg["ai_provider"]
     with tracer.start_as_current_span("pipeline.ai_extract", attributes={
-        "provider": settings.ai_provider,
-        "model": settings.ai_model,
+        "provider": provider,
+        "model": cfg["ai_model"],
     }):
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "extracting", "active")
 
-        api_key = ""
-        if settings.ai_provider == "anthropic":
-            api_key = settings.anthropic_api_key
-        elif settings.ai_provider == "openai":
-            api_key = settings.openai_api_key
-
         extractor = RecipeExtractor(
-            provider=settings.ai_provider,
-            api_key=api_key,
-            model=settings.ai_model,
-            base_url=settings.ollama_base_url if settings.ai_provider == "ollama" else None,
+            provider=provider,
+            api_key=cfg.get(f"{provider}_api_key", ""),
+            model=cfg["ai_model"],
+            base_url=cfg["ollama_base_url"] if provider == "ollama" else None,
         )
         result = await extractor.extract(transcript)
         return {
@@ -155,15 +169,11 @@ async def forward_to_mealie_activity(
     if not forward_to_mealie:
         return
 
-    from backend.database import engine
     from backend.services.mealie import MealieClient
-    from backend.services.settings import SettingsService
-    from sqlmodel import Session
 
-    with Session(engine) as session:
-        svc = SettingsService(session)
-        mealie_url = svc.get("mealie_url", "")
-        mealie_api_key = svc.get("mealie_api_key", "")
+    cfg = _app_settings()
+    mealie_url = cfg["mealie_url"]
+    mealie_api_key = cfg["mealie_api_key"]
 
     if not mealie_url or not mealie_api_key:
         return
@@ -200,6 +210,7 @@ class ExtractionWorkflow:
                 download_activity,
                 args=[input.url, user_id, item_id],
                 start_to_close_timeout=timedelta(minutes=5),
+                retry_policy=RETRY,
             )
 
             # Step 2: Transcribe
@@ -207,6 +218,7 @@ class ExtractionWorkflow:
                 transcribe_activity,
                 args=[download_result["audio_path"], user_id, item_id],
                 start_to_close_timeout=timedelta(minutes=10),
+                retry_policy=RETRY,
             )
 
             # Step 3: Extract recipe via AI
@@ -214,6 +226,7 @@ class ExtractionWorkflow:
                 extract_activity,
                 args=[transcribe_result["text"], user_id, item_id],
                 start_to_close_timeout=timedelta(minutes=2),
+                retry_policy=RETRY,
             )
 
             # Step 4: Save to database
@@ -221,6 +234,7 @@ class ExtractionWorkflow:
                 save_recipe_activity,
                 args=[input.url, transcribe_result["text"], extraction_data, user_id, item_id],
                 start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RETRY,
             )
 
             # Step 5: Forward to Mealie (non-blocking)

@@ -80,6 +80,8 @@ async def recover_stuck_queue_items() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.app_password == "changeme" or not settings.jwt_secret or settings.jwt_secret.startswith("change-me"):
+        raise RuntimeError("Set APP_PASSWORD and JWT_SECRET in .env (see .env.example)")
     create_db()
     await recover_stuck_queue_items()
     yield

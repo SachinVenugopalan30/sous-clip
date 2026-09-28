@@ -54,3 +54,17 @@ def test_me_with_valid_token(client, auth_headers):
 def test_me_without_token(client):
     resp = client.get("/api/auth/me")
     assert resp.status_code == 401
+
+
+@pytest.mark.parametrize("password, secret", [
+    ("changeme", "a-real-secret"),
+    ("a-real-password", ""),
+    ("a-real-password", "change-me-to-a-random-string"),
+])
+def test_app_refuses_to_start_with_default_credentials(monkeypatch, password, secret):
+    from backend.main import settings
+    monkeypatch.setattr(settings, "app_password", password)
+    monkeypatch.setattr(settings, "jwt_secret", secret)
+    with pytest.raises(RuntimeError, match="APP_PASSWORD and JWT_SECRET"):
+        with TestClient(app):
+            pass

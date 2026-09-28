@@ -91,7 +91,8 @@ class RecipeExtractor:
     async def _call_ollama(self, prompt: str) -> str:
         client = openai.AsyncOpenAI(
             api_key="ollama",
-            base_url=self.base_url or "http://localhost:11434/v1",
+            # Ollama's OpenAI-compatible API lives under /v1; accept the URL with or without it
+            base_url=(self.base_url or "http://localhost:11434").rstrip("/").removesuffix("/v1") + "/v1",
         )
         response = await client.chat.completions.create(
             model=self.model,
@@ -104,13 +105,8 @@ class RecipeExtractor:
         return response.choices[0].message.content
 
     def _parse_response(self, raw: str) -> ExtractionResult:
-        # Strip markdown fences if present
-        text = raw.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1]
-            text = text.rsplit("```", 1)[0]
-
-        data = json.loads(text)
+        # Take the outermost JSON object; drops fences and any chatter around it
+        data = json.loads(raw[raw.find("{"): raw.rfind("}") + 1])
 
         ingredients = [
             Ingredient(

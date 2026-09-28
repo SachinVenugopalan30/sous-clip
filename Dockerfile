@@ -1,5 +1,5 @@
 # Stage 1: Build frontend
-FROM node:20-alpine AS frontend-build
+FROM docker.io/library/node:24-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Python backend + serve built frontend
-FROM python:3.12-slim AS production
+FROM docker.io/library/python:3.12-slim AS production
 WORKDIR /app
 
 # Install system deps for yt-dlp, ffmpeg, and deno (JS runtime for yt-dlp)

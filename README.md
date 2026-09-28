@@ -98,6 +98,17 @@ If you use [Mealie](https://mealie.io/) as your recipe manager, Sous Clip can au
 
 If Mealie is not configured, no Mealie UI elements are shown. If forwarding fails (Mealie down, bad token, etc.), the recipe is still saved in Sous Clip — the error is shown in the queue progress but does not block the extraction.
 
+## Podman
+
+The compose file works with Podman as-is:
+
+```bash
+podman compose up -d   # needs podman-compose >= 1.1, or docker-compose as the provider
+```
+
+- **GPU:** set up the NVIDIA CDI spec (`sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`), then use `devices: [nvidia.com/gpu=all]` on the `worker` service instead of the `deploy:` block.
+- **Ollama on the host:** use `http://host.containers.internal:11434` as the Ollama URL.
+
 ## GPU Support
 
 The same Docker image works for CPU and GPU. For GPU acceleration:

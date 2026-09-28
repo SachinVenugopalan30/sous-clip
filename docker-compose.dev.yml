@@ -16,7 +16,7 @@ services:
       - default
 
   temporal:
-    image: temporalio/auto-setup:latest
+    image: docker.io/temporalio/auto-setup:latest
     expose:
       - "7233"
     environment:
@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
 
   temporal-db:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     environment:
       - POSTGRES_USER=temporal
       - POSTGRES_PASSWORD=temporal
@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
 
   valkey:
-    image: valkey/valkey:8-alpine
+    image: docker.io/valkey/valkey:8-alpine
     expose:
       - "6379"
     volumes:
@@ -78,12 +78,12 @@ services:
         condition: service_healthy
     volumes:
       - app-data:/app/data
-      - ./data/whisper-models:/app/models:ro
+      - ./data/whisper-models:/app/models:ro,z
     restart: unless-stopped
 
   # --- Mealie (for local testing) ---
   mealie:
-    image: hkotel/mealie:latest
+    image: docker.io/hkotel/mealie:latest
     ports:
       - "127.0.0.1:9925:9000"
     environment:

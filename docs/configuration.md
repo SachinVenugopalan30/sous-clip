@@ -50,7 +50,7 @@ AI_MODEL=llama3
 OLLAMA_BASE_URL=http://host.docker.internal:11434
 ```
 
-> When running Ollama on the host machine and Sous Clip in Docker, use `host.docker.internal` instead of `localhost`.
+> When running Ollama on the host machine and Sous Clip in Docker, use `host.docker.internal` instead of `localhost` (`host.containers.internal` on Podman).
 
 You can also change these at runtime from the **Settings** page in the UI.
 
