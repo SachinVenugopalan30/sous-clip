@@ -1,7 +1,9 @@
-import { Clock, Users, Tag, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Clock, Users, Tag, ExternalLink, Minus, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { Badge } from "./ui/badge";
 import type { Recipe } from "../lib/api";
+import { scaleQuantity } from "../lib/scale";
 
 interface RecipeViewProps {
   recipe: Recipe;
@@ -10,6 +12,9 @@ interface RecipeViewProps {
 export function RecipeView({ recipe }: RecipeViewProps) {
   const totalTime =
     (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
+  // View-only: scaled values never reach the edit form
+  const [servings, setServings] = useState(recipe.servings);
+  const factor = recipe.servings && servings ? servings / recipe.servings : 1;
 
   return (
     <motion.div
@@ -62,13 +67,26 @@ export function RecipeView({ recipe }: RecipeViewProps) {
       <div className="mt-8 grid gap-8 md:grid-cols-[1fr_2fr]">
         {/* Ingredients */}
         <div>
-          <h2 className="font-display text-xl font-bold">Ingredients</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-xl font-bold">Ingredients</h2>
+            {servings && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <button type="button" aria-label="Fewer servings" disabled={servings <= 1} onClick={() => setServings(servings - 1)} className="rounded-md p-1.5 hover:bg-bg disabled:opacity-40">
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span aria-live="polite" className="min-w-16 text-center">{servings} servings</span>
+                <button type="button" aria-label="More servings" onClick={() => setServings(servings + 1)} className="rounded-md p-1.5 hover:bg-bg">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
           <ul className="mt-4 space-y-2">
             {recipe.ingredients.map((ing, i) => (
               <li key={i} className="flex items-baseline gap-2 text-sm">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                 <span>
-                  {ing.quantity && <strong>{ing.quantity}</strong>}
+                  {ing.quantity && <strong>{scaleQuantity(ing.quantity, factor)}</strong>}
                   {ing.unit && ` ${ing.unit}`}
                   {(ing.quantity || ing.unit) && " "}
                   {ing.name}
