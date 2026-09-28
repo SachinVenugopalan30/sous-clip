@@ -88,3 +88,9 @@ async def test_extract_with_openai(mock_openai_class):
 
     assert result.title == "Garlic Butter Pasta"
     assert len(result.ingredients) == 2
+
+
+def test_parse_response_ignores_preamble_and_fences():
+    extractor = RecipeExtractor(provider="anthropic", api_key="k", model="m")
+    raw = f"Sure! Here's the recipe:\n```json\n{MOCK_AI_RESPONSE}\n```\nEnjoy!"
+    assert extractor._parse_response(raw).title == "Garlic Butter Pasta"
