@@ -43,7 +43,8 @@ cp .env.example .env
 # Download the Whisper model (one-time setup)
 python scripts/download-model.py
 
-# Start everything
+# Start everything (pulls the prebuilt image; use `up -d --build` to build locally)
+docker compose pull
 docker compose up -d
 ```
 

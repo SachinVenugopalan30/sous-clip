@@ -1,5 +1,6 @@
 services:
   app:
+    image: ghcr.io/sachinvenugopalan30/sous-clip:latest
     build: .
     ports:
       - "127.0.0.1:3000:3000"
@@ -72,6 +73,7 @@ services:
     restart: unless-stopped
 
   worker:
+    image: ghcr.io/sachinvenugopalan30/sous-clip:latest
     build: .
     command: python -m backend.worker
     env_file: .env
