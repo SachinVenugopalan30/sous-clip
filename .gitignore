@@ -3,3 +3,5 @@
 docs/plans
 
 data/whisper-models
+__pycache__/
+.pytest_cache/
