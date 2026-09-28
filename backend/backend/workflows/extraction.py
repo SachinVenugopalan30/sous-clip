@@ -18,6 +18,16 @@ def _get_queue() -> ExtractionQueue:
     return ExtractionQueue(settings.valkey_url)
 
 
+def _app_settings() -> dict[str, str]:
+    """Settings saved in the UI, falling back to env defaults."""
+    from backend.database import engine
+    from backend.services.settings import SettingsService
+    from sqlmodel import Session
+
+    with Session(engine) as session:
+        return SettingsService(session).get_all()
+
+
 @dataclass
 class ExtractionWorkflowInput:
     url: str
@@ -61,17 +71,18 @@ async def download_activity(url: str, user_id: str, queue_item_id: str) -> dict:
 
 @activity.defn
 async def transcribe_activity(audio_path: str, user_id: str, queue_item_id: str) -> dict:
+    cfg = _app_settings()
     with tracer.start_as_current_span("pipeline.transcribe", attributes={
-        "model_size": settings.whisper_model_size,
-        "device": settings.whisper_device,
+        "model_size": cfg["whisper_model_size"],
+        "device": cfg["whisper_device"],
     }):
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "transcribing", "active")
 
         transcriber = Transcriber(
-            model_size=settings.whisper_model_size,
-            device=settings.whisper_device,
-            compute_type=settings.whisper_compute_type,
+            model_size=cfg["whisper_model_size"],
+            device=cfg["whisper_device"],
+            compute_type=cfg["whisper_compute_type"],
         )
         result = transcriber.transcribe(audio_path)
         return {"text": result.text, "language": result.language}
@@ -79,24 +90,20 @@ async def transcribe_activity(audio_path: str, user_id: str, queue_item_id: str)
 
 @activity.defn
 async def extract_activity(transcript: str, user_id: str, queue_item_id: str) -> dict:
+    cfg = _app_settings()
+    provider = cfg["ai_provider"]
     with tracer.start_as_current_span("pipeline.ai_extract", attributes={
-        "provider": settings.ai_provider,
-        "model": settings.ai_model,
+        "provider": provider,
+        "model": cfg["ai_model"],
     }):
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "extracting", "active")
 
-        api_key = ""
-        if settings.ai_provider == "anthropic":
-            api_key = settings.anthropic_api_key
-        elif settings.ai_provider == "openai":
-            api_key = settings.openai_api_key
-
         extractor = RecipeExtractor(
-            provider=settings.ai_provider,
-            api_key=api_key,
-            model=settings.ai_model,
-            base_url=settings.ollama_base_url if settings.ai_provider == "ollama" else None,
+            provider=provider,
+            api_key=cfg.get(f"{provider}_api_key", ""),
+            model=cfg["ai_model"],
+            base_url=cfg["ollama_base_url"] if provider == "ollama" else None,
         )
         result = await extractor.extract(transcript)
         return {
@@ -155,15 +162,11 @@ async def forward_to_mealie_activity(
     if not forward_to_mealie:
         return
 
-    from backend.database import engine
     from backend.services.mealie import MealieClient
-    from backend.services.settings import SettingsService
-    from sqlmodel import Session
 
-    with Session(engine) as session:
-        svc = SettingsService(session)
-        mealie_url = svc.get("mealie_url", "")
-        mealie_api_key = svc.get("mealie_api_key", "")
+    cfg = _app_settings()
+    mealie_url = cfg["mealie_url"]
+    mealie_api_key = cfg["mealie_api_key"]
 
     if not mealie_url or not mealie_api_key:
         return

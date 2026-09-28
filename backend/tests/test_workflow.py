@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from backend.models import AppSetting
 from backend.schemas import Ingredient
 from backend.services.extractor import ExtractionResult
 from backend.workflows.extraction import (
@@ -33,14 +34,18 @@ async def test_download_activity(mock_dl_cls, mock_get_queue):
 @pytest.mark.asyncio
 @patch("backend.workflows.extraction._get_queue")
 @patch("backend.workflows.extraction.Transcriber")
-async def test_transcribe_activity(mock_tr_cls, mock_get_queue):
+async def test_transcribe_activity(mock_tr_cls, mock_get_queue, db_engine, db_session):
+    db_session.add(AppSetting(key="whisper_model_size", value="small"))
+    db_session.commit()
     mock_queue = MagicMock()
     mock_get_queue.return_value = mock_queue
     mock_tr = MagicMock()
     mock_tr.transcribe.return_value = MagicMock(text="pasta recipe", language="en")
     mock_tr_cls.return_value = mock_tr
 
-    result = await transcribe_activity("/tmp/a.mp3", "user-1", "q-123")
+    with patch("backend.database.engine", db_engine):
+        result = await transcribe_activity("/tmp/a.mp3", "user-1", "q-123")
+    assert mock_tr_cls.call_args.kwargs["model_size"] == "small"
     assert result["text"] == "pasta recipe"
     assert result["language"] == "en"
     mock_queue.publish_progress.assert_called()
@@ -49,7 +54,11 @@ async def test_transcribe_activity(mock_tr_cls, mock_get_queue):
 @pytest.mark.asyncio
 @patch("backend.workflows.extraction._get_queue")
 @patch("backend.workflows.extraction.RecipeExtractor")
-async def test_extract_activity(mock_ex_cls, mock_get_queue):
+async def test_extract_activity(mock_ex_cls, mock_get_queue, db_engine, db_session):
+    db_session.add(AppSetting(key="ai_provider", value="openai"))
+    db_session.add(AppSetting(key="ai_model", value="gpt-test"))
+    db_session.add(AppSetting(key="openai_api_key", value="sk-db"))
+    db_session.commit()
     mock_queue = MagicMock()
     mock_get_queue.return_value = mock_queue
     mock_ex = MagicMock()
@@ -65,7 +74,11 @@ async def test_extract_activity(mock_ex_cls, mock_get_queue):
     ))
     mock_ex_cls.return_value = mock_ex
 
-    result = await extract_activity("pasta recipe", "user-1", "q-123")
+    with patch("backend.database.engine", db_engine):
+        result = await extract_activity("pasta recipe", "user-1", "q-123")
+    assert mock_ex_cls.call_args.kwargs == {
+        "provider": "openai", "api_key": "sk-db", "model": "gpt-test", "base_url": None,
+    }
     assert result["title"] == "Pasta"
     assert len(result["ingredients"]) == 1
     mock_queue.publish_progress.assert_called()
