@@ -91,7 +91,8 @@ class RecipeExtractor:
     async def _call_ollama(self, prompt: str) -> str:
         client = openai.AsyncOpenAI(
             api_key="ollama",
-            base_url=self.base_url or "http://localhost:11434/v1",
+            # Ollama's OpenAI-compatible API lives under /v1; accept the URL with or without it
+            base_url=(self.base_url or "http://localhost:11434").rstrip("/").removesuffix("/v1") + "/v1",
         )
         response = await client.chat.completions.create(
             model=self.model,

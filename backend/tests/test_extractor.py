@@ -94,3 +94,19 @@ def test_parse_response_ignores_preamble_and_fences():
     extractor = RecipeExtractor(provider="anthropic", api_key="k", model="m")
     raw = f"Sure! Here's the recipe:\n```json\n{MOCK_AI_RESPONSE}\n```\nEnjoy!"
     assert extractor._parse_response(raw).title == "Garlic Butter Pasta"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("base_url", ["http://ollama:11434", "http://ollama:11434/v1/"])
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_ollama_base_url_gets_v1_once(mock_openai_class, base_url):
+    mock_client = AsyncMock()
+    mock_openai_class.return_value = mock_client
+    mock_client.chat.completions.create = AsyncMock(
+        return_value=MagicMock(choices=[MagicMock(message=MagicMock(content=MOCK_AI_RESPONSE))])
+    )
+
+    extractor = RecipeExtractor(provider="ollama", api_key="", model="llama3", base_url=base_url)
+    await extractor.extract("pasta")
+
+    assert mock_openai_class.call_args.kwargs["base_url"] == "http://ollama:11434/v1"
