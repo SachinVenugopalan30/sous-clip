@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    app_version: str = "dev"  # set from the release tag at image build
+
     database_url: str = "sqlite:///./data/recipes.db"
 
     whisper_model_size: str = "base"

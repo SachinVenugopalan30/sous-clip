@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Sous Clip",
     description="Self-hosted recipe extractor for short-form cooking videos",
-    version="0.1.0",
+    version=settings.app_version,
     lifespan=lifespan,
 )
 
@@ -111,7 +111,7 @@ app.include_router(share_router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": settings.app_version}
 
 
 # Serve frontend static files in production

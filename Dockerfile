@@ -31,6 +31,8 @@ COPY --from=frontend-build /app/frontend/dist ./static/
 RUN mkdir -p /app/data
 
 # Environment defaults
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
 ENV DATABASE_URL=sqlite:///./data/recipes.db
 ENV MEDIA_DIR=./data/media
 ENV WHISPER_MODEL_SIZE=base
