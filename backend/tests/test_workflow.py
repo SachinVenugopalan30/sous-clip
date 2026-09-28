@@ -61,6 +61,7 @@ async def test_extract_activity(mock_ex_cls, mock_get_queue):
         cook_time_minutes=10,
         servings=2,
         notes=None,
+        tags=[],
     ))
     mock_ex_cls.return_value = mock_ex
 

@@ -16,6 +16,7 @@ def test_extraction_result():
         cook_time_minutes=15,
         servings=4,
         notes="Add chili flakes",
+        tags=[],
     )
     assert result.title == "Garlic Butter Pasta"
     assert len(result.ingredients) == 1
