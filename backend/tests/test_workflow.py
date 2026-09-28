@@ -95,6 +95,7 @@ async def test_extract_activity(mock_ex_cls, mock_get_queue, db_engine, db_sessi
 @patch("backend.workflows.extraction.workflow.execute_activity", new_callable=AsyncMock)
 async def test_pipeline_steps_have_bounded_retries(mock_execute):
     # Temporal's default retries forever, so a bad LLM reply would hang the job
+    mock_execute.return_value = MagicMock()  # activity results are plain dicts, not awaitables
     await ExtractionWorkflow().run(ExtractionWorkflowInput(url="u", user_id="u1", queue_item_id="q1"))
 
     steps = {c.args[0]: c.kwargs.get("retry_policy") for c in mock_execute.call_args_list}

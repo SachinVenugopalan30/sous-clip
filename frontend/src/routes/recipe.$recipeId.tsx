@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ClipboardCopy, Download, FileText, Link as LinkIcon, Link2Off, Loader2, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardCopy, Download, FileText, Link as LinkIcon, Link2Off, Loader2, Pencil, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { RecipeEditForm } from "../components/RecipeEditForm";
 import { RecipeView } from "../components/RecipeView";
 import { useRecipe, useDeleteRecipe } from "../hooks/useRecipes";
 import { useSettings } from "../hooks/useSettings";
@@ -25,6 +26,7 @@ function RecipePage() {
   const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
   const [sharing, setSharing] = useState(false);
   const [sendingToMealie, setSendingToMealie] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const handleDelete = () => {
     deleteRecipe.mutate(Number(recipeId), {
@@ -125,6 +127,10 @@ function RecipePage() {
           Back to library
         </Link>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)} disabled={editing}>
+            <Pencil className="mr-1 h-4 w-4" />
+            Edit
+          </Button>
           {recipe.share_token ? (
             <>
               <Button variant="ghost" size="sm" onClick={handleCopyLink}>
@@ -177,7 +183,11 @@ function RecipePage() {
           </Button>
         </div>
       </div>
-      <RecipeView recipe={recipe} />
+      {editing ? (
+        <RecipeEditForm recipe={recipe} onDone={() => setEditing(false)} />
+      ) : (
+        <RecipeView recipe={recipe} />
+      )}
     </div>
   );
 }

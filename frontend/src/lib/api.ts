@@ -40,6 +40,8 @@ export const api = {
         `/recipes${search ? `?search=${encodeURIComponent(search)}` : ""}`
       ),
     get: (id: number) => fetchAPI<Recipe>(`/recipes/${id}`),
+    update: (id: number, changes: Partial<Omit<Recipe, "id">>) =>
+      fetchAPI<Recipe>(`/recipes/${id}`, { method: "PATCH", body: JSON.stringify(changes) }),
     delete: (id: number) => fetchAPI<void>(`/recipes/${id}`, { method: "DELETE" }),
     bulkDelete: (ids: number[]) =>
       fetchAPI<{ deleted: number }>("/recipes/bulk-delete", {

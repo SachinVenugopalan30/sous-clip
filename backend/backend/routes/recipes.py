@@ -1,5 +1,6 @@
 import json
 import secrets
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,7 +11,7 @@ from backend.config import settings
 from backend.database import get_session
 from backend.dependencies import CurrentUser, get_current_user
 from backend.models import Recipe
-from backend.schemas import Ingredient, RecipeListResponse, RecipeResponse
+from backend.schemas import Ingredient, RecipeListResponse, RecipeResponse, RecipeUpdate
 from backend.services.mealie import MealieClient
 from backend.services.settings import SettingsService
 
@@ -66,6 +67,31 @@ def get_recipe(recipe_id: int, session: Session = Depends(get_session), _user: C
     recipe = session.get(Recipe, recipe_id)
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
+    return _recipe_to_response(recipe)
+
+
+@router.patch("/{recipe_id}", response_model=RecipeResponse)
+def update_recipe(
+    recipe_id: int,
+    body: RecipeUpdate,
+    session: Session = Depends(get_session),
+    _user: CurrentUser = Depends(get_current_user),
+):
+    changes = body.model_dump(exclude_unset=True)
+    if not changes:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    recipe = session.get(Recipe, recipe_id)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    for key, value in changes.items():
+        if key in ("ingredients", "instructions", "tags"):
+            setattr(recipe, f"{key}_json", json.dumps(value))
+        else:
+            setattr(recipe, key, value)
+    recipe.updated_at = datetime.now(timezone.utc)
+    session.add(recipe)
+    session.commit()
+    session.refresh(recipe)
     return _recipe_to_response(recipe)
 
 
