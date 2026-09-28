@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from temporalio import activity, workflow
+from temporalio.common import RetryPolicy
 
 from backend.config import settings
 from backend.services.downloader import Downloader
@@ -13,6 +14,10 @@ from backend.services.transcriber import Transcriber
 from backend.telemetry import get_tracer
 
 tracer = get_tracer("extraction-pipeline")
+
+# ponytail: flat 3 attempts per step; mark permanent errors non_retryable if retries waste time.
+# save_recipe can duplicate a recipe if its commit succeeds but queue.complete fails; make it idempotent if seen.
+RETRY = RetryPolicy(maximum_attempts=3)
 
 
 def _get_queue() -> ExtractionQueue:
@@ -205,6 +210,7 @@ class ExtractionWorkflow:
                 download_activity,
                 args=[input.url, user_id, item_id],
                 start_to_close_timeout=timedelta(minutes=5),
+                retry_policy=RETRY,
             )
 
             # Step 2: Transcribe
@@ -212,6 +218,7 @@ class ExtractionWorkflow:
                 transcribe_activity,
                 args=[download_result["audio_path"], user_id, item_id],
                 start_to_close_timeout=timedelta(minutes=10),
+                retry_policy=RETRY,
             )
 
             # Step 3: Extract recipe via AI
@@ -219,6 +226,7 @@ class ExtractionWorkflow:
                 extract_activity,
                 args=[transcribe_result["text"], user_id, item_id],
                 start_to_close_timeout=timedelta(minutes=2),
+                retry_policy=RETRY,
             )
 
             # Step 4: Save to database
@@ -226,6 +234,7 @@ class ExtractionWorkflow:
                 save_recipe_activity,
                 args=[input.url, transcribe_result["text"], extraction_data, user_id, item_id],
                 start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RETRY,
             )
 
             # Step 5: Forward to Mealie (non-blocking)

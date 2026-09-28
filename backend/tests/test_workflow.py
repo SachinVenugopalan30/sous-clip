@@ -7,6 +7,7 @@ from backend.models import AppSetting
 from backend.schemas import Ingredient
 from backend.services.extractor import ExtractionResult
 from backend.workflows.extraction import (
+    ExtractionWorkflow,
     ExtractionWorkflowInput,
     download_activity,
     transcribe_activity,
@@ -85,3 +86,14 @@ async def test_extract_activity(mock_ex_cls, mock_get_queue, db_engine, db_sessi
     assert result["title"] == "Pasta"
     assert len(result["ingredients"]) == 1
     mock_queue.publish_progress.assert_called()
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction.workflow.execute_activity", new_callable=AsyncMock)
+async def test_pipeline_steps_have_bounded_retries(mock_execute):
+    # Temporal's default retries forever, so a bad LLM reply would hang the job
+    await ExtractionWorkflow().run(ExtractionWorkflowInput(url="u", user_id="u1", queue_item_id="q1"))
+
+    steps = {c.args[0]: c.kwargs.get("retry_policy") for c in mock_execute.call_args_list}
+    for step in (download_activity, transcribe_activity, extract_activity, save_recipe_activity):
+        assert steps[step] is not None and steps[step].maximum_attempts == 3, step.__name__
