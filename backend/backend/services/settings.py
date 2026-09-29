@@ -17,7 +17,7 @@ DEFAULTS = {
     "custom_base_url": "",
     "custom_api_key": "",  # optional: some endpoints need no key
     "custom_api_style": "openai",  # set by Settings → Test connection
-    "update_check": "true",  # hourly GitHub release check; "false" turns it off
+    "update_check": "true",  # hourly GitHub check (releases, stars); "false" turns it off
 }
 
 # Keys that should never be returned to the frontend in plain text

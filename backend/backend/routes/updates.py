@@ -5,7 +5,7 @@ from backend.config import settings
 from backend.database import get_session
 from backend.dependencies import CurrentUser, get_current_user
 from backend.services.settings import SettingsService
-from backend.services.updates import latest_release, parse_version, trigger_update, watchtower_reachable
+from backend.services.updates import latest_release, parse_version, star_count, trigger_update, watchtower_reachable
 
 router = APIRouter(prefix="/api/update", tags=["update"])
 
@@ -23,6 +23,7 @@ async def update_status(
         "current": current,
         "latest": latest,
         "update_available": bool(current_v and latest_v and latest_v > current_v),
+        "stars": await star_count() if check_enabled else None,  # shown on the GitHub link in the header
         "watchtower": await watchtower_reachable(),
     }
 

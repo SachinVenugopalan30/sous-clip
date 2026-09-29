@@ -1,7 +1,31 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { BookOpen, ChefHat, Github, LogOut, Moon, Plus, Settings, Sun } from "lucide-react";
+import { BookOpen, ChefHat, Github, LogOut, Moon, Plus, Settings, Star, Sun } from "lucide-react";
+import { useUpdateStatus } from "../hooks/useSettings";
 import { useAuthStore } from "../stores/auth";
 import { useThemeStore } from "../stores/theme";
+
+// Live star count from GET /api/update (server refreshes it hourly; hidden when the GitHub check is off)
+function GitHubLink({ className }: { className: string }) {
+  const stars = useUpdateStatus().data?.stars;
+  const count = stars == null ? null : new Intl.NumberFormat(undefined, { notation: "compact" }).format(stars);
+  return (
+    <a
+      href="https://github.com/SachinVenugopalan30/sous-clip"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      aria-label={count ? `Sous Clip on GitHub, ${count} ${stars === 1 ? "star" : "stars"}` : "Sous Clip on GitHub"}
+    >
+      <Github className="h-4 w-4" />
+      {count && (
+        <span className="flex items-center gap-0.5 text-xs tabular-nums">
+          <Star className="h-3 w-3" />
+          {count}
+        </span>
+      )}
+    </a>
+  );
+}
 
 export function Layout() {
   const logout = useAuthStore((s) => s.logout);
@@ -45,15 +69,7 @@ export function Layout() {
             >
               <Settings className="h-4 w-4" />
             </Link>
-            <a
-              href="https://github.com/SachinVenugopalan30/sous-clip"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-text"
-              title="GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
+            <GitHubLink className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-text" />
             <button
               onClick={toggleTheme}
               className="text-muted-foreground transition-colors hover:text-text"
@@ -81,15 +97,7 @@ export function Layout() {
             <span className="font-display text-lg font-bold">SC</span>
           </Link>
           <div className="flex items-center">
-            <a
-              href="https://github.com/SachinVenugopalan30/sous-clip"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
-              title="GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
+            <GitHubLink className="flex h-11 min-w-11 items-center justify-center gap-1 px-2 text-muted-foreground transition-colors hover:text-text" />
             <button
               onClick={toggleTheme}
               className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"

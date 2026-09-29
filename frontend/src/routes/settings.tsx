@@ -420,7 +420,7 @@ function UpdatesSection({
           checked={form.update_check !== "false"}
           onChange={(e) => setForm({ ...form, update_check: e.target.checked ? "true" : "false" })}
         />
-        Check GitHub for new releases (once an hour)
+        Check GitHub for new releases and stars (once an hour)
       </label>
     </section>
   );

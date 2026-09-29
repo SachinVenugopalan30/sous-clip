@@ -127,6 +127,7 @@ export interface UpdateStatus {
   current: string;
   latest: string | null;
   update_available: boolean;
+  stars: number | null;
   watchtower: boolean;
 }
 

@@ -18,7 +18,7 @@ def client(db_engine, monkeypatch):
         with Session(db_engine) as session:
             yield session
 
-    monkeypatch.setattr(updates, "_cache", None)
+    monkeypatch.setattr(updates, "_cache", {})
     app.dependency_overrides[get_session] = override_session
     yield TestClient(app)
     app.dependency_overrides.clear()
@@ -26,9 +26,13 @@ def client(db_engine, monkeypatch):
 
 @pytest.fixture
 def github():
-    """Patched GitHub call; set .return_value.json.return_value or .side_effect per test."""
+    """Patched GitHub API: latest release v1.10.0, 7 stars. Override .side_effect per test."""
+    def reply(url, *args, **kwargs):
+        body = {"tag_name": "v1.10.0"} if url.endswith("/releases/latest") else {"stargazers_count": 7}
+        return MagicMock(json=MagicMock(return_value=body))
+
     with patch("backend.services.updates.httpx.AsyncClient.get", new_callable=AsyncMock) as get:
-        get.return_value = MagicMock(json=MagicMock(return_value={"tag_name": "v1.10.0"}))
+        get.side_effect = reply
         yield get
 
 
@@ -39,32 +43,38 @@ def test_update_available_compares_numerically(client, auth_headers, github, mon
     assert (body["current"], body["latest"], body["update_available"]) == (current, "v1.10.0", available)
 
 
-def test_dev_build_skips_github(client, auth_headers, github):
+def test_dev_build_skips_the_release_check_but_shows_stars(client, auth_headers, github):
     body = client.get("/api/update", headers=auth_headers).json()
-    assert body["latest"] is None and body["update_available"] is False
-    github.assert_not_called()
+    assert (body["latest"], body["update_available"], body["stars"]) == (None, False, 7)
+    assert [c.args[0] for c in github.call_args_list] == [updates.REPO_URL]
 
 
 def test_disabled_check_skips_github(client, auth_headers, github, db_session, monkeypatch):
     monkeypatch.setattr(settings, "app_version", "v1.9.0")
     db_session.add(AppSetting(key="update_check", value="false"))
     db_session.commit()
-    assert client.get("/api/update", headers=auth_headers).json()["update_available"] is False
-    github.assert_not_called()
+    body = client.get("/api/update", headers=auth_headers).json()
+    assert (body["update_available"], body["stars"]) == (False, None)
+    github.assert_not_called()  # "Check GitHub" off means no GitHub calls at all
 
 
 def test_github_is_called_once_per_hour(client, auth_headers, github, monkeypatch):
     monkeypatch.setattr(settings, "app_version", "v1.9.0")
     client.get("/api/update", headers=auth_headers)
     client.get("/api/update", headers=auth_headers)
-    github.assert_called_once()
+    assert sorted(c.args[0] for c in github.call_args_list) == sorted([updates.RELEASES_URL, updates.REPO_URL])
 
 
 def test_github_error_means_no_update(client, auth_headers, github, monkeypatch):
     monkeypatch.setattr(settings, "app_version", "v1.9.0")
     github.side_effect = httpx.ConnectError("offline")
     body = client.get("/api/update", headers=auth_headers).json()
-    assert body["latest"] is None and body["update_available"] is False
+    assert (body["latest"], body["update_available"], body["stars"]) == (None, False, None)
+
+
+def test_status_includes_live_star_count(client, auth_headers, github, monkeypatch):
+    monkeypatch.setattr(settings, "app_version", "v1.9.0")
+    assert client.get("/api/update", headers=auth_headers).json()["stars"] == 7
 
 
 def test_requires_login(client):
@@ -83,8 +93,15 @@ def watchtower_token(monkeypatch):
 ], ids=["reachable", "unreachable", "no-token"])
 def test_status_reports_watchtower(client, auth_headers, monkeypatch, token, probe, expected):
     monkeypatch.setattr(settings, "watchtower_http_api_token", token)
+    def reply(url, *args, **kwargs):  # route by URL: the star lookup shares this client method
+        if url.startswith("https://api.github.com"):
+            return MagicMock(json=MagicMock(return_value={"stargazers_count": 7}))
+        if isinstance(probe, Exception):
+            raise probe
+        return probe
+
     with patch("backend.services.updates.httpx.AsyncClient.get", new_callable=AsyncMock) as get:
-        get.side_effect = [probe]
+        get.side_effect = reply
         assert client.get("/api/update", headers=auth_headers).json()["watchtower"] is expected
 
 

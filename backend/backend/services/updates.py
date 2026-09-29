@@ -4,11 +4,12 @@ import httpx
 
 from backend.config import settings
 
-RELEASES_URL = "https://api.github.com/repos/SachinVenugopalan30/sous-clip/releases/latest"
+REPO_URL = "https://api.github.com/repos/SachinVenugopalan30/sous-clip"
+RELEASES_URL = f"{REPO_URL}/releases/latest"
 CACHE_SECONDS = 3600
 
 # ponytail: per-process cache; assumes one uvicorn worker. Move to Valkey if --workers is ever added.
-_cache: tuple[float, str | None] | None = None
+_cache: dict[str, tuple[float, object]] = {}
 
 
 def parse_version(version: str | None) -> tuple[int, ...] | None:
@@ -19,20 +20,28 @@ def parse_version(version: str | None) -> tuple[int, ...] | None:
         return None
 
 
-async def latest_release() -> str | None:
-    """Latest GitHub release tag, cached for an hour (failures too, so GitHub being down stays cheap)."""
-    global _cache
-    if _cache and time.monotonic() - _cache[0] < CACHE_SECONDS:
-        return _cache[1]
+async def _github_field(url: str, field: str):
+    """One field from a GitHub API response, cached for an hour per URL (failures too, so GitHub being down stays cheap)."""
+    cached = _cache.get(url)
+    if cached and time.monotonic() - cached[0] < CACHE_SECONDS:
+        return cached[1]
     try:
         async with httpx.AsyncClient(timeout=5) as client:
-            response = await client.get(RELEASES_URL)
+            response = await client.get(url)
             response.raise_for_status()
-            tag = response.json()["tag_name"]
+            value = response.json()[field]
     except (httpx.HTTPError, KeyError, ValueError):
-        tag = None
-    _cache = (time.monotonic(), tag)
-    return tag
+        value = None
+    _cache[url] = (time.monotonic(), value)
+    return value
+
+
+async def latest_release() -> str | None:
+    return await _github_field(RELEASES_URL, "tag_name")
+
+
+async def star_count() -> int | None:
+    return await _github_field(REPO_URL, "stargazers_count")
 
 
 async def watchtower_reachable() -> bool:
