@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Search, BookOpen, Trash2, X, CheckSquare, Send } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { RecipeCard } from "../components/RecipeCard";
 import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useRecipes";
-import { useSettings } from "../hooks/useSettings";
+import { useSettings, useUpdateStatus } from "../hooks/useSettings";
 import { api } from "../lib/api";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
@@ -15,7 +15,47 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+const DISMISSED_KEY = "dismissedUpdate";
+
+// Shows a new-release notice once per version; dismissing it (or opening Settings) hides it until the next one
+function useNewReleaseToast() {
+  const { data: update } = useUpdateStatus();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const latest = update?.latest;
+    if (!update?.update_available || !latest) return;
+    const dismiss = () => {
+      try {
+        localStorage.setItem(DISMISSED_KEY, latest);
+      } catch {
+        // storage blocked: the toast just comes back next visit
+      }
+    };
+    try {
+      if (localStorage.getItem(DISMISSED_KEY) === latest) return;
+    } catch {
+      // storage blocked: show it anyway
+    }
+    toast(`Sous Clip ${latest} is available`, {
+      id: "new-release",
+      description: `You're on ${update.current}.`,
+      duration: Infinity,
+      closeButton: true,
+      onDismiss: dismiss,
+      action: {
+        label: "View",
+        onClick: () => {
+          dismiss();
+          navigate({ to: "/settings" });
+        },
+      },
+    });
+  }, [update, navigate]);
+}
+
 function HomePage() {
+  useNewReleaseToast();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());

@@ -89,6 +89,9 @@ export const api = {
         body: JSON.stringify({ mealie_url: mealieUrl, mealie_api_key: mealieApiKey }),
       }),
   },
+  update: {
+    status: () => fetchAPI<UpdateStatus>("/update"),
+  },
   queue: {
     enqueue: (urls: string[], userId: string) =>
       fetchAPI<{ items: QueueItem[] }>("/queue", {
@@ -112,6 +115,12 @@ export interface Ingredient {
   name: string;
   quantity: string | null;
   unit: string | null;
+}
+
+export interface UpdateStatus {
+  current: string;
+  latest: string | null;
+  update_available: boolean;
 }
 
 export interface Recipe {

@@ -8,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Separator } from "../components/ui/separator";
 import { Skeleton } from "../components/ui/skeleton";
-import { useSettings, useUpdateSettings } from "../hooks/useSettings";
+import { useSettings, useUpdateSettings, useUpdateStatus } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -186,6 +186,10 @@ function SettingsPage() {
       {/* Mealie Integration */}
       <MealieSection form={form} setForm={setForm} />
 
+      <Separator className="my-8" />
+
+      <UpdatesSection form={form} setForm={setForm} />
+
       <div className="mt-8">
         <Button
           onClick={handleSave}
@@ -299,6 +303,50 @@ function MealieSection({
           )}
         </div>
       </div>
+    </section>
+  );
+}
+
+function UpdatesSection({
+  form,
+  setForm,
+}: {
+  form: Record<string, string>;
+  setForm: (f: Record<string, string>) => void;
+}) {
+  const { data: status } = useUpdateStatus();
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Updates</h2>
+      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <dt className="text-muted-foreground">Current</dt>
+        <dd>{status?.current ?? "…"}</dd>
+        <dt className="text-muted-foreground">Latest</dt>
+        <dd>
+          {status?.latest ? (
+            <a
+              href={`https://github.com/SachinVenugopalan30/sous-clip/releases/tag/${status.latest}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-accent"
+            >
+              {status.latest}
+            </a>
+          ) : (
+            "Unknown"
+          )}
+          {status?.update_available && <span className="ml-2 text-accent">Update available</span>}
+        </dd>
+      </dl>
+      <label className="mt-4 flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={form.update_check !== "false"}
+          onChange={(e) => setForm({ ...form, update_check: e.target.checked ? "true" : "false" })}
+        />
+        Check GitHub for new releases (once an hour)
+      </label>
     </section>
   );
 }
