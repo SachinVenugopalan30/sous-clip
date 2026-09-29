@@ -164,3 +164,21 @@ async def test_save_stores_one_thumbnail_even_on_retry(mock_get_queue, db_engine
     assert len(stored) == 1 and stored[0].suffix == ".webp" and stored[0].read_bytes() == b"img"
     assert not first_src.exists() and not retry_src.exists()
     assert db_session.exec(select(Recipe)).one().thumbnail == stored[0].name
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction.workflow.execute_activity", new_callable=AsyncMock)
+async def test_failed_step_is_reported_with_its_name(mock_execute):
+    from temporalio.exceptions import ApplicationError
+
+    def run_step(fn, **kw):
+        if fn is extract_activity:
+            raise ApplicationError("Connection error.", type="APIConnectionError")
+        return MagicMock()
+    mock_execute.side_effect = run_step
+
+    with pytest.raises(ApplicationError):
+        await ExtractionWorkflow().run(ExtractionWorkflowInput(url="u", user_id="u1", queue_item_id="q1"))
+
+    fail_call = next(c for c in mock_execute.call_args_list if c.args[0].__name__ == "fail_queue_item_activity")
+    assert fail_call.kwargs["args"][2].startswith("AI extraction failed: Can't reach the AI endpoint")

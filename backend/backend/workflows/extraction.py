@@ -8,6 +8,7 @@ from temporalio.common import RetryPolicy
 
 from backend.config import settings
 from backend.services.downloader import Downloader
+from backend.services.errors import describe_failure
 from backend.services.extractor import RecipeExtractor
 from backend.services.queue import ExtractionQueue
 from backend.services.transcriber import Transcriber
@@ -224,6 +225,7 @@ class ExtractionWorkflow:
     async def run(self, input: ExtractionWorkflowInput) -> int:
         user_id = input.user_id
         item_id = input.queue_item_id
+        step = "Download"  # named in the queue's error message if this step fails
 
         try:
             # Step 1: Download
@@ -235,6 +237,7 @@ class ExtractionWorkflow:
             )
 
             # Step 2: Transcribe
+            step = "Transcription"
             transcribe_result = await workflow.execute_activity(
                 transcribe_activity,
                 args=[download_result["audio_path"], user_id, item_id],
@@ -243,6 +246,7 @@ class ExtractionWorkflow:
             )
 
             # Step 3: Extract recipe via AI
+            step = "AI extraction"
             extraction_data = await workflow.execute_activity(
                 extract_activity,
                 # .get: histories recorded before v1.3.0 have no caption
@@ -252,6 +256,7 @@ class ExtractionWorkflow:
             )
 
             # Step 4: Save to database
+            step = "Saving the recipe"
             recipe_id = await workflow.execute_activity(
                 save_recipe_activity,
                 args=[
@@ -277,7 +282,7 @@ class ExtractionWorkflow:
             # Mark the queue item as failed so the UI reflects the error
             await workflow.execute_activity(
                 fail_queue_item_activity,
-                args=[user_id, item_id, str(e)],
+                args=[user_id, item_id, describe_failure(step, e)],
                 start_to_close_timeout=timedelta(seconds=10),
             )
             raise
