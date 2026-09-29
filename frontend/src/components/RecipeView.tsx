@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Users, Tag, ExternalLink, Minus, Plus } from "lucide-react";
+import { CalendarDays, Clock, Users, Tag, ExternalLink, Minus, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { Badge } from "./ui/badge";
 import type { Recipe } from "../lib/api";
@@ -42,6 +42,10 @@ export function RecipeView({ recipe }: RecipeViewProps) {
             {recipe.servings} servings
           </span>
         )}
+        <span className="flex items-center gap-1.5">
+          <CalendarDays className="h-4 w-4" />
+          Added {new Date(recipe.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
+        </span>
         <a
           href={recipe.source_url}
           target="_blank"

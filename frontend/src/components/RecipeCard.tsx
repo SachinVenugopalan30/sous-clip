@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { CheckSquare, Clock, Link as LinkIcon, Send, Square, Tag, Trash2, Users } from "lucide-react";
+import { CalendarDays, CheckSquare, Clock, Link as LinkIcon, Send, Square, Tag, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import type { Recipe } from "../lib/api";
+import { formatAdded } from "../lib/library";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -48,6 +49,10 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
               {recipe.servings} servings
             </span>
           )}
+          <span className="flex items-center gap-1" title={new Date(recipe.created_at).toLocaleString()}>
+            <CalendarDays className="h-3.5 w-3.5" />
+            Added {formatAdded(recipe.created_at)}
+          </span>
         </div>
 
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">

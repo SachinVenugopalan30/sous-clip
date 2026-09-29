@@ -8,6 +8,7 @@ import { RecipeCard } from "../components/RecipeCard";
 import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useRecipes";
 import { useSettings, useUpdateStatus } from "../hooks/useSettings";
 import { api } from "../lib/api";
+import { applyLibraryFilters, type LibraryFilters, type SortKey } from "../lib/library";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
 
@@ -16,6 +17,24 @@ export const Route = createFileRoute("/")({
 });
 
 const DISMISSED_KEY = "dismissedUpdate";
+const NO_FILTERS: LibraryFilters = { maxMinutes: null, addedWithinDays: null, sort: "newest" };
+const TIME_CHIPS = [15, 30, 60];
+const ADDED_CHIPS: [number, string][] = [[7, "This week"], [30, "This month"]];
+
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+        active ? "bg-primary text-primary-foreground" : "bg-bg text-muted-foreground hover:bg-border"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 // Shows a new-release notice once per version; dismissing it (or opening Settings) hides it until the next one
 function useNewReleaseToast() {
@@ -60,6 +79,7 @@ function HomePage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<LibraryFilters>(NO_FILTERS);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [bulkSendingToMealie, setBulkSendingToMealie] = useState(false);
   const { data, isLoading } = useRecipes(debouncedSearch || undefined);
@@ -74,10 +94,14 @@ function HomePage() {
     new Set(data?.recipes.flatMap((r) => r.tags) ?? [])
   ).sort();
 
-  // Filter recipes by selected tags
-  const filteredRecipes = data?.recipes.filter(
-    (r) => selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t))
+  // Filter by tags, cooking time and date added; then sort
+  const filteredRecipes = data && applyLibraryFilters(
+    data.recipes.filter((r) => selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t))),
+    filters
   );
+  const filtering = selectedTags.size > 0 || filters.maxMinutes !== null || filters.addedWithinDays !== null;
+  const toggleFilter = (key: "maxMinutes" | "addedWithinDays", value: number) =>
+    setFilters({ ...filters, [key]: filters[key] === value ? null : value });
 
   // Simple debounce
   const handleSearch = (value: string) => {
@@ -192,26 +216,45 @@ function HomePage() {
         />
       </div>
 
-      {allTags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          Sort
+          <select
+            value={filters.sort}
+            onChange={(e) => setFilters({ ...filters, sort: e.target.value as SortKey })}
+            className="rounded-md border border-border bg-bg px-2 py-1 text-xs text-foreground"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="quickest">Quickest</option>
+          </select>
+        </label>
+        {TIME_CHIPS.map((m) => (
+          <FilterChip key={m} active={filters.maxMinutes === m} onClick={() => toggleFilter("maxMinutes", m)}>
+            ≤ {m} min
+          </FilterChip>
+        ))}
+        {ADDED_CHIPS.map(([days, label]) => (
+          <FilterChip key={days} active={filters.addedWithinDays === days} onClick={() => toggleFilter("addedWithinDays", days)}>
+            {label}
+          </FilterChip>
+        ))}
+      </div>
+
+      {(allTags.length > 0 || filtering) && (
+        <div className="mt-2 flex flex-wrap gap-2">
           {allTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => toggleTag(tag)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                selectedTags.has(tag)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-bg text-muted-foreground hover:bg-border"
-              }`}
-            >
+            <FilterChip key={tag} active={selectedTags.has(tag)} onClick={() => toggleTag(tag)}>
               {tag}
-            </button>
+            </FilterChip>
           ))}
-          {selectedTags.size > 0 && (
+          {filtering && (
             <button
               type="button"
-              onClick={() => setSelectedTags(new Set())}
+              onClick={() => {
+                setSelectedTags(new Set());
+                setFilters({ ...NO_FILTERS, sort: filters.sort });
+              }}
               className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
             >
               <X className="h-3 w-3" />
@@ -254,10 +297,10 @@ function HomePage() {
         >
           <BookOpen className="h-12 w-12 text-border" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
-            {selectedTags.size > 0 ? "No recipes match these tags" : "No recipes yet"}
+            {filtering ? "No recipes match these filters" : "No recipes yet"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {selectedTags.size > 0
+            {filtering
               ? "Try removing some filters."
               : "Extract your first recipe from a cooking video."}
           </p>
