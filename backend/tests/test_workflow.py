@@ -130,7 +130,7 @@ async def test_workflow_passes_caption_and_tolerates_old_download_results(mock_e
     await ExtractionWorkflow().run(ExtractionWorkflowInput(url="u", user_id="u1", queue_item_id="q1"))
 
     extract_call = next(c for c in mock_execute.call_args_list if c.args[0] is extract_activity)
-    assert extract_call.kwargs["args"][-1] == ""
+    assert extract_call.kwargs["args"][-2:] == ["", ""]  # caption, video title
 
 
 @pytest.mark.asyncio
@@ -144,7 +144,7 @@ async def test_extract_activity_forwards_caption(mock_ex_cls, mock_get_queue, db
     with patch("backend.database.engine", db_engine):
         await extract_activity("talk", "user-1", "q-1", "200g spaghetti")
 
-    mock_ex_cls.return_value.extract.assert_awaited_once_with("talk", "200g spaghetti")
+    mock_ex_cls.return_value.extract.assert_awaited_once_with("talk", "200g spaghetti", "")
 
 
 @pytest.mark.asyncio
