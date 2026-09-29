@@ -33,7 +33,7 @@ def mock_queue():
         yield mock_q
 
 
-@patch("backend.routes.extract.Client")
+@patch("backend.routes.queue.Client")
 def test_extract_enqueues_and_starts_workflow(mock_client_cls, client, mock_queue, auth_headers):
     mock_client = AsyncMock()
     mock_client_cls.connect = AsyncMock(return_value=mock_client)

@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -14,6 +15,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Push the image before creating the release, so the in-app "new version" notice
+      # never points at an image that doesn't exist yet
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: APP_VERSION=${{ github.ref_name }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          tags: |
+            ghcr.io/sachinvenugopalan30/sous-clip:${{ github.ref_name }}
+            ghcr.io/sachinvenugopalan30/sous-clip:latest
 
       - name: Create GitHub Release
         env:

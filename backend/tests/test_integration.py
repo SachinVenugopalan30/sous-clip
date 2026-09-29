@@ -58,7 +58,7 @@ def mock_queue():
         yield mock_q
 
 
-@patch("backend.routes.extract.Client")
+@patch("backend.routes.queue.Client")
 def test_extract_then_list_recipes(mock_client_cls, client, mock_queue, test_db, auth_headers):
     # Mock Temporal client
     mock_client = AsyncMock()

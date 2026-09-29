@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Send } from "lucide-react";
+import { ClipboardPaste, Send } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
@@ -85,6 +85,18 @@ function SubmitPage() {
     }
   }, []);
 
+  // Clipboard reads need HTTPS or localhost; hide the button where the browser can't do it
+  const canPaste = !!navigator.clipboard?.readText;
+  const handlePaste = async () => {
+    try {
+      const link = (await navigator.clipboard.readText()).match(/https?:\/\/\S+/)?.[0];
+      if (link) setUrl(link);
+      else toast.error("No link found on the clipboard");
+    } catch {
+      toast.error("Clipboard access was blocked; paste the link instead");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
@@ -120,16 +132,30 @@ function SubmitPage() {
         onSubmit={handleSubmit}
         className="mt-6 flex flex-col gap-3 sm:flex-row"
       >
-        <Input
-          placeholder="https://youtube.com/shorts/..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="flex-1"
-        />
+        <div className="relative flex-1">
+          <Input
+            placeholder="https://youtube.com/shorts/..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-label="Video URL"
+            className="h-11 pr-20 sm:h-9"
+          />
+          {/* On phones the link is usually already copied from the video app */}
+          {canPaste && !url && (
+            <Button type="button" variant="ghost" size="sm" onClick={handlePaste} className="absolute right-1 top-1/2 h-9 -translate-y-1/2 sm:h-7">
+              <ClipboardPaste className="mr-1 h-4 w-4" />
+              Paste
+            </Button>
+          )}
+        </div>
         <Button
           type="submit"
           disabled={extract.isPending || !url.trim()}
-          className="bg-accent text-white hover:bg-accent/90 active:scale-[0.97]"
+          className="h-11 bg-accent text-white hover:bg-accent/90 active:scale-[0.97] sm:h-9"
         >
           <Send className="mr-2 h-4 w-4" />
           Extract
@@ -142,7 +168,7 @@ function SubmitPage() {
           role="switch"
           aria-checked={forwardToMealie}
           onClick={() => setForwardToMealie(!forwardToMealie)}
-          className="mt-3 flex items-center gap-2.5 cursor-pointer select-none group"
+          className="mt-3 flex min-h-11 items-center gap-2.5 cursor-pointer select-none group sm:min-h-0"
         >
           <span
             className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors duration-200 ${

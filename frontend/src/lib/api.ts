@@ -40,6 +40,8 @@ export const api = {
         `/recipes${search ? `?search=${encodeURIComponent(search)}` : ""}`
       ),
     get: (id: number) => fetchAPI<Recipe>(`/recipes/${id}`),
+    update: (id: number, changes: Partial<Omit<Recipe, "id">>) =>
+      fetchAPI<Recipe>(`/recipes/${id}`, { method: "PATCH", body: JSON.stringify(changes) }),
     delete: (id: number) => fetchAPI<void>(`/recipes/${id}`, { method: "DELETE" }),
     bulkDelete: (ids: number[]) =>
       fetchAPI<{ deleted: number }>("/recipes/bulk-delete", {
@@ -81,11 +83,20 @@ export const api = {
         method: "PUT",
         body: JSON.stringify(updates),
       }),
+    testAI: (baseUrl: string, model: string, apiKey: string) =>
+      fetchAPI<{ ok: boolean; style?: "openai" | "anthropic"; error?: string }>("/settings/test-ai", {
+        method: "POST",
+        body: JSON.stringify({ base_url: baseUrl, model, api_key: apiKey }),
+      }),
     testMealie: (mealieUrl: string, mealieApiKey: string) =>
       fetchAPI<{ ok: boolean; version?: string; error?: string }>("/settings/test-mealie", {
         method: "POST",
         body: JSON.stringify({ mealie_url: mealieUrl, mealie_api_key: mealieApiKey }),
       }),
+  },
+  update: {
+    status: () => fetchAPI<UpdateStatus>("/update"),
+    start: () => fetchAPI<{ ok: boolean; error?: string }>("/update", { method: "POST" }),
   },
   queue: {
     enqueue: (urls: string[], userId: string) =>
@@ -112,6 +123,14 @@ export interface Ingredient {
   unit: string | null;
 }
 
+export interface UpdateStatus {
+  current: string;
+  latest: string | null;
+  update_available: boolean;
+  stars: number | null;
+  watchtower: boolean;
+}
+
 export interface Recipe {
   id: number;
   title: string;
@@ -124,6 +143,7 @@ export interface Recipe {
   tags: string[];
   notes: string | null;
   share_token: string | null;
+  thumbnail_url: string | null;
   created_at: string;
 }
 

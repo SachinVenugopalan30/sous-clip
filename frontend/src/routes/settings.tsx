@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Save, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Save, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
@@ -8,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Separator } from "../components/ui/separator";
 import { Skeleton } from "../components/ui/skeleton";
-import { useSettings, useUpdateSettings } from "../hooks/useSettings";
+import { useSettings, useUpdateSettings, useUpdateStatus } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -18,7 +18,9 @@ const AI_PROVIDERS = [
   { value: "anthropic", label: "Anthropic (Claude)" },
   { value: "openai", label: "OpenAI" },
   { value: "ollama", label: "Ollama (Local)" },
+  { value: "custom", label: "Custom endpoint" },
 ];
+const API_STYLE_LABELS: Record<string, string> = { openai: "OpenAI-compatible", anthropic: "Anthropic-compatible" };
 
 const WHISPER_MODELS = ["tiny", "base", "small", "medium", "large-v3"];
 const WHISPER_DEVICES = ["auto", "cpu", "cuda"];
@@ -122,6 +124,8 @@ function SettingsPage() {
               />
             </div>
           )}
+
+          {form.ai_provider === "custom" && <CustomEndpointFields form={form} setForm={setForm} />}
         </div>
       </section>
 
@@ -186,6 +190,10 @@ function SettingsPage() {
       {/* Mealie Integration */}
       <MealieSection form={form} setForm={setForm} />
 
+      <Separator className="my-8" />
+
+      <UpdatesSection form={form} setForm={setForm} />
+
       <div className="mt-8">
         <Button
           onClick={handleSave}
@@ -238,7 +246,7 @@ function MealieSection({
       <h2 className="text-lg font-semibold">Mealie Integration</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         Optionally forward extracted recipes to a{" "}
-        <a href="https://mealie.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent">
+        <a href="https://mealie.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent-text">
           Mealie
         </a>{" "}
         instance. Leave blank to skip.
@@ -279,6 +287,7 @@ function MealieSection({
             size="sm"
             onClick={handleTest}
             disabled={testStatus === "loading"}
+            className="h-10 sm:h-8"
           >
             {testStatus === "loading" ? (
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -286,13 +295,13 @@ function MealieSection({
             Test Connection
           </Button>
           {testStatus === "success" && (
-            <span className="flex items-center gap-1 text-xs text-green-600">
+            <span className="flex items-center gap-1 text-xs text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
               {testMessage}
             </span>
           )}
           {testStatus === "error" && (
-            <span className="flex items-center gap-1 text-xs text-red-600">
+            <span className="flex items-center gap-1 text-xs text-destructive">
               <XCircle className="h-3.5 w-3.5" />
               {testMessage}
             </span>
@@ -300,5 +309,204 @@ function MealieSection({
         </div>
       </div>
     </section>
+  );
+}
+
+const UPDATE_TIMEOUT_MS = 5 * 60 * 1000;
+
+// Polls /health until the app comes back on a different version; false after the timeout
+async function waitForNewVersion(current: string): Promise<boolean> {
+  const deadline = Date.now() + UPDATE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    try {
+      const res = await fetch("/health", { cache: "no-store" });
+      if (res.ok && (await res.json()).version !== current) return true;
+    } catch {
+      // app container is restarting
+    }
+  }
+  return false;
+}
+
+async function reloadFresh() {
+  // The PWA precache would otherwise serve the old bundle after the restart
+  const registrations = (await navigator.serviceWorker?.getRegistrations()) ?? [];
+  await Promise.all(registrations.map((r) => r.unregister()));
+  location.reload();
+}
+
+function UpdatesSection({
+  form,
+  setForm,
+}: {
+  form: Record<string, string>;
+  setForm: (f: Record<string, string>) => void;
+}) {
+  const { data: status } = useUpdateStatus();
+  const [phase, setPhase] = useState<"idle" | "updating" | "failed">("idle");
+
+  const handleUpdate = async () => {
+    if (!status) return;
+    setPhase("updating");
+    try {
+      const result = await api.update.start();
+      if (!result.ok) {
+        toast.error(result.error || "Update failed to start");
+        setPhase("idle");
+        return;
+      }
+    } catch {
+      // Connection dropped: Watchtower is most likely already replacing this container
+    }
+    if (await waitForNewVersion(status.current)) await reloadFresh();
+    else setPhase("failed");
+  };
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Updates</h2>
+      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <dt className="text-muted-foreground">Current</dt>
+        <dd>{status?.current ?? "…"}</dd>
+        <dt className="text-muted-foreground">Latest</dt>
+        <dd>
+          {status?.latest ? (
+            <a
+              href={`https://github.com/SachinVenugopalan30/sous-clip/releases/tag/${status.latest}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-accent-text"
+            >
+              {status.latest}
+            </a>
+          ) : (
+            "Unknown"
+          )}
+          {status?.update_available && <span className="ml-2 text-accent-text">Update available</span>}
+        </dd>
+      </dl>
+      {status?.update_available &&
+        (status.watchtower ? (
+          <div className="mt-4">
+            <Button onClick={handleUpdate} disabled={phase === "updating"}>
+              {phase === "updating" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {phase === "updating" ? "Updating…" : `Update to ${status.latest}`}
+            </Button>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Restarts the app; extractions in progress resume afterwards. If this errors, check that
+              WATCHTOWER_HTTP_API_TOKEN matches your .env.
+            </p>
+            {phase === "failed" && (
+              <p role="alert" className="mt-2 text-sm text-destructive">
+                The update didn't apply within 5 minutes. Check <code>docker compose logs watchtower</code>.
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm">
+            To update, run{" "}
+            <code className="rounded bg-bg px-1.5 py-0.5 text-xs">docker compose pull && docker compose up -d</code>
+          </p>
+        ))}
+      <label className="mt-4 flex min-h-11 items-center gap-3 text-sm sm:min-h-0">
+        <input
+          type="checkbox"
+          className="size-5 accent-[var(--color-accent)]"
+          checked={form.update_check !== "false"}
+          onChange={(e) => setForm({ ...form, update_check: e.target.checked ? "true" : "false" })}
+        />
+        Check GitHub for new releases and stars (once an hour)
+      </label>
+    </section>
+  );
+}
+
+function CustomEndpointFields({
+  form,
+  setForm,
+}: {
+  form: Record<string, string>;
+  setForm: (f: Record<string, string>) => void;
+}) {
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const change = (key: string, value: string) => {
+    setForm({ ...form, [key]: value });
+    setStatus("idle");
+  };
+
+  const handleTest = async () => {
+    if (!form.custom_base_url || !form.ai_model) {
+      toast.error("Enter the endpoint URL and a model first");
+      return;
+    }
+    setStatus("loading");
+    try {
+      const result = await api.settings.testAI(form.custom_base_url, form.ai_model, form.custom_api_key || "");
+      if (result.ok && result.style) {
+        setForm({ ...form, custom_api_style: result.style });
+        setStatus("success");
+        setMessage(`Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
+      } else {
+        setStatus("error");
+        setMessage(result.error || "Connection failed");
+      }
+    } catch (e) {
+      setStatus("error");
+      setMessage(e instanceof Error ? e.message : "Connection failed");
+    }
+  };
+
+  return (
+    <>
+      <label className="block text-sm font-medium">
+        Endpoint URL
+        <Input
+          value={form.custom_base_url || ""}
+          onChange={(e) => change("custom_base_url", e.target.value)}
+          placeholder="http://host.docker.internal:1234/v1"
+          className="mt-1"
+        />
+      </label>
+      <label className="block text-sm font-medium">
+        API Key <span className="font-normal text-muted-foreground">(optional)</span>
+        <Input
+          type="password"
+          value={form.custom_api_key || ""}
+          onChange={(e) => change("custom_api_key", e.target.value)}
+          placeholder="Leave blank if the endpoint needs no key"
+          className="mt-1"
+        />
+      </label>
+      <div>
+        <div className="flex items-center gap-3">
+          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={status === "loading"} className="h-10 sm:h-8">
+            {status === "loading" && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+            Test connection
+          </Button>
+          {status === "idle" && form.custom_api_style && form.custom_base_url && (
+            <span className="text-xs text-muted-foreground">Using the {API_STYLE_LABELS[form.custom_api_style]} API</span>
+          )}
+        </div>
+        {(status === "success" || status === "error") && (
+          <p
+            role={status === "error" ? "alert" : "status"}
+            className={`mt-2 flex items-start gap-1 text-xs ${status === "success" ? "text-success" : "text-destructive"}`}
+          >
+            {status === "success" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
+            {message}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          Sends one small request to work out whether the endpoint speaks the OpenAI or Anthropic API. From Docker, use
+          host.docker.internal instead of localhost.
+        </p>
+      </div>
+    </>
   );
 }

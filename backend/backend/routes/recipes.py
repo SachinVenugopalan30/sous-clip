@@ -1,14 +1,17 @@
 import json
 import secrets
+from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from backend.config import settings
 from backend.database import get_session
 from backend.dependencies import CurrentUser, get_current_user
 from backend.models import Recipe
-from backend.schemas import Ingredient, RecipeListResponse, RecipeResponse
+from backend.schemas import Ingredient, RecipeListResponse, RecipeResponse, RecipeUpdate
 from backend.services.mealie import MealieClient
 from backend.services.settings import SettingsService
 
@@ -28,8 +31,15 @@ def _recipe_to_response(recipe: Recipe) -> RecipeResponse:
         tags=json.loads(recipe.tags_json),
         notes=recipe.notes,
         share_token=recipe.share_token,
+        thumbnail_url=f"/thumbnails/{recipe.thumbnail}" if recipe.thumbnail else None,
         created_at=recipe.created_at.isoformat(),
     )
+
+
+def _delete_recipe(session: Session, recipe: Recipe) -> None:
+    if recipe.thumbnail:
+        Path(settings.thumbnails_dir, recipe.thumbnail).unlink(missing_ok=True)
+    session.delete(recipe)
 
 
 @router.get("", response_model=RecipeListResponse)
@@ -60,12 +70,37 @@ def get_recipe(recipe_id: int, session: Session = Depends(get_session), _user: C
     return _recipe_to_response(recipe)
 
 
+@router.patch("/{recipe_id}", response_model=RecipeResponse)
+def update_recipe(
+    recipe_id: int,
+    body: RecipeUpdate,
+    session: Session = Depends(get_session),
+    _user: CurrentUser = Depends(get_current_user),
+):
+    changes = body.model_dump(exclude_unset=True)
+    if not changes:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    recipe = session.get(Recipe, recipe_id)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    for key, value in changes.items():
+        if key in ("ingredients", "instructions", "tags"):
+            setattr(recipe, f"{key}_json", json.dumps(value))
+        else:
+            setattr(recipe, key, value)
+    recipe.updated_at = datetime.now(timezone.utc)
+    session.add(recipe)
+    session.commit()
+    session.refresh(recipe)
+    return _recipe_to_response(recipe)
+
+
 @router.delete("/{recipe_id}", status_code=204)
 def delete_recipe(recipe_id: int, session: Session = Depends(get_session), _user: CurrentUser = Depends(get_current_user)):
     recipe = session.get(Recipe, recipe_id)
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    session.delete(recipe)
+    _delete_recipe(session, recipe)
     session.commit()
 
 
@@ -83,7 +118,7 @@ def bulk_delete_recipes(
     recipes = session.exec(statement).all()
     count = len(recipes)
     for recipe in recipes:
-        session.delete(recipe)
+        _delete_recipe(session, recipe)
     session.commit()
     return {"deleted": count}
 

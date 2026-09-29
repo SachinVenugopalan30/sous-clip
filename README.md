@@ -43,7 +43,8 @@ cp .env.example .env
 # Download the Whisper model (one-time setup)
 python scripts/download-model.py
 
-# Start everything
+# Start everything (pulls the prebuilt image; use `up -d --build` to build locally)
+docker compose pull
 docker compose up -d
 ```
 
@@ -97,6 +98,23 @@ If you use [Mealie](https://mealie.io/) as your recipe manager, Sous Clip can au
 5. When extracting a recipe, check **"Also send to Mealie"** to forward it
 
 If Mealie is not configured, no Mealie UI elements are shown. If forwarding fails (Mealie down, bad token, etc.), the recipe is still saved in Sous Clip — the error is shown in the queue progress but does not block the extraction.
+
+## Updating
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+Sous Clip checks GitHub once an hour and shows a notice when a new release is out (turn it off in **Settings → Updates**). The `:latest` image is also rebuilt weekly so yt-dlp stays current.
+
+**Update from the app (optional):** add these to `.env`, then `docker compose up -d`:
+
+```env
+WATCHTOWER_HTTP_API_TOKEN=<any random string>
+COMPOSE_PROFILES=updater
+```
+
+This starts a [Watchtower](https://github.com/nicholas-fedor/watchtower) container, and **Settings → Updates** gets an **Update** button that pulls the new image and restarts the app. Watchtower needs the Docker socket, which is root-equivalent on the host, so it only runs when you opt in, and it only touches the `app` and `worker` containers. Podman users also set `DOCKER_SOCKET=/run/user/$UID/podman/podman.sock` (best-effort).
 
 ## Podman
 

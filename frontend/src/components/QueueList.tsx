@@ -180,7 +180,7 @@ export function QueueList({
                 isCompleting
                   ? "border-accent-alt/30"
                   : isFailed
-                    ? "border-red-300"
+                    ? "border-destructive/40"
                     : isInProgress
                       ? "border-accent/20 shadow-sm"
                       : "border-border"
@@ -296,7 +296,7 @@ export function QueueList({
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 block truncate text-[11px] text-muted-foreground/60 hover:text-accent transition-colors"
+                        className="mt-1 block truncate text-[11px] text-muted-foreground/60 hover:text-accent-text transition-colors"
                       >
                         {item.url}
                       </a>
@@ -332,12 +332,12 @@ export function QueueList({
                     {/* Error state */}
                     {isFailed && (
                       <motion.div
-                        className="mt-3 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2"
+                        className="mt-3 flex items-start gap-2 rounded-lg bg-destructive/10 px-3 py-2"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
-                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
-                        <p className="text-xs leading-relaxed text-red-700">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+                        <p className="text-xs leading-relaxed text-destructive">
                           {item.error || "Something went wrong during extraction"}
                         </p>
                       </motion.div>

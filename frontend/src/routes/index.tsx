@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Search, BookOpen, Trash2, X, CheckSquare, Send } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { RecipeCard } from "../components/RecipeCard";
 import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useRecipes";
-import { useSettings } from "../hooks/useSettings";
+import { useSettings, useUpdateStatus } from "../hooks/useSettings";
 import { api } from "../lib/api";
+import { applyLibraryFilters, type LibraryFilters, type SortKey } from "../lib/library";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
 
@@ -15,11 +16,70 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+const DISMISSED_KEY = "dismissedUpdate";
+const NO_FILTERS: LibraryFilters = { maxMinutes: null, addedWithinDays: null, sort: "newest" };
+const TIME_CHIPS = [15, 30, 60];
+const ADDED_CHIPS: [number, string][] = [[7, "This week"], [30, "This month"]];
+
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-medium transition-colors sm:px-3 sm:py-1 ${
+        active ? "bg-primary text-primary-foreground" : "bg-bg text-muted-foreground hover:bg-border"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+// Shows a new-release notice once per version; dismissing it (or opening Settings) hides it until the next one
+function useNewReleaseToast() {
+  const { data: update } = useUpdateStatus();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const latest = update?.latest;
+    if (!update?.update_available || !latest) return;
+    const dismiss = () => {
+      try {
+        localStorage.setItem(DISMISSED_KEY, latest);
+      } catch {
+        // storage blocked: the toast just comes back next visit
+      }
+    };
+    try {
+      if (localStorage.getItem(DISMISSED_KEY) === latest) return;
+    } catch {
+      // storage blocked: show it anyway
+    }
+    toast(`Sous Clip ${latest} is available`, {
+      id: "new-release",
+      description: `You're on ${update.current}.`,
+      duration: Infinity,
+      closeButton: true,
+      onDismiss: dismiss,
+      action: {
+        label: "View",
+        onClick: () => {
+          dismiss();
+          navigate({ to: "/settings" });
+        },
+      },
+    });
+  }, [update, navigate]);
+}
+
 function HomePage() {
+  useNewReleaseToast();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<LibraryFilters>(NO_FILTERS);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [bulkSendingToMealie, setBulkSendingToMealie] = useState(false);
   const { data, isLoading } = useRecipes(debouncedSearch || undefined);
@@ -34,10 +94,14 @@ function HomePage() {
     new Set(data?.recipes.flatMap((r) => r.tags) ?? [])
   ).sort();
 
-  // Filter recipes by selected tags
-  const filteredRecipes = data?.recipes.filter(
-    (r) => selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t))
+  // Filter by tags, cooking time and date added; then sort
+  const filteredRecipes = data && applyLibraryFilters(
+    data.recipes.filter((r) => selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t))),
+    filters
   );
+  const filtering = selectedTags.size > 0 || filters.maxMinutes !== null || filters.addedWithinDays !== null;
+  const toggleFilter = (key: "maxMinutes" | "addedWithinDays", value: number) =>
+    setFilters({ ...filters, [key]: filters[key] === value ? null : value });
 
   // Simple debounce
   const handleSearch = (value: string) => {
@@ -152,32 +216,52 @@ function HomePage() {
         />
       </div>
 
-      {allTags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {allTags.map((tag) => (
+      <div className="chip-row -mx-4 mt-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+        <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+          Sort
+          <select
+            value={filters.sort}
+            onChange={(e) => setFilters({ ...filters, sort: e.target.value as SortKey })}
+            className="rounded-md border border-border bg-bg px-2 py-1.5 text-xs text-foreground sm:py-1"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="quickest">Quickest</option>
+          </select>
+        </label>
+        {TIME_CHIPS.map((m) => (
+          <FilterChip key={m} active={filters.maxMinutes === m} onClick={() => toggleFilter("maxMinutes", m)}>
+            ≤ {m} min
+          </FilterChip>
+        ))}
+        {ADDED_CHIPS.map(([days, label]) => (
+          <FilterChip key={days} active={filters.addedWithinDays === days} onClick={() => toggleFilter("addedWithinDays", days)}>
+            {label}
+          </FilterChip>
+        ))}
+      </div>
+
+      {(allTags.length > 0 || filtering) && (
+        <div className="chip-row -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          {/* First, so it stays reachable when the row scrolls sideways on phones */}
+          {filtering && (
             <button
-              key={tag}
               type="button"
-              onClick={() => toggleTag(tag)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                selectedTags.has(tag)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-bg text-muted-foreground hover:bg-border"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-          {selectedTags.size > 0 && (
-            <button
-              type="button"
-              onClick={() => setSelectedTags(new Set())}
-              className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setSelectedTags(new Set());
+                setFilters({ ...NO_FILTERS, sort: filters.sort });
+              }}
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-xs text-muted-foreground hover:text-foreground sm:py-1"
             >
               <X className="h-3 w-3" />
               Clear filters
             </button>
           )}
+          {allTags.map((tag) => (
+            <FilterChip key={tag} active={selectedTags.has(tag)} onClick={() => toggleTag(tag)}>
+              {tag}
+            </FilterChip>
+          ))}
         </div>
       )}
 
@@ -214,10 +298,10 @@ function HomePage() {
         >
           <BookOpen className="h-12 w-12 text-border" />
           <p className="mt-4 text-lg font-medium text-muted-foreground">
-            {selectedTags.size > 0 ? "No recipes match these tags" : "No recipes yet"}
+            {filtering ? "No recipes match these filters" : "No recipes yet"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {selectedTags.size > 0
+            {filtering
               ? "Try removing some filters."
               : "Extract your first recipe from a cooking video."}
           </p>
@@ -288,8 +372,8 @@ function HomePage() {
               disabled={bulkDelete.isPending}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 confirmingDelete
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "text-red-500 hover:bg-red-500/10"
+                  ? "bg-destructive text-white hover:bg-destructive/90"
+                  : "text-destructive hover:bg-destructive/10"
               }`}
             >
               <Trash2 className="h-4 w-4" />

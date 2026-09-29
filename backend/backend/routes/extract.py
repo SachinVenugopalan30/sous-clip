@@ -1,12 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from temporalio.client import Client
 
-from backend.config import settings
 from backend.dependencies import CurrentUser, get_current_user
-from backend.routes.queue import QueueItemResponse, get_queue
-from backend.services.queue import ExtractionQueue, QueueStatus
-from backend.workflows.extraction import ExtractionWorkflow, ExtractionWorkflowInput
+from backend.routes.queue import QueueItemResponse, get_queue, start_extraction
+from backend.services.queue import QueueStatus
 
 router = APIRouter(prefix="/api", tags=["extract"])
 
@@ -29,26 +26,8 @@ async def extract_recipe(request: ExtractRequest, _user: CurrentUser = Depends(g
     # Enqueue the URL
     item = queue.enqueue(user_id=request.user_id, url=request.url)
 
-    # Start Temporal workflow
-    try:
-        client = await Client.connect(settings.temporal_host)
-        await client.start_workflow(
-            ExtractionWorkflow.run,
-            ExtractionWorkflowInput(
-                url=request.url,
-                user_id=request.user_id,
-                queue_item_id=item.id,
-                forward_to_mealie=request.forward_to_mealie,
-            ),
-            id=f"extraction-{item.id}",
-            task_queue="extraction-queue",
-        )
-    except Exception as e:
-        queue.fail(item.id, request.user_id, str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to start extraction: {e}")
-
-    # Mark as in-progress so frontend shows pipeline visualization
-    queue.mark_in_progress(item.id)
+    # Starts the Temporal workflow and marks the item in progress (frontend shows the pipeline)
+    await start_extraction(queue, item, request.forward_to_mealie)
     item.status = QueueStatus.IN_PROGRESS
 
     return ExtractResponse(

@@ -16,7 +16,7 @@ export function RecipeDrawer({ recipe, open, onClose }: RecipeDrawerProps) {
         <Drawer.Content className="fixed bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl bg-bg">
           <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-border" />
           <div className="overflow-y-auto p-6">
-            {recipe && <RecipeView recipe={recipe} />}
+            {recipe && <RecipeView key={recipe.id} recipe={recipe} />}
           </div>
         </Drawer.Content>
       </Drawer.Portal>

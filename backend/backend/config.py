@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    app_version: str = "dev"  # set from the release tag at image build
+
     database_url: str = "sqlite:///./data/recipes.db"
 
     whisper_model_size: str = "base"
@@ -19,6 +21,11 @@ class Settings(BaseSettings):
     valkey_url: str = "redis://localhost:6379/0"
 
     media_dir: str = "./data/media"
+    thumbnails_dir: str = "./data/thumbnails"
+
+    # Optional in-app updates via the Watchtower compose profile
+    watchtower_url: str = "http://watchtower:8080"
+    watchtower_http_api_token: str = ""
 
     app_username: str = "admin"
     app_password: str = "changeme"
@@ -30,7 +37,8 @@ class Settings(BaseSettings):
     otel_endpoint: str = "http://localhost:4317"
     otel_service_name: str = "sous-clip"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    # extra=ignore: .env also holds keys for other tools (HF_TOKEN, OPENAI_BASE_URL)
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

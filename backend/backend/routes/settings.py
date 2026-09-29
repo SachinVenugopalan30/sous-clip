@@ -4,6 +4,7 @@ from sqlmodel import Session
 
 from backend.database import get_session
 from backend.dependencies import CurrentUser, get_current_user
+from backend.services.extractor import detect_api_style
 from backend.services.settings import SettingsService
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
@@ -53,4 +54,25 @@ async def test_mealie_connection(
         result = await client.test_connection()
         return result
     except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+class TestAIRequest(BaseModel):
+    base_url: str
+    model: str
+    api_key: str = ""
+
+
+@router.post("/test-ai")
+async def test_ai_endpoint(
+    request: TestAIRequest,
+    session: Session = Depends(get_session),
+    _user: CurrentUser = Depends(get_current_user),
+):
+    api_key = request.api_key
+    if api_key.startswith("••••••"):  # field left as the masked stored key
+        api_key = SettingsService(session).get("custom_api_key") or ""
+    try:
+        return {"ok": True, "style": await detect_api_style(request.base_url, api_key, request.model)}
+    except ValueError as e:
         return {"ok": False, "error": str(e)}

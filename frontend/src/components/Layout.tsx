@@ -1,7 +1,31 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { BookOpen, ChefHat, Github, LogOut, Moon, Plus, Settings, Sun } from "lucide-react";
+import { BookOpen, ChefHat, Github, LogOut, Moon, Plus, Settings, Star, Sun } from "lucide-react";
+import { useUpdateStatus } from "../hooks/useSettings";
 import { useAuthStore } from "../stores/auth";
 import { useThemeStore } from "../stores/theme";
+
+// Live star count from GET /api/update (server refreshes it hourly; hidden when the GitHub check is off)
+function GitHubLink({ className }: { className: string }) {
+  const stars = useUpdateStatus().data?.stars;
+  const count = stars == null ? null : new Intl.NumberFormat(undefined, { notation: "compact" }).format(stars);
+  return (
+    <a
+      href="https://github.com/SachinVenugopalan30/sous-clip"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      aria-label={count ? `Sous Clip on GitHub, ${count} ${stars === 1 ? "star" : "stars"}` : "Sous Clip on GitHub"}
+    >
+      <Github className="h-4 w-4" />
+      {count && (
+        <span className="flex items-center gap-0.5 text-xs tabular-nums">
+          <Star className="h-3 w-3" />
+          {count}
+        </span>
+      )}
+    </a>
+  );
+}
 
 export function Layout() {
   const logout = useAuthStore((s) => s.logout);
@@ -20,14 +44,14 @@ export function Layout() {
       <header className="hidden sm:block border-b border-border bg-surface">
         <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <ChefHat className="h-6 w-6 text-accent" />
+            <ChefHat className="h-6 w-6 text-accent-text" />
             <span className="font-display text-xl font-bold">Sous Clip</span>
           </Link>
 
           <div className="flex items-center gap-6">
             <Link
               to="/"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-text [&.active]:text-accent"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-text [&.active]:text-accent-text"
             >
               <BookOpen className="h-4 w-4" />
               Library
@@ -41,19 +65,11 @@ export function Layout() {
             </Link>
             <Link
               to="/settings"
-              className="text-muted-foreground transition-colors hover:text-text [&.active]:text-accent"
+              className="text-muted-foreground transition-colors hover:text-text [&.active]:text-accent-text"
             >
               <Settings className="h-4 w-4" />
             </Link>
-            <a
-              href="https://github.com/SachinVenugopalan30/sous-clip"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-text"
-              title="GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
+            <GitHubLink className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-text" />
             <button
               onClick={toggleTheme}
               className="text-muted-foreground transition-colors hover:text-text"
@@ -75,32 +91,24 @@ export function Layout() {
 
       {/* Mobile header */}
       <header className="sm:hidden border-b border-border bg-surface">
-        <nav className="flex items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <ChefHat className="h-5 w-5 text-accent" />
+        <nav className="flex items-center justify-between px-2 py-1">
+          <Link to="/" className="flex min-h-11 items-center gap-2 px-2">
+            <ChefHat className="h-5 w-5 text-accent-text" />
             <span className="font-display text-lg font-bold">SC</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/SachinVenugopalan30/sous-clip"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-text"
-              title="GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
+          <div className="flex items-center">
+            <GitHubLink className="flex h-11 min-w-11 items-center justify-center gap-1 px-2 text-muted-foreground transition-colors hover:text-text" />
             <button
               onClick={toggleTheme}
-              className="text-muted-foreground transition-colors hover:text-text"
+              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <span className="text-xs text-muted-foreground">{username}</span>
+            <span className="px-1 text-xs text-muted-foreground">{username}</span>
             <button
               onClick={logout}
-              className="text-muted-foreground transition-colors hover:text-text"
+              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
               title="Logout"
             >
               <LogOut className="h-4 w-4" />
@@ -118,21 +126,21 @@ export function Layout() {
         <div className="flex items-center justify-around py-2">
           <Link
             to="/"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent"
+            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
           >
             <BookOpen className="h-5 w-5" />
             <span className="text-[10px] font-medium">Library</span>
           </Link>
           <Link
             to="/submit"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent"
+            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
           >
             <Plus className="h-5 w-5" />
             <span className="text-[10px] font-medium">Extract</span>
           </Link>
           <Link
             to="/settings"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent"
+            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
           >
             <Settings className="h-5 w-5" />
             <span className="text-[10px] font-medium">Settings</span>

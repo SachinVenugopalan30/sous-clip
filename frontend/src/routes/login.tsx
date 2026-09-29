@@ -43,7 +43,7 @@ function LoginPage() {
       className="mx-auto mt-20 max-w-sm"
     >
       <div className="flex flex-col items-center">
-        <ChefHat className="h-10 w-10 text-accent" />
+        <ChefHat className="h-10 w-10 text-accent-text" />
         <h1 className="mt-4 font-display text-2xl font-bold">Sous Clip</h1>
         <p className="mt-1 text-sm text-muted-foreground">Sign in to your instance</p>
       </div>
@@ -62,7 +62,7 @@ function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && (
-          <p className="text-sm text-red-500">{error}</p>
+          <p role="alert" className="text-sm text-destructive">{error}</p>
         )}
         <Button
           type="submit"

@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { CheckSquare, Clock, Link as LinkIcon, Send, Square, Tag, Trash2, Users } from "lucide-react";
+import { CalendarDays, CheckSquare, Clock, Link as LinkIcon, Send, Square, Tag, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import type { Recipe } from "../lib/api";
+import { formatAdded } from "../lib/library";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -28,6 +29,9 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
         params={{ recipeId: String(recipe.id) }}
         className={`block flex-1 rounded-t-xl border border-b-0 bg-surface p-5 shadow-sm transition-shadow hover:shadow-md ${selected ? "border-primary ring-1 ring-primary" : "border-border"}`}
       >
+        {recipe.thumbnail_url && (
+          <img src={recipe.thumbnail_url} alt="" loading="lazy" className="-mx-5 -mt-5 mb-4 aspect-video w-[calc(100%+2.5rem)] max-w-none rounded-t-xl object-cover" />
+        )}
         <h3 className="font-display text-lg font-bold leading-tight">
           {recipe.title}
         </h3>
@@ -45,6 +49,10 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
               {recipe.servings} servings
             </span>
           )}
+          <span className="flex items-center gap-1" title={new Date(recipe.created_at).toLocaleString()}>
+            <CalendarDays className="h-3.5 w-3.5" />
+            Added {formatAdded(recipe.created_at)}
+          </span>
         </div>
 
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
@@ -75,7 +83,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onToggle?.(recipe.id);
           }}
-          className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs transition-colors ${selected ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-bg"}`}
+          className={`flex items-center gap-1 rounded-lg px-2 py-2.5 text-xs sm:py-1.5 transition-colors ${selected ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-bg"}`}
           aria-label={selected ? "Deselect recipe" : "Select recipe"}
         >
           {selected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
@@ -88,7 +96,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onShare?.(recipe.id);
           }}
-          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
+          className="flex items-center gap-1 rounded-lg px-2 py-2.5 text-xs sm:py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
           aria-label="Share recipe"
         >
           <LinkIcon className="h-4 w-4" />
@@ -98,7 +106,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSendToMealie?.(recipe.id); }}
-            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
+            className="flex items-center gap-1 rounded-lg px-2 py-2.5 text-xs sm:py-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-bg"
             aria-label="Send to Mealie"
           >
             <Send className="h-4 w-4" />
@@ -112,7 +120,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onDelete?.(recipe.id);
           }}
-          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-500/10"
+          className="flex items-center gap-1 rounded-lg px-2 py-2.5 text-xs sm:py-1.5 text-destructive transition-colors hover:bg-destructive/10"
           aria-label="Delete recipe"
         >
           <Trash2 className="h-4 w-4" />

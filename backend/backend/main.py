@@ -1,5 +1,7 @@
 import logging
+import mimetypes
 import os
+from pathlib import Path
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -17,6 +19,7 @@ from backend.routes.queue import router as queue_router
 from backend.routes.auth import router as auth_router
 from backend.routes.recipes import router as recipes_router, share_router
 from backend.routes.settings import router as settings_router
+from backend.routes.updates import router as updates_router
 from backend.services.queue import ExtractionQueue
 from backend.workflows.extraction import ExtractionWorkflow, ExtractionWorkflowInput
 
@@ -90,7 +93,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Sous Clip",
     description="Self-hosted recipe extractor for short-form cooking videos",
-    version="0.1.0",
+    version=settings.app_version,
     lifespan=lifespan,
 )
 
@@ -107,12 +110,19 @@ app.include_router(progress_router)
 app.include_router(queue_router)
 app.include_router(settings_router)
 app.include_router(share_router)
+app.include_router(updates_router)
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": settings.app_version}
 
+
+# python:3.12-slim has no /etc/mime.types and CPython only maps .webp from 3.13; IG/TikTok thumbnails are often webp
+mimetypes.add_type("image/webp", ".webp")
+# Created here too: the app can start before the worker has saved any thumbnail
+Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)
+app.mount("/thumbnails", StaticFiles(directory=settings.thumbnails_dir, check_dir=False), name="thumbnails")
 
 # Serve frontend static files in production
 _static_dir = os.path.join(os.path.dirname(__file__), "..", "static")

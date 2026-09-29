@@ -14,10 +14,14 @@ DEFAULTS = {
     "whisper_compute_type": env_settings.whisper_compute_type,
     "mealie_url": "",
     "mealie_api_key": "",
+    "custom_base_url": "",
+    "custom_api_key": "",  # optional: some endpoints need no key
+    "custom_api_style": "openai",  # set by Settings → Test connection
+    "update_check": "true",  # hourly GitHub check (releases, stars); "false" turns it off
 }
 
 # Keys that should never be returned to the frontend in plain text
-SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key", "mealie_api_key"}
+SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key", "mealie_api_key", "custom_api_key"}
 
 
 class SettingsService:

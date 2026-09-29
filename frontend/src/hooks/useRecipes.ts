@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
+import { api, type Recipe } from "../lib/api";
 
 export function useRecipes(search?: string) {
   return useQuery({
@@ -12,6 +12,18 @@ export function useRecipe(id: number) {
   return useQuery({
     queryKey: ["recipe", id],
     queryFn: () => api.recipes.get(id),
+  });
+}
+
+export function useUpdateRecipe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, changes }: { id: number; changes: Partial<Omit<Recipe, "id">> }) =>
+      api.recipes.update(id, changes),
+    onSuccess: (recipe) => {
+      queryClient.setQueryData(["recipe", recipe.id], recipe);
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+    },
   });
 }
 

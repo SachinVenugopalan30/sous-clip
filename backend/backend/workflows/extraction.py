@@ -8,6 +8,7 @@ from temporalio.common import RetryPolicy
 
 from backend.config import settings
 from backend.services.downloader import Downloader
+from backend.services.errors import describe_failure
 from backend.services.extractor import RecipeExtractor
 from backend.services.queue import ExtractionQueue
 from backend.services.transcriber import Transcriber
@@ -16,7 +17,6 @@ from backend.telemetry import get_tracer
 tracer = get_tracer("extraction-pipeline")
 
 # ponytail: flat 3 attempts per step; mark permanent errors non_retryable if retries waste time.
-# save_recipe can duplicate a recipe if its commit succeeds but queue.complete fails; make it idempotent if seen.
 RETRY = RetryPolicy(maximum_attempts=3)
 
 
@@ -72,6 +72,8 @@ async def download_activity(url: str, user_id: str, queue_item_id: str) -> dict:
             "title": result.title,
             "channel": result.channel,
             "duration": result.duration,
+            "caption": result.caption,
+            "thumbnail_path": result.thumbnail_path,
         }
 
 
@@ -96,7 +98,9 @@ async def transcribe_activity(audio_path: str, user_id: str, queue_item_id: str)
 
 
 @activity.defn
-async def extract_activity(transcript: str, user_id: str, queue_item_id: str) -> dict:
+async def extract_activity(
+    transcript: str, user_id: str, queue_item_id: str, caption: str = "", video_title: str = "",
+) -> dict:
     cfg = _app_settings()
     provider = cfg["ai_provider"]
     with tracer.start_as_current_span("pipeline.ai_extract", attributes={
@@ -110,9 +114,10 @@ async def extract_activity(transcript: str, user_id: str, queue_item_id: str) ->
             provider=provider,
             api_key=cfg.get(f"{provider}_api_key", ""),
             model=cfg["ai_model"],
-            base_url=cfg["ollama_base_url"] if provider == "ollama" else None,
+            base_url={"ollama": cfg["ollama_base_url"], "custom": cfg["custom_base_url"]}.get(provider),
+            api_style=cfg["custom_api_style"],
         )
-        result = await extractor.extract(transcript)
+        result = await extractor.extract(transcript, caption, video_title)
         return {
             "title": result.title,
             "ingredients": [i.model_dump() for i in result.ingredients],
@@ -127,38 +132,58 @@ async def extract_activity(transcript: str, user_id: str, queue_item_id: str) ->
 
 @activity.defn
 async def save_recipe_activity(
-    url: str, transcript: str, extraction_data: dict, user_id: str, queue_item_id: str
+    url: str, transcript: str, extraction_data: dict, user_id: str, queue_item_id: str,
+    thumbnail_path: str | None = None,
 ) -> int:
     with tracer.start_as_current_span("pipeline.save"):
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "saved", "active")
 
+        import secrets
+        import shutil
+
         from backend.database import engine
         from backend.models import Recipe
-        from sqlmodel import Session
+        from sqlmodel import Session, select
 
-        recipe = Recipe(
-            title=extraction_data["title"],
-            source_url=url,
-            ingredients_json=json.dumps(extraction_data["ingredients"]),
-            instructions_json=json.dumps(extraction_data["instructions"]),
-            prep_time_minutes=extraction_data.get("prep_time_minutes"),
-            cook_time_minutes=extraction_data.get("cook_time_minutes"),
-            servings=extraction_data.get("servings"),
-            notes=extraction_data.get("notes"),
-            tags_json=json.dumps(extraction_data.get("tags", [])),
-            transcript=transcript,
-        )
         with Session(engine) as session:
-            session.add(recipe)
-            session.commit()
-            session.refresh(recipe)
+            # A retry after a successful commit must not insert a second recipe
+            existing = session.exec(select(Recipe).where(Recipe.queue_item_id == queue_item_id)).first()
+            recipe_id = existing.id if existing else None
+
+        if recipe_id is None:
+            thumbnail = None
+            if thumbnail_path and Path(thumbnail_path).exists():
+                # Copy, commit, then unlink: a failed commit never leaves a dangling reference
+                thumbnail = secrets.token_urlsafe(12) + Path(thumbnail_path).suffix
+                Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(thumbnail_path, Path(settings.thumbnails_dir) / thumbnail)
+            recipe = Recipe(
+                title=extraction_data["title"],
+                source_url=url,
+                ingredients_json=json.dumps(extraction_data["ingredients"]),
+                instructions_json=json.dumps(extraction_data["instructions"]),
+                prep_time_minutes=extraction_data.get("prep_time_minutes"),
+                cook_time_minutes=extraction_data.get("cook_time_minutes"),
+                servings=extraction_data.get("servings"),
+                notes=extraction_data.get("notes"),
+                tags_json=json.dumps(extraction_data.get("tags", [])),
+                transcript=transcript,
+                queue_item_id=queue_item_id,
+                thumbnail=thumbnail,
+            )
+            with Session(engine) as session:
+                session.add(recipe)
+                session.commit()
+                recipe_id = recipe.id
+        if thumbnail_path:
+            Path(thumbnail_path).unlink(missing_ok=True)
 
         # Mark queue item completed and publish final event
         queue.complete(queue_item_id, user_id)
         queue.publish_progress(user_id, queue_item_id, "saved", "complete")
 
-        return recipe.id
+        return recipe_id
 
 
 @activity.defn
@@ -203,6 +228,7 @@ class ExtractionWorkflow:
     async def run(self, input: ExtractionWorkflowInput) -> int:
         user_id = input.user_id
         item_id = input.queue_item_id
+        step = "Download"  # named in the queue's error message if this step fails
 
         try:
             # Step 1: Download
@@ -214,6 +240,7 @@ class ExtractionWorkflow:
             )
 
             # Step 2: Transcribe
+            step = "Transcription"
             transcribe_result = await workflow.execute_activity(
                 transcribe_activity,
                 args=[download_result["audio_path"], user_id, item_id],
@@ -222,17 +249,26 @@ class ExtractionWorkflow:
             )
 
             # Step 3: Extract recipe via AI
+            step = "AI extraction"
             extraction_data = await workflow.execute_activity(
                 extract_activity,
-                args=[transcribe_result["text"], user_id, item_id],
+                # .get: histories recorded before v1.3.0 have no caption or title
+                args=[
+                    transcribe_result["text"], user_id, item_id,
+                    download_result.get("caption", ""), download_result.get("title", ""),
+                ],
                 start_to_close_timeout=timedelta(minutes=2),
                 retry_policy=RETRY,
             )
 
             # Step 4: Save to database
+            step = "Saving the recipe"
             recipe_id = await workflow.execute_activity(
                 save_recipe_activity,
-                args=[input.url, transcribe_result["text"], extraction_data, user_id, item_id],
+                args=[
+                    input.url, transcribe_result["text"], extraction_data, user_id, item_id,
+                    download_result.get("thumbnail_path"),
+                ],
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=RETRY,
             )
@@ -252,7 +288,7 @@ class ExtractionWorkflow:
             # Mark the queue item as failed so the UI reflects the error
             await workflow.execute_activity(
                 fail_queue_item_activity,
-                args=[user_id, item_id, str(e)],
+                args=[user_id, item_id, describe_failure(step, e)],
                 start_to_close_timeout=timedelta(seconds=10),
             )
             raise

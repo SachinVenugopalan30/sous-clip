@@ -7,6 +7,7 @@ import yt_dlp
 
 
 URL_PATTERN = re.compile(r"^https?://")
+THUMBNAIL_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
 
 @dataclass
@@ -16,6 +17,8 @@ class DownloadResult:
     channel: str | None = None
     duration: int | None = None  # seconds
     thumbnail: str | None = None  # URL
+    caption: str = ""
+    thumbnail_path: str | None = None  # local file written by yt-dlp
 
 
 class Downloader:
@@ -52,6 +55,7 @@ class Downloader:
             "no_warnings": True,
             "remote_components": ["ejs:github"],
             "progress_hooks": [_yt_dlp_hook],
+            "writethumbnail": True,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -65,4 +69,8 @@ class Downloader:
             channel=info.get("channel") or info.get("uploader"),
             duration=info.get("duration"),
             thumbnail=info.get("thumbnail"),
+            caption=(info.get("description") or "")[:800],  # long descriptions are mostly links and hashtags
+            thumbnail_path=next(
+                (str(p) for p in self.media_dir.glob(f"{video_id}.*") if p.suffix in THUMBNAIL_EXTS), None
+            ),
         )
