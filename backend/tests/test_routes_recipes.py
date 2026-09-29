@@ -145,6 +145,7 @@ def test_thumbnails_are_served_on_fresh_install(client):
     try:
         response = client.get("/thumbnails/test-served.webp")
         assert response.status_code == 200 and response.content == b"img"
+        assert response.headers["content-type"] == "image/webp"  # Python 3.12 has no .webp mapping
     finally:
         served.unlink()
 

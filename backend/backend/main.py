@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 import os
 from pathlib import Path
 
@@ -117,6 +118,8 @@ async def health():
     return {"status": "ok", "version": settings.app_version}
 
 
+# python:3.12-slim has no /etc/mime.types and CPython only maps .webp from 3.13; IG/TikTok thumbnails are often webp
+mimetypes.add_type("image/webp", ".webp")
 # Created here too: the app can start before the worker has saved any thumbnail
 Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)
 app.mount("/thumbnails", StaticFiles(directory=settings.thumbnails_dir, check_dir=False), name="thumbnails")
