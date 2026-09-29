@@ -372,8 +372,8 @@ function HomePage() {
               disabled={bulkDelete.isPending}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 confirmingDelete
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "text-red-500 hover:bg-red-500/10"
+                  ? "bg-destructive text-white hover:bg-destructive/90"
+                  : "text-destructive hover:bg-destructive/10"
               }`}
             >
               <Trash2 className="h-4 w-4" />

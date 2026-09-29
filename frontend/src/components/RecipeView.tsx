@@ -50,7 +50,7 @@ export function RecipeView({ recipe }: RecipeViewProps) {
           href={recipe.source_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="-my-2 flex items-center gap-1 py-2 text-accent hover:underline sm:my-0 sm:py-0"
+          className="-my-2 flex items-center gap-1 py-2 text-accent-text hover:underline sm:my-0 sm:py-0"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Source video
@@ -78,7 +78,7 @@ export function RecipeView({ recipe }: RecipeViewProps) {
                 <button type="button" aria-label="Fewer servings" disabled={servings <= 1} onClick={() => setServings(servings - 1)} className="rounded-md p-2.5 hover:bg-bg sm:p-1.5 disabled:opacity-40">
                   <Minus className="h-4 w-4" />
                 </button>
-                <span aria-live="polite" className="min-w-16 text-center">{servings} servings</span>
+                <span aria-live="polite" className="min-w-16 text-center tabular-nums">{servings} servings</span>
                 <button type="button" aria-label="More servings" onClick={() => setServings(servings + 1)} className="rounded-md p-2.5 hover:bg-bg sm:p-1.5">
                   <Plus className="h-4 w-4" />
                 </button>
@@ -90,7 +90,7 @@ export function RecipeView({ recipe }: RecipeViewProps) {
               <li key={i} className="flex items-baseline gap-2 text-sm">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                 <span>
-                  {ing.quantity && <strong>{scaleQuantity(ing.quantity, factor)}</strong>}
+                  {ing.quantity && <strong className="tabular-nums">{scaleQuantity(ing.quantity, factor)}</strong>}
                   {ing.unit && ` ${ing.unit}`}
                   {(ing.quantity || ing.unit) && " "}
                   {ing.name}

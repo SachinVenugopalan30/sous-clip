@@ -40,6 +40,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-success: var(--success);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -73,10 +75,12 @@
   --secondary: #F5F0E8;
   --secondary-foreground: #1C1917;
   --muted: #F5F0E8;
-  --muted-foreground: #78716C;
+  --muted-foreground: #6E6762; /* 4.6:1 on card surfaces (was 4.25) */
   --accent: #C2410C;
   --accent-foreground: #FDFAF5;
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: #B91C1C; /* red-700: 5.7:1 on card surfaces */
+  --accent-text: #C2410C; /* accent used as text or icon */
+  --success: #15803D;
   --border: #E2D9CC;
   --input: #E2D9CC;
   --ring: #C2410C;
@@ -110,6 +114,8 @@
   --muted-foreground: #A8A29E;
   --accent: #C2410C;
   --accent-foreground: #FDFAF5;
+  --accent-text: #FB923C; /* #C2410C text is 2.9:1 on dark surfaces; orange-400 is 6.4:1 */
+  --success: #4ADE80;
   --color-bg: #1C1917;
   --color-surface: #292524;
   --color-text: #FDFAF5;
@@ -138,6 +144,22 @@
   }
   body {
     @apply bg-background text-foreground;
+    caret-color: var(--accent-text);
+    accent-color: var(--accent);
+  }
+  html {
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent) transparent;
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--accent) 28%, transparent);
+  }
+  /* Custom controls (chips, card actions) get a visible ring; shadcn components keep their own */
+  :focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+  }
+  a {
+    text-underline-offset: 3px;
   }
 }
 

@@ -130,7 +130,7 @@ function RecipePage() {
     ...(mealieConfigured
       ? [{ label: "Mealie", menuLabel: "Send to Mealie", icon: sendingToMealie ? Loader2 : Send, spin: sendingToMealie, onClick: handleSendToMealie, disabled: sendingToMealie }]
       : []),
-    { label: "Delete", menuLabel: "Delete recipe", icon: Trash2, onClick: handleDelete, danger: true, className: "text-red-600 hover:bg-red-50 hover:text-red-700" },
+    { label: "Delete", menuLabel: "Delete recipe", icon: Trash2, onClick: handleDelete, danger: true, className: "text-destructive hover:bg-destructive/10 hover:text-destructive" },
   ];
 
   return (

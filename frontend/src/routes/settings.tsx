@@ -246,7 +246,7 @@ function MealieSection({
       <h2 className="text-lg font-semibold">Mealie Integration</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         Optionally forward extracted recipes to a{" "}
-        <a href="https://mealie.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent">
+        <a href="https://mealie.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent-text">
           Mealie
         </a>{" "}
         instance. Leave blank to skip.
@@ -295,13 +295,13 @@ function MealieSection({
             Test Connection
           </Button>
           {testStatus === "success" && (
-            <span className="flex items-center gap-1 text-xs text-green-600">
+            <span className="flex items-center gap-1 text-xs text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
               {testMessage}
             </span>
           )}
           {testStatus === "error" && (
-            <span className="flex items-center gap-1 text-xs text-red-600">
+            <span className="flex items-center gap-1 text-xs text-destructive">
               <XCircle className="h-3.5 w-3.5" />
               {testMessage}
             </span>
@@ -376,14 +376,14 @@ function UpdatesSection({
               href={`https://github.com/SachinVenugopalan30/sous-clip/releases/tag/${status.latest}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-accent"
+              className="underline hover:text-accent-text"
             >
               {status.latest}
             </a>
           ) : (
             "Unknown"
           )}
-          {status?.update_available && <span className="ml-2 text-accent">Update available</span>}
+          {status?.update_available && <span className="ml-2 text-accent-text">Update available</span>}
         </dd>
       </dl>
       {status?.update_available &&
@@ -402,7 +402,7 @@ function UpdatesSection({
               WATCHTOWER_HTTP_API_TOKEN matches your .env.
             </p>
             {phase === "failed" && (
-              <p role="alert" className="mt-2 text-sm text-red-600">
+              <p role="alert" className="mt-2 text-sm text-destructive">
                 The update didn't apply within 5 minutes. Check <code>docker compose logs watchtower</code>.
               </p>
             )}
@@ -496,7 +496,7 @@ function CustomEndpointFields({
         {(status === "success" || status === "error") && (
           <p
             role={status === "error" ? "alert" : "status"}
-            className={`mt-2 flex items-start gap-1 text-xs ${status === "success" ? "text-green-600" : "text-red-600"}`}
+            className={`mt-2 flex items-start gap-1 text-xs ${status === "success" ? "text-success" : "text-destructive"}`}
           >
             {status === "success" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
             {message}

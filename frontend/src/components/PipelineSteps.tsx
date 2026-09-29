@@ -65,8 +65,8 @@ export function PipelineSteps({
                       ? "border-accent-alt bg-accent-alt text-white"
                       : isActive
                         ? error
-                          ? "border-red-500 bg-red-50 text-red-600"
-                          : "border-accent bg-accent/10 text-accent"
+                          ? "border-destructive bg-destructive/10 text-destructive"
+                          : "border-accent bg-accent/10 text-accent-text"
                         : "border-border bg-surface text-muted-foreground/40"
                   }`}
                   initial={false}
@@ -92,8 +92,8 @@ export function PipelineSteps({
                     ? "text-accent-alt"
                     : isActive
                       ? error
-                        ? "text-red-600"
-                        : "text-accent"
+                        ? "text-destructive"
+                        : "text-accent-text"
                       : "text-muted-foreground/40"
                 }`}
               >

@@ -120,7 +120,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             e.stopPropagation();
             onDelete?.(recipe.id);
           }}
-          className="flex items-center gap-1 rounded-lg px-2 py-2.5 text-xs sm:py-1.5 text-red-500 transition-colors hover:bg-red-500/10"
+          className="flex items-center gap-1 rounded-lg px-2 py-2.5 text-xs sm:py-1.5 text-destructive transition-colors hover:bg-destructive/10"
           aria-label="Delete recipe"
         >
           <Trash2 className="h-4 w-4" />

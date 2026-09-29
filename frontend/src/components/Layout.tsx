@@ -20,14 +20,14 @@ export function Layout() {
       <header className="hidden sm:block border-b border-border bg-surface">
         <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
-            <ChefHat className="h-6 w-6 text-accent" />
+            <ChefHat className="h-6 w-6 text-accent-text" />
             <span className="font-display text-xl font-bold">Sous Clip</span>
           </Link>
 
           <div className="flex items-center gap-6">
             <Link
               to="/"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-text [&.active]:text-accent"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-text [&.active]:text-accent-text"
             >
               <BookOpen className="h-4 w-4" />
               Library
@@ -41,7 +41,7 @@ export function Layout() {
             </Link>
             <Link
               to="/settings"
-              className="text-muted-foreground transition-colors hover:text-text [&.active]:text-accent"
+              className="text-muted-foreground transition-colors hover:text-text [&.active]:text-accent-text"
             >
               <Settings className="h-4 w-4" />
             </Link>
@@ -77,7 +77,7 @@ export function Layout() {
       <header className="sm:hidden border-b border-border bg-surface">
         <nav className="flex items-center justify-between px-2 py-1">
           <Link to="/" className="flex min-h-11 items-center gap-2 px-2">
-            <ChefHat className="h-5 w-5 text-accent" />
+            <ChefHat className="h-5 w-5 text-accent-text" />
             <span className="font-display text-lg font-bold">SC</span>
           </Link>
           <div className="flex items-center">
@@ -118,21 +118,21 @@ export function Layout() {
         <div className="flex items-center justify-around py-2">
           <Link
             to="/"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent"
+            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
           >
             <BookOpen className="h-5 w-5" />
             <span className="text-[10px] font-medium">Library</span>
           </Link>
           <Link
             to="/submit"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent"
+            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
           >
             <Plus className="h-5 w-5" />
             <span className="text-[10px] font-medium">Extract</span>
           </Link>
           <Link
             to="/settings"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent"
+            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
           >
             <Settings className="h-5 w-5" />
             <span className="text-[10px] font-medium">Settings</span>
