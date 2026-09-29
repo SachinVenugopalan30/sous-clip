@@ -18,7 +18,9 @@ const AI_PROVIDERS = [
   { value: "anthropic", label: "Anthropic (Claude)" },
   { value: "openai", label: "OpenAI" },
   { value: "ollama", label: "Ollama (Local)" },
+  { value: "custom", label: "Custom endpoint (OpenAI or Anthropic compatible)" },
 ];
+const API_STYLE_LABELS: Record<string, string> = { openai: "OpenAI-compatible", anthropic: "Anthropic-compatible" };
 
 const WHISPER_MODELS = ["tiny", "base", "small", "medium", "large-v3"];
 const WHISPER_DEVICES = ["auto", "cpu", "cuda"];
@@ -122,6 +124,8 @@ function SettingsPage() {
               />
             </div>
           )}
+
+          {form.ai_provider === "custom" && <CustomEndpointFields form={form} setForm={setForm} />}
         </div>
       </section>
 
@@ -417,5 +421,90 @@ function UpdatesSection({
         Check GitHub for new releases (once an hour)
       </label>
     </section>
+  );
+}
+
+function CustomEndpointFields({
+  form,
+  setForm,
+}: {
+  form: Record<string, string>;
+  setForm: (f: Record<string, string>) => void;
+}) {
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const change = (key: string, value: string) => {
+    setForm({ ...form, [key]: value });
+    setStatus("idle");
+  };
+
+  const handleTest = async () => {
+    if (!form.custom_base_url || !form.ai_model) {
+      toast.error("Enter the endpoint URL and a model first");
+      return;
+    }
+    setStatus("loading");
+    try {
+      const result = await api.settings.testAI(form.custom_base_url, form.ai_model, form.custom_api_key || "");
+      if (result.ok && result.style) {
+        setForm({ ...form, custom_api_style: result.style });
+        setStatus("success");
+        setMessage(`Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
+      } else {
+        setStatus("error");
+        setMessage(result.error || "Connection failed");
+      }
+    } catch (e) {
+      setStatus("error");
+      setMessage(e instanceof Error ? e.message : "Connection failed");
+    }
+  };
+
+  return (
+    <>
+      <label className="block text-sm font-medium">
+        Endpoint URL
+        <Input
+          value={form.custom_base_url || ""}
+          onChange={(e) => change("custom_base_url", e.target.value)}
+          placeholder="http://host.docker.internal:1234/v1"
+          className="mt-1"
+        />
+      </label>
+      <label className="block text-sm font-medium">
+        API Key <span className="font-normal text-muted-foreground">(optional)</span>
+        <Input
+          type="password"
+          value={form.custom_api_key || ""}
+          onChange={(e) => change("custom_api_key", e.target.value)}
+          placeholder="Leave blank if the endpoint needs no key"
+          className="mt-1"
+        />
+      </label>
+      <div>
+        <div className="flex items-center gap-3">
+          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={status === "loading"}>
+            {status === "loading" && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+            Test connection
+          </Button>
+          {status === "idle" && form.custom_api_style && form.custom_base_url && (
+            <span className="text-xs text-muted-foreground">Using the {API_STYLE_LABELS[form.custom_api_style]} API</span>
+          )}
+        </div>
+        {(status === "success" || status === "error") && (
+          <p
+            role={status === "error" ? "alert" : "status"}
+            className={`mt-2 flex items-start gap-1 text-xs ${status === "success" ? "text-green-600" : "text-red-600"}`}
+          >
+            {status === "success" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
+            {message}
+          </p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          Sends one small request to work out whether the endpoint speaks the OpenAI or Anthropic API. From Docker, use
+          host.docker.internal instead of localhost.
+        </p>
+      </div>
+    </>
   );
 }

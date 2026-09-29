@@ -83,6 +83,11 @@ export const api = {
         method: "PUT",
         body: JSON.stringify(updates),
       }),
+    testAI: (baseUrl: string, model: string, apiKey: string) =>
+      fetchAPI<{ ok: boolean; style?: "openai" | "anthropic"; error?: string }>("/settings/test-ai", {
+        method: "POST",
+        body: JSON.stringify({ base_url: baseUrl, model, api_key: apiKey }),
+      }),
     testMealie: (mealieUrl: string, mealieApiKey: string) =>
       fetchAPI<{ ok: boolean; version?: string; error?: string }>("/settings/test-mealie", {
         method: "POST",
