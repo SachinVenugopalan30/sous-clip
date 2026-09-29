@@ -84,7 +84,7 @@ async def test_extract_activity(mock_ex_cls, mock_get_queue, db_engine, db_sessi
     with patch("backend.database.engine", db_engine):
         result = await extract_activity("pasta recipe", "user-1", "q-123")
     assert mock_ex_cls.call_args.kwargs == {
-        "provider": "openai", "api_key": "sk-db", "model": "gpt-test", "base_url": None,
+        "provider": "openai", "api_key": "sk-db", "model": "gpt-test", "base_url": None, "api_style": "openai",
     }
     assert result["title"] == "Pasta"
     assert len(result["ingredients"]) == 1
@@ -182,3 +182,23 @@ async def test_failed_step_is_reported_with_its_name(mock_execute):
 
     fail_call = next(c for c in mock_execute.call_args_list if c.args[0].__name__ == "fail_queue_item_activity")
     assert fail_call.kwargs["args"][2].startswith("AI extraction failed: Can't reach the AI endpoint")
+
+
+@pytest.mark.asyncio
+@patch("backend.workflows.extraction._get_queue")
+@patch("backend.workflows.extraction.RecipeExtractor")
+async def test_extract_activity_passes_custom_endpoint_settings(mock_ex_cls, mock_get_queue, db_engine, db_session):
+    for key, value in {"ai_provider": "custom", "ai_model": "lfm", "custom_base_url": "http://h:3456",
+                       "custom_api_key": "", "custom_api_style": "anthropic"}.items():
+        db_session.add(AppSetting(key=key, value=value))
+    db_session.commit()
+    mock_ex_cls.return_value.extract = AsyncMock(return_value=ExtractionResult(
+        title="P", ingredients=[], instructions=[], prep_time_minutes=None,
+        cook_time_minutes=None, servings=None, notes=None, tags=[],
+    ))
+    with patch("backend.database.engine", db_engine):
+        await extract_activity("talk", "user-1", "q-1")
+
+    assert mock_ex_cls.call_args.kwargs == {
+        "provider": "custom", "api_key": "", "model": "lfm", "base_url": "http://h:3456", "api_style": "anthropic",
+    }

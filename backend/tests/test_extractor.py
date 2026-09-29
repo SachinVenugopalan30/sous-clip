@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from backend.schemas import Ingredient
-from backend.services.extractor import SYSTEM_PROMPT, RecipeExtractor, ExtractionResult
+from backend.services.extractor import SYSTEM_PROMPT, RecipeExtractor, ExtractionResult, detect_api_style
 
 
 def test_extraction_result():
@@ -143,3 +143,73 @@ async def test_openai_compatible_calls_use_json_mode(mock_openai_class, provider
     )
     await RecipeExtractor(provider=provider, api_key="k", model="m").extract("pasta")
     assert create.call_args.kwargs["response_format"] == {"type": "json_object"}
+
+
+def _openai_reply(mock_openai_class):
+    create = mock_openai_class.return_value.chat.completions.create = AsyncMock(
+        return_value=MagicMock(choices=[MagicMock(message=MagicMock(content=MOCK_AI_RESPONSE))])
+    )
+    return create
+
+
+def _anthropic_reply(mock_anthropic_class):
+    create = mock_anthropic_class.return_value.messages.create = AsyncMock(
+        return_value=MagicMock(content=[MagicMock(text=MOCK_AI_RESPONSE)])
+    )
+    return create
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_custom_openai_style_normalises_url_and_allows_no_key(mock_openai_class):
+    _openai_reply(mock_openai_class)
+    extractor = RecipeExtractor(provider="custom", api_key="", model="m", base_url="http://h:3456/v1/", api_style="openai")
+    assert (await extractor.extract("pasta")).title == "Garlic Butter Pasta"
+    assert mock_openai_class.call_args.kwargs == {"api_key": "none", "base_url": "http://h:3456/v1"}
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.anthropic.AsyncAnthropic")
+async def test_custom_anthropic_style_uses_root_url(mock_anthropic_class):
+    _anthropic_reply(mock_anthropic_class)
+    extractor = RecipeExtractor(provider="custom", api_key="k", model="m", base_url="http://h:4000/v1", api_style="anthropic")
+    assert (await extractor.extract("pasta")).title == "Garlic Butter Pasta"
+    assert mock_anthropic_class.call_args.kwargs == {"api_key": "k", "base_url": "http://h:4000"}
+
+
+class NotFoundError(Exception):  # same class name as the SDKs' 404 error, which explain() keys on
+    pass
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.anthropic.AsyncAnthropic")
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_detect_prefers_openai_then_falls_back_to_anthropic(mock_openai_class, mock_anthropic_class):
+    _openai_reply(mock_openai_class)
+    _anthropic_reply(mock_anthropic_class)
+    assert await detect_api_style("http://h", "", "m") == "openai"
+
+    mock_openai_class.return_value.chat.completions.create.side_effect = NotFoundError("404")
+    assert await detect_api_style("http://h", "", "m") == "anthropic"
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.anthropic.AsyncAnthropic")
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_detect_explains_both_failures(mock_openai_class, mock_anthropic_class):
+    _openai_reply(mock_openai_class).side_effect = NotFoundError("no route")
+    _anthropic_reply(mock_anthropic_class).side_effect = ConnectionError("refused")
+    with pytest.raises(ValueError) as exc:
+        await detect_api_style("http://h", "", "m")
+    assert "OpenAI-style: The AI endpoint returned 404" in str(exc.value) and "Anthropic-style: refused" in str(exc.value)
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.anthropic.AsyncAnthropic")
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_detect_states_a_shared_failure_once(mock_openai_class, mock_anthropic_class):
+    _openai_reply(mock_openai_class).side_effect = ConnectionError("refused")
+    _anthropic_reply(mock_anthropic_class).side_effect = ConnectionError("refused")
+    with pytest.raises(ValueError) as exc:
+        await detect_api_style("http://h", "", "m")
+    assert str(exc.value) == "refused"

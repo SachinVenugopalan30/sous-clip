@@ -5,6 +5,7 @@ import anthropic
 import openai
 
 from backend.schemas import Ingredient
+from backend.services.errors import explain
 
 
 SYSTEM_PROMPT = """You are a recipe extraction assistant. Given a transcript from a cooking video, extract the structured recipe data.
@@ -43,12 +44,20 @@ class ExtractionResult:
     tags: list[str]
 
 
+def _root(url: str) -> str:
+    """Base URL without a trailing slash or /v1, so users can paste either form."""
+    return url.rstrip("/").removesuffix("/v1")
+
+
 class RecipeExtractor:
-    def __init__(self, provider: str, api_key: str, model: str, base_url: str | None = None):
+    def __init__(
+        self, provider: str, api_key: str, model: str, base_url: str | None = None, api_style: str = "openai",
+    ):
         self.provider = provider
         self.api_key = api_key
         self.model = model
         self.base_url = base_url
+        self.api_style = api_style  # custom endpoints: "openai" or "anthropic", found by detect_api_style
 
     def _build_prompt(self, transcript: str, caption: str = "") -> str:
         prompt = f"Extract the recipe from this cooking video transcript:\n\n{transcript}"
@@ -57,21 +66,24 @@ class RecipeExtractor:
         return prompt
 
     async def extract(self, transcript: str, caption: str = "") -> ExtractionResult:
-        prompt = self._build_prompt(transcript, caption)
+        return self._parse_response(await self._call(self._build_prompt(transcript, caption)))
 
+    async def _call(self, prompt: str) -> str:
         if self.provider == "anthropic":
-            raw = await self._call_anthropic(prompt)
-        elif self.provider == "openai":
-            raw = await self._call_openai(prompt)
-        elif self.provider == "ollama":
-            raw = await self._call_ollama(prompt)
-        else:
-            raise ValueError(f"Unknown AI provider: {self.provider}")
+            return await self._call_anthropic(prompt, self.api_key)
+        if self.provider == "openai":
+            return await self._call_openai(prompt, self.api_key)  # base URL: SDK default or OPENAI_BASE_URL
+        if self.provider == "ollama":
+            return await self._call_openai(prompt, "ollama", _root(self.base_url or "http://localhost:11434") + "/v1")
+        if self.provider == "custom":
+            key = self.api_key or "none"  # both SDKs require a key; keyless endpoints ignore it
+            if self.api_style == "anthropic":
+                return await self._call_anthropic(prompt, key, _root(self.base_url or ""))
+            return await self._call_openai(prompt, key, _root(self.base_url or "") + "/v1")
+        raise ValueError(f"Unknown AI provider: {self.provider}")
 
-        return self._parse_response(raw)
-
-    async def _call_anthropic(self, prompt: str) -> str:
-        client = anthropic.AsyncAnthropic(api_key=self.api_key)
+    async def _call_anthropic(self, prompt: str, api_key: str, base_url: str | None = None) -> str:
+        client = anthropic.AsyncAnthropic(api_key=api_key, **({"base_url": base_url} if base_url else {}))
         message = await client.messages.create(
             model=self.model,
             max_tokens=2048,
@@ -80,25 +92,8 @@ class RecipeExtractor:
         )
         return message.content[0].text
 
-    async def _call_openai(self, prompt: str) -> str:
-        client = openai.AsyncOpenAI(api_key=self.api_key)
-        response = await client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=2048,
-            response_format={"type": "json_object"},  # guarantees parseable JSON; small models often emit broken JSON otherwise
-        )
-        return response.choices[0].message.content
-
-    async def _call_ollama(self, prompt: str) -> str:
-        client = openai.AsyncOpenAI(
-            api_key="ollama",
-            # Ollama's OpenAI-compatible API lives under /v1; accept the URL with or without it
-            base_url=(self.base_url or "http://localhost:11434").rstrip("/").removesuffix("/v1") + "/v1",
-        )
+    async def _call_openai(self, prompt: str, api_key: str, base_url: str | None = None) -> str:
+        client = openai.AsyncOpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
         response = await client.chat.completions.create(
             model=self.model,
             messages=[
@@ -135,3 +130,18 @@ class RecipeExtractor:
             notes=data.get("notes"),
             tags=data.get("tags") or [],
         )
+
+
+async def detect_api_style(base_url: str, api_key: str, model: str) -> str:
+    """Send the pipeline's real request in each API format; the first that works is the endpoint's style."""
+    failures = []
+    for style, label in (("openai", "OpenAI"), ("anthropic", "Anthropic")):
+        try:
+            await RecipeExtractor("custom", api_key, model, base_url, style)._call("Reply with an empty JSON object: {}")
+            return style
+        except Exception as e:
+            failures.append((label, explain(type(e).__name__, str(e))))
+    reasons = {reason for _, reason in failures}
+    if len(reasons) == 1:  # e.g. both rejected the key: say it once
+        raise ValueError(reasons.pop())
+    raise ValueError(" ".join(f"{label}-style: {reason}" for label, reason in failures))

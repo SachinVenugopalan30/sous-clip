@@ -112,7 +112,8 @@ async def extract_activity(transcript: str, user_id: str, queue_item_id: str, ca
             provider=provider,
             api_key=cfg.get(f"{provider}_api_key", ""),
             model=cfg["ai_model"],
-            base_url=cfg["ollama_base_url"] if provider == "ollama" else None,
+            base_url={"ollama": cfg["ollama_base_url"], "custom": cfg["custom_base_url"]}.get(provider),
+            api_style=cfg["custom_api_style"],
         )
         result = await extractor.extract(transcript, caption)
         return {
