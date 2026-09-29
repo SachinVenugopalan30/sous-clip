@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     otel_endpoint: str = "http://localhost:4317"
     otel_service_name: str = "sous-clip"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    # extra=ignore: .env also holds keys for other tools (HF_TOKEN, OPENAI_BASE_URL)
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()
