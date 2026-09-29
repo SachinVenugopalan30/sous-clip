@@ -69,3 +69,50 @@ def test_github_error_means_no_update(client, auth_headers, github, monkeypatch)
 
 def test_requires_login(client):
     assert client.get("/api/update").status_code == 401
+
+
+@pytest.fixture
+def watchtower_token(monkeypatch):
+    monkeypatch.setattr(settings, "watchtower_http_api_token", "wt-token")
+
+
+@pytest.mark.parametrize("token, probe, expected", [
+    ("wt-token", MagicMock(status_code=404), True),  # any HTTP answer means Watchtower is running
+    ("wt-token", httpx.ConnectError("no such host"), False),
+    ("", MagicMock(status_code=200), False),  # no token: the button could never work
+], ids=["reachable", "unreachable", "no-token"])
+def test_status_reports_watchtower(client, auth_headers, monkeypatch, token, probe, expected):
+    monkeypatch.setattr(settings, "watchtower_http_api_token", token)
+    with patch("backend.services.updates.httpx.AsyncClient.get", new_callable=AsyncMock) as get:
+        get.side_effect = [probe]
+        assert client.get("/api/update", headers=auth_headers).json()["watchtower"] is expected
+
+
+@pytest.mark.parametrize("status, ok, error", [
+    (202, True, None),
+    (200, True, None),
+    (401, False, "WATCHTOWER_HTTP_API_TOKEN"),
+    (429, False, "already running"),
+], ids=["202", "200", "401", "429"])
+def test_trigger_update_forwards_token_async(client, auth_headers, watchtower_token, status, ok, error):
+    with patch("backend.services.updates.httpx.AsyncClient.post", new_callable=AsyncMock) as post:
+        post.return_value = MagicMock(status_code=status)
+        body = client.post("/api/update", headers=auth_headers).json()
+
+    assert post.call_args.args[0] == "http://watchtower:8080/v1/update"
+    assert post.call_args.kwargs["params"] == {"async": "true"}
+    assert post.call_args.kwargs["headers"] == {"Authorization": "Bearer wt-token"}
+    assert body["ok"] is ok
+    assert error is None or error in body["error"]
+
+
+def test_trigger_update_without_token_or_watchtower(client, auth_headers, monkeypatch):
+    assert client.post("/api/update", headers=auth_headers).json()["ok"] is False
+    monkeypatch.setattr(settings, "watchtower_http_api_token", "wt-token")
+    with patch("backend.services.updates.httpx.AsyncClient.post", new_callable=AsyncMock) as post:
+        post.side_effect = httpx.ConnectError("no such host")
+        assert client.post("/api/update", headers=auth_headers).json()["ok"] is False
+
+
+def test_trigger_update_requires_login(client):
+    assert client.post("/api/update").status_code == 401

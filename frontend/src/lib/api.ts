@@ -91,6 +91,7 @@ export const api = {
   },
   update: {
     status: () => fetchAPI<UpdateStatus>("/update"),
+    start: () => fetchAPI<{ ok: boolean; error?: string }>("/update", { method: "POST" }),
   },
   queue: {
     enqueue: (urls: string[], userId: string) =>
@@ -121,6 +122,7 @@ export interface UpdateStatus {
   current: string;
   latest: string | null;
   update_available: boolean;
+  watchtower: boolean;
 }
 
 export interface Recipe {

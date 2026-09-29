@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Save, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Save, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
@@ -307,6 +307,30 @@ function MealieSection({
   );
 }
 
+const UPDATE_TIMEOUT_MS = 5 * 60 * 1000;
+
+// Polls /health until the app comes back on a different version; false after the timeout
+async function waitForNewVersion(current: string): Promise<boolean> {
+  const deadline = Date.now() + UPDATE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    try {
+      const res = await fetch("/health", { cache: "no-store" });
+      if (res.ok && (await res.json()).version !== current) return true;
+    } catch {
+      // app container is restarting
+    }
+  }
+  return false;
+}
+
+async function reloadFresh() {
+  // The PWA precache would otherwise serve the old bundle after the restart
+  const registrations = (await navigator.serviceWorker?.getRegistrations()) ?? [];
+  await Promise.all(registrations.map((r) => r.unregister()));
+  location.reload();
+}
+
 function UpdatesSection({
   form,
   setForm,
@@ -315,6 +339,24 @@ function UpdatesSection({
   setForm: (f: Record<string, string>) => void;
 }) {
   const { data: status } = useUpdateStatus();
+  const [phase, setPhase] = useState<"idle" | "updating" | "failed">("idle");
+
+  const handleUpdate = async () => {
+    if (!status) return;
+    setPhase("updating");
+    try {
+      const result = await api.update.start();
+      if (!result.ok) {
+        toast.error(result.error || "Update failed to start");
+        setPhase("idle");
+        return;
+      }
+    } catch {
+      // Connection dropped: Watchtower is most likely already replacing this container
+    }
+    if (await waitForNewVersion(status.current)) await reloadFresh();
+    else setPhase("failed");
+  };
 
   return (
     <section>
@@ -339,6 +381,33 @@ function UpdatesSection({
           {status?.update_available && <span className="ml-2 text-accent">Update available</span>}
         </dd>
       </dl>
+      {status?.update_available &&
+        (status.watchtower ? (
+          <div className="mt-4">
+            <Button onClick={handleUpdate} disabled={phase === "updating"}>
+              {phase === "updating" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {phase === "updating" ? "Updating…" : `Update to ${status.latest}`}
+            </Button>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Restarts the app; extractions in progress resume afterwards. If this errors, check that
+              WATCHTOWER_HTTP_API_TOKEN matches your .env.
+            </p>
+            {phase === "failed" && (
+              <p role="alert" className="mt-2 text-sm text-red-600">
+                The update didn't apply within 5 minutes. Check <code>docker compose logs watchtower</code>.
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm">
+            To update, run{" "}
+            <code className="rounded bg-bg px-1.5 py-0.5 text-xs">docker compose pull && docker compose up -d</code>
+          </p>
+        ))}
       <label className="mt-4 flex items-center gap-2 text-sm">
         <input
           type="checkbox"

@@ -2,6 +2,8 @@ services:
   app:
     image: ghcr.io/sachinvenugopalan30/sous-clip:latest
     build: .
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
     ports:
       - "127.0.0.1:3000:3000"
     env_file: .env
@@ -75,6 +77,8 @@ services:
   worker:
     image: ghcr.io/sachinvenugopalan30/sous-clip:latest
     build: .
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
     command: python -m backend.worker
     env_file: .env
     environment:
@@ -87,6 +91,22 @@ services:
     volumes:
       - app-data:/app/data
       - ./data/whisper-models:/app/models:ro,z
+    restart: unless-stopped
+
+  # Optional: "Update now" in Settings. Opt in with COMPOSE_PROFILES=updater in .env.
+  # It gets the Docker socket (root-equivalent on the host), so it only runs when asked for.
+  watchtower:
+    image: docker.io/nickfedor/watchtower:1.22.3 # maintained fork; async update API since v1.17.0
+    profiles: [updater]
+    expose:
+      - "8080"
+    environment:
+      - WATCHTOWER_HTTP_API_ENDPOINTS=update # API-only: no periodic polling
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_HTTP_API_TOKEN:-}
+      - WATCHTOWER_LABEL_ENABLE=true # only app + worker
+      - WATCHTOWER_CLEANUP=true
+    volumes:
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
     restart: unless-stopped
 
 volumes:

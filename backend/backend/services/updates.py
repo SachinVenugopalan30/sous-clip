@@ -2,6 +2,8 @@ import time
 
 import httpx
 
+from backend.config import settings
+
 RELEASES_URL = "https://api.github.com/repos/SachinVenugopalan30/sous-clip/releases/latest"
 CACHE_SECONDS = 3600
 
@@ -31,3 +33,38 @@ async def latest_release() -> str | None:
         tag = None
     _cache = (time.monotonic(), tag)
     return tag
+
+
+async def watchtower_reachable() -> bool:
+    """Any HTTP answer counts; a wrong token only shows up as a 401 when updating."""
+    if not settings.watchtower_http_api_token:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=2) as client:
+            await client.get(settings.watchtower_url)
+        return True
+    except httpx.HTTPError:
+        return False
+
+
+async def trigger_update() -> dict:
+    """Ask Watchtower to pull and recreate app + worker. async=true returns 202 before it
+    replaces this container; 202 means triggered, not succeeded."""
+    if not settings.watchtower_http_api_token:
+        return {"ok": False, "error": "Watchtower isn't configured"}
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(
+                f"{settings.watchtower_url}/v1/update",
+                params={"async": "true"},
+                headers={"Authorization": f"Bearer {settings.watchtower_http_api_token}"},
+            )
+    except httpx.HTTPError as e:
+        return {"ok": False, "error": f"Can't reach Watchtower: {e}"}
+    if response.status_code in (200, 202):
+        return {"ok": True}
+    errors = {
+        401: "Watchtower rejected the token. Check that WATCHTOWER_HTTP_API_TOKEN matches your .env",
+        429: "An update is already running",
+    }
+    return {"ok": False, "error": errors.get(response.status_code, f"Watchtower returned HTTP {response.status_code}")}

@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     media_dir: str = "./data/media"
     thumbnails_dir: str = "./data/thumbnails"
 
+    # Optional in-app updates via the Watchtower compose profile
+    watchtower_url: str = "http://watchtower:8080"
+    watchtower_http_api_token: str = ""
+
     app_username: str = "admin"
     app_password: str = "changeme"
     jwt_secret: str = "change-me-in-production"
