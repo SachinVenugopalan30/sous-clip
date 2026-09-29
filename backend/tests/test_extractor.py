@@ -117,3 +117,17 @@ def test_prompt_delimits_caption_and_omits_it_when_empty():
     assert "<caption>\n200g spaghetti\n</caption>" in extractor._build_prompt("talk", "200g spaghetti")
     assert "<caption>" not in extractor._build_prompt("talk", "")
     assert "untrusted" in SYSTEM_PROMPT
+
+
+def test_parse_response_tolerates_nulls_from_small_models():
+    # The prompt says "use null if not mentioned"; small models apply that to lists and title too
+    raw = json.dumps({"title": None, "ingredients": None, "instructions": None, "tags": None,
+                      "servings": None, "notes": None})
+    result = RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(raw)
+    assert (result.title, result.ingredients, result.instructions, result.tags) == ("Untitled recipe", [], [], [])
+
+
+def test_parse_response_drops_nameless_ingredients():
+    raw = json.dumps({"title": "T", "instructions": [], "ingredients": [{"name": None, "quantity": "1"}, {"name": "salt"}]})
+    result = RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(raw)
+    assert [i.name for i in result.ingredients] == ["salt"]

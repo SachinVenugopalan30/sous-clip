@@ -112,22 +112,24 @@ class RecipeExtractor:
         # Take the outermost JSON object; drops fences and any chatter around it
         data = json.loads(raw[raw.find("{"): raw.rfind("}") + 1])
 
+        # "or" defaults: models (small ones especially) return null for lists and title too
         ingredients = [
             Ingredient(
                 name=i["name"],
                 quantity=i.get("quantity"),
                 unit=i.get("unit"),
             )
-            for i in data["ingredients"]
+            for i in data.get("ingredients") or []
+            if i.get("name")
         ]
 
         return ExtractionResult(
-            title=data["title"],
+            title=data.get("title") or "Untitled recipe",
             ingredients=ingredients,
-            instructions=data["instructions"],
+            instructions=data.get("instructions") or [],
             prep_time_minutes=data.get("prep_time_minutes"),
             cook_time_minutes=data.get("cook_time_minutes"),
             servings=data.get("servings"),
             notes=data.get("notes"),
-            tags=data.get("tags", []),
+            tags=data.get("tags") or [],
         )
