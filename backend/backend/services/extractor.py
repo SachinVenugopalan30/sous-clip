@@ -89,6 +89,7 @@ class RecipeExtractor:
                 {"role": "user", "content": prompt},
             ],
             max_tokens=2048,
+            response_format={"type": "json_object"},  # guarantees parseable JSON; small models often emit broken JSON otherwise
         )
         return response.choices[0].message.content
 
@@ -105,6 +106,7 @@ class RecipeExtractor:
                 {"role": "user", "content": prompt},
             ],
             max_tokens=2048,
+            response_format={"type": "json_object"},  # guarantees parseable JSON; small models often emit broken JSON otherwise
         )
         return response.choices[0].message.content
 

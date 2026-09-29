@@ -131,3 +131,15 @@ def test_parse_response_drops_nameless_ingredients():
     raw = json.dumps({"title": "T", "instructions": [], "ingredients": [{"name": None, "quantity": "1"}, {"name": "salt"}]})
     result = RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(raw)
     assert [i.name for i in result.ingredients] == ["salt"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("provider", ["openai", "ollama"])
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_openai_compatible_calls_use_json_mode(mock_openai_class, provider):
+    # Measured on LFM2.5 via oMLX: plain 1/3 valid JSON (~45s), JSON mode 3/3 (~13s)
+    create = mock_openai_class.return_value.chat.completions.create = AsyncMock(
+        return_value=MagicMock(choices=[MagicMock(message=MagicMock(content=MOCK_AI_RESPONSE))])
+    )
+    await RecipeExtractor(provider=provider, api_key="k", model="m").extract("pasta")
+    assert create.call_args.kwargs["response_format"] == {"type": "json_object"}
