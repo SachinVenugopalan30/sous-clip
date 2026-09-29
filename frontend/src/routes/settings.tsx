@@ -18,7 +18,7 @@ const AI_PROVIDERS = [
   { value: "anthropic", label: "Anthropic (Claude)" },
   { value: "openai", label: "OpenAI" },
   { value: "ollama", label: "Ollama (Local)" },
-  { value: "custom", label: "Custom endpoint (OpenAI or Anthropic compatible)" },
+  { value: "custom", label: "Custom endpoint" },
 ];
 const API_STYLE_LABELS: Record<string, string> = { openai: "OpenAI-compatible", anthropic: "Anthropic-compatible" };
 
@@ -287,6 +287,7 @@ function MealieSection({
             size="sm"
             onClick={handleTest}
             disabled={testStatus === "loading"}
+            className="h-10 sm:h-8"
           >
             {testStatus === "loading" ? (
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
@@ -412,9 +413,10 @@ function UpdatesSection({
             <code className="rounded bg-bg px-1.5 py-0.5 text-xs">docker compose pull && docker compose up -d</code>
           </p>
         ))}
-      <label className="mt-4 flex items-center gap-2 text-sm">
+      <label className="mt-4 flex min-h-11 items-center gap-3 text-sm sm:min-h-0">
         <input
           type="checkbox"
+          className="size-5 accent-[var(--color-accent)]"
           checked={form.update_check !== "false"}
           onChange={(e) => setForm({ ...form, update_check: e.target.checked ? "true" : "false" })}
         />
@@ -483,7 +485,7 @@ function CustomEndpointFields({
       </label>
       <div>
         <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={status === "loading"}>
+          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={status === "loading"} className="h-10 sm:h-8">
             {status === "loading" && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
             Test connection
           </Button>

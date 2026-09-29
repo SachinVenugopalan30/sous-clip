@@ -141,6 +141,22 @@
   }
 }
 
+/* iOS Safari zooms the page when a field under 16px is focused. Unlayered on purpose:
+   it must beat Tailwind's text-xs/text-sm utilities, which live in a higher layer than base. */
+@media (max-width: 639px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Swipeable single-line chip rows on phones */
+.chip-row {
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
 /* Smooth theme transition */
 html.theme-transition,
 html.theme-transition *,

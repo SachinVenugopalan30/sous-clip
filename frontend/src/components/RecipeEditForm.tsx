@@ -73,10 +73,10 @@ export function RecipeEditForm({ recipe, onDone }: { recipe: Recipe; onDone: () 
         <div className="mt-1 space-y-2">
           {ingredients.map((ing, i) => (
             <div key={i} className="flex gap-2">
-              <Input aria-label="Quantity" placeholder="Qty" value={ing.quantity ?? ""} onChange={(e) => setIngredient(i, "quantity", e.target.value)} className="w-20" />
-              <Input aria-label="Unit" placeholder="Unit" value={ing.unit ?? ""} onChange={(e) => setIngredient(i, "unit", e.target.value)} className="w-24" />
-              <Input aria-label="Ingredient" placeholder="Ingredient" value={ing.name} onChange={(e) => setIngredient(i, "name", e.target.value)} className="flex-1" />
-              <Button type="button" variant="ghost" size="sm" aria-label="Remove ingredient" onClick={() => setIngredients(ingredients.filter((_, j) => j !== i))}>
+              <Input aria-label="Quantity" placeholder="Qty" value={ing.quantity ?? ""} onChange={(e) => setIngredient(i, "quantity", e.target.value)} className="w-16 sm:w-20" />
+              <Input aria-label="Unit" placeholder="Unit" value={ing.unit ?? ""} onChange={(e) => setIngredient(i, "unit", e.target.value)} className="w-20 sm:w-24" />
+              <Input aria-label="Ingredient" placeholder="Ingredient" value={ing.name} onChange={(e) => setIngredient(i, "name", e.target.value)} className="min-w-0 flex-1" />
+              <Button type="button" variant="ghost" size="sm" className="size-10 shrink-0 sm:size-8" aria-label="Remove ingredient" onClick={() => setIngredients(ingredients.filter((_, j) => j !== i))}>
                 <X className="h-4 w-4" />
               </Button>
             </div>

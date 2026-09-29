@@ -50,7 +50,7 @@ export function RecipeView({ recipe }: RecipeViewProps) {
           href={recipe.source_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-accent hover:underline"
+          className="-my-2 flex items-center gap-1 py-2 text-accent hover:underline sm:my-0 sm:py-0"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Source video
@@ -75,11 +75,11 @@ export function RecipeView({ recipe }: RecipeViewProps) {
             <h2 className="font-display text-xl font-bold">Ingredients</h2>
             {servings && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <button type="button" aria-label="Fewer servings" disabled={servings <= 1} onClick={() => setServings(servings - 1)} className="rounded-md p-1.5 hover:bg-bg disabled:opacity-40">
+                <button type="button" aria-label="Fewer servings" disabled={servings <= 1} onClick={() => setServings(servings - 1)} className="rounded-md p-2.5 hover:bg-bg sm:p-1.5 disabled:opacity-40">
                   <Minus className="h-4 w-4" />
                 </button>
                 <span aria-live="polite" className="min-w-16 text-center">{servings} servings</span>
-                <button type="button" aria-label="More servings" onClick={() => setServings(servings + 1)} className="rounded-md p-1.5 hover:bg-bg">
+                <button type="button" aria-label="More servings" onClick={() => setServings(servings + 1)} className="rounded-md p-2.5 hover:bg-bg sm:p-1.5">
                   <Plus className="h-4 w-4" />
                 </button>
               </div>

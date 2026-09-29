@@ -27,7 +27,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+      className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-medium transition-colors sm:px-3 sm:py-1 ${
         active ? "bg-primary text-primary-foreground" : "bg-bg text-muted-foreground hover:bg-border"
       }`}
     >
@@ -216,13 +216,13 @@ function HomePage() {
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="chip-row -mx-4 mt-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+        <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
           Sort
           <select
             value={filters.sort}
             onChange={(e) => setFilters({ ...filters, sort: e.target.value as SortKey })}
-            className="rounded-md border border-border bg-bg px-2 py-1 text-xs text-foreground"
+            className="rounded-md border border-border bg-bg px-2 py-1.5 text-xs text-foreground sm:py-1"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -242,12 +242,8 @@ function HomePage() {
       </div>
 
       {(allTags.length > 0 || filtering) && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {allTags.map((tag) => (
-            <FilterChip key={tag} active={selectedTags.has(tag)} onClick={() => toggleTag(tag)}>
-              {tag}
-            </FilterChip>
-          ))}
+        <div className="chip-row -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          {/* First, so it stays reachable when the row scrolls sideways on phones */}
           {filtering && (
             <button
               type="button"
@@ -255,12 +251,17 @@ function HomePage() {
                 setSelectedTags(new Set());
                 setFilters({ ...NO_FILTERS, sort: filters.sort });
               }}
-              className="flex items-center gap-1 rounded-full px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-xs text-muted-foreground hover:text-foreground sm:py-1"
             >
               <X className="h-3 w-3" />
               Clear filters
             </button>
           )}
+          {allTags.map((tag) => (
+            <FilterChip key={tag} active={selectedTags.has(tag)} onClick={() => toggleTag(tag)}>
+              {tag}
+            </FilterChip>
+          ))}
         </div>
       )}
 

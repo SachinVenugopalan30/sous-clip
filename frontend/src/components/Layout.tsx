@@ -75,32 +75,32 @@ export function Layout() {
 
       {/* Mobile header */}
       <header className="sm:hidden border-b border-border bg-surface">
-        <nav className="flex items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
+        <nav className="flex items-center justify-between px-2 py-1">
+          <Link to="/" className="flex min-h-11 items-center gap-2 px-2">
             <ChefHat className="h-5 w-5 text-accent" />
             <span className="font-display text-lg font-bold">SC</span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <a
               href="https://github.com/SachinVenugopalan30/sous-clip"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-text"
+              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
               title="GitHub"
             >
               <Github className="h-4 w-4" />
             </a>
             <button
               onClick={toggleTheme}
-              className="text-muted-foreground transition-colors hover:text-text"
+              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <span className="text-xs text-muted-foreground">{username}</span>
+            <span className="px-1 text-xs text-muted-foreground">{username}</span>
             <button
               onClick={logout}
-              className="text-muted-foreground transition-colors hover:text-text"
+              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
               title="Logout"
             >
               <LogOut className="h-4 w-4" />
