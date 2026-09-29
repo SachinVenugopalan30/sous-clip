@@ -134,17 +134,18 @@ class ExtractionQueue:
             item.error = error
             self.client.hset("queue_items", item_id, item.to_json())
 
-    def retry(self, user_id: str, item_id: str) -> bool:
+    def retry(self, user_id: str, item_id: str) -> QueueItem | None:
+        """Reset a failed item to PENDING; the caller restarts its workflow."""
         raw = self.client.hget("queue_items", item_id)
         if not raw:
-            return False
+            return None
         item = QueueItem.from_json(raw)
         if item.status != QueueStatus.FAILED:
-            return False
+            return None
         item.status = QueueStatus.PENDING
         item.error = None
         self.client.hset("queue_items", item_id, item.to_json())
-        return True
+        return item
 
     def get_all_active_items(self) -> list[QueueItem]:
         """Return all PENDING or IN_PROGRESS items across all users."""

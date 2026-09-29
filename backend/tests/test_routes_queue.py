@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -88,12 +88,29 @@ def test_cancel_non_pending_fails(client, mock_queue, auth_headers):
     assert resp.json()["cancelled"] is False
 
 
-def test_retry_failed_item(client, mock_queue, auth_headers):
-    mock_queue.retry.return_value = True
+@patch("backend.routes.queue.Client.connect", new_callable=AsyncMock)
+def test_retry_restarts_the_extraction_workflow(mock_connect, client, mock_queue, auth_headers):
+    # Retry used to only reset the item to PENDING, so it sat in "queued" forever
+    mock_queue.retry.return_value = _make_item()
 
     resp = client.post("/api/queue/user-1/q-123/retry", headers=auth_headers)
-    assert resp.status_code == 200
-    assert resp.json()["retried"] is True
+
+    assert resp.status_code == 200 and resp.json()["retried"] is True
+    start = mock_connect.return_value.start_workflow
+    start.assert_awaited_once()
+    assert start.call_args.kwargs["id"] == "extraction-q-123"
+    assert (start.call_args.args[1].url, start.call_args.args[1].queue_item_id) == ("https://youtube.com/shorts/abc", "q-123")
+    mock_queue.mark_in_progress.assert_called_once_with("q-123")
+
+
+@patch("backend.routes.queue.Client.connect", new_callable=AsyncMock)
+def test_retry_of_non_failed_item_starts_nothing(mock_connect, client, mock_queue, auth_headers):
+    mock_queue.retry.return_value = None
+
+    resp = client.post("/api/queue/user-1/q-123/retry", headers=auth_headers)
+
+    assert resp.json()["retried"] is False
+    mock_connect.assert_not_called()
 
 
 def test_queue_requires_auth(client, mock_queue):
