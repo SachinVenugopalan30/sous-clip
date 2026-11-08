@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClipboardPaste, Send } from "lucide-react";
@@ -18,8 +18,16 @@ export const Route = createFileRoute("/submit")({
   component: SubmitPage,
 });
 
+const sharedParam = () => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("url") || params.get("text");
+};
+
 function SubmitPage() {
-  const [url, setUrl] = useState("");
+  // A link shared from the PWA share sheet arrives as ?url= or ?text=
+  const [url, setUrl] = useState(
+    () => sharedParam()?.match(/https?:\/\/[^\s]+/)?.[0] ?? ""
+  );
   const [forwardToMealie, setForwardToMealie] = useState(false);
   const userId = "default";
   const extract = useExtractRecipe();
@@ -27,7 +35,6 @@ function SubmitPage() {
   const { data: settings } = useSettings();
   const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
   const queryClient = useQueryClient();
-  const hasHandledShare = useRef(false);
 
   const handleExpire = useCallback(
     (_itemId: string) => {
@@ -50,31 +57,24 @@ function SubmitPage() {
 
   const { progress, metaMap } = useProgress(userId, handleComplete);
 
-  // Handle Share Target URL params (from PWA share sheet)
-  useEffect(() => {
-    if (hasHandledShare.current) return;
-    hasHandledShare.current = true;
-
-    const params = new URLSearchParams(window.location.search);
-    const sharedUrl = params.get("url") || params.get("text") || "";
-    if (sharedUrl) {
-      const urlMatch = sharedUrl.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) {
-        setUrl(urlMatch[0]);
-        extract.mutate(
-          { url: urlMatch[0], userId, forwardToMealie },
-          {
-            onSuccess: () => {
-              toast.success("Video queued for extraction");
-              setUrl("");
-            },
-            onError: (err) =>
-              toast.error(err.message || "Failed to queue extraction"),
-          }
-        );
+  const submit = (link: string) =>
+    extract.mutate(
+      { url: link, userId, forwardToMealie },
+      {
+        onSuccess: () => {
+          toast.success("Video queued for extraction");
+          setUrl("");
+        },
+        onError: (err) => toast.error(err.message || "Failed to queue extraction"),
       }
-      window.history.replaceState({}, "", "/submit");
-    }
+    );
+
+  // Submit a shared link once, then strip it from the address bar (which also stops a StrictMode re-run)
+  useEffect(() => {
+    if (!sharedParam()) return;
+    window.history.replaceState({}, "", "/submit");
+    if (url) submit(url);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- mount-only: url is the initial shared link and submit is recreated every render
   }, []);
 
   // Clipboard reads need HTTPS or localhost; hide the button where the browser can't do it
@@ -93,18 +93,7 @@ function SubmitPage() {
     e.preventDefault();
     if (!url.trim()) return;
 
-    extract.mutate(
-      { url: url.trim(), userId, forwardToMealie },
-      {
-        onSuccess: () => {
-          toast.success("Video queued for extraction");
-          setUrl("");
-        },
-        onError: (err) => {
-          toast.error(err.message || "Failed to queue extraction");
-        },
-      }
-    );
+    submit(url.trim());
   };
 
   return (
