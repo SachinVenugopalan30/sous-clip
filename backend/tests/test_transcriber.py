@@ -1,12 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from backend.services.transcriber import Transcriber, TranscribeResult
-
-
-def test_transcribe_result():
-    result = TranscribeResult(text="Hello world", language="en")
-    assert result.text == "Hello world"
-    assert result.language == "en"
+from backend.services.transcriber import Transcriber
 
 
 @patch("backend.services.transcriber.WhisperModel")
