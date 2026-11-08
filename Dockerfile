@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN bun --bun run build
 
 # Stage 2: Python backend + serve built frontend
-FROM docker.io/library/python:3.12-slim AS production
+FROM docker.io/library/python:3.14-slim AS production
 WORKDIR /app
 
 # Install system deps for yt-dlp, ffmpeg, and deno (JS runtime for yt-dlp)
@@ -17,9 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python deps
-COPY backend/pyproject.toml ./
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-RUN uv pip install --system --no-cache-dir .
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv export --frozen --no-dev --no-emit-project -o requirements.txt \
+    && uv pip install --system --no-cache-dir -r requirements.txt
 
 # Copy backend code
 COPY backend/backend/ ./backend/

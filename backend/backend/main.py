@@ -118,7 +118,7 @@ async def health():
     return {"status": "ok", "version": settings.app_version}
 
 
-# python:3.12-slim has no /etc/mime.types and CPython only maps .webp from 3.13; IG/TikTok thumbnails are often webp
+# Defensive: python:slim has no /etc/mime.types, so keep .webp (common IG/TikTok thumbnail format) mapped explicitly; CPython 3.14 already maps it
 mimetypes.add_type("image/webp", ".webp")
 # Created here too: the app can start before the worker has saved any thumbnail
 Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)

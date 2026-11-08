@@ -8,7 +8,7 @@ Thanks for your interest in contributing!
 2. Clone your fork
 3. Create a branch: `git checkout -b feat/your-feature`
 4. Make your changes
-5. Run tests: `cd backend && pytest tests/ -v`
+5. Run tests: `cd backend && uv run pytest tests/ -v`
 6. Commit and push
 7. Open a Pull Request
 
@@ -17,9 +17,8 @@ Thanks for your interest in contributing!
 ```bash
 # Backend
 cd backend
-uv venv .venv --python 3.13
-uv pip install -e ".[dev]"
-.venv/bin/uvicorn backend.main:app --reload
+uv sync --extra dev
+uv run uvicorn backend.main:app --reload
 
 # Frontend
 cd frontend
