@@ -32,6 +32,7 @@ def _recipe_to_response(recipe: Recipe) -> RecipeResponse:
         notes=recipe.notes,
         share_token=recipe.share_token,
         thumbnail_url=f"/thumbnails/{recipe.thumbnail}" if recipe.thumbnail else None,
+        queue_item_id=recipe.queue_item_id,
         created_at=recipe.created_at.isoformat(),
     )
 
@@ -193,4 +194,4 @@ def get_shared_recipe(token: str, session: Session = Depends(get_session)):
     recipe = session.exec(select(Recipe).where(Recipe.share_token == token)).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Shared recipe not found")
-    return _recipe_to_response(recipe)
+    return _recipe_to_response(recipe).model_copy(update={"queue_item_id": None})  # internal id, not for the public

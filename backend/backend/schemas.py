@@ -32,6 +32,7 @@ class RecipeResponse(BaseModel):
     notes: str | None = None
     share_token: str | None = None
     thumbnail_url: str | None = None
+    queue_item_id: str | None = None
     created_at: str
 
 

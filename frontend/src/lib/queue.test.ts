@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatDuration, rowState, serialNumbers } from "./queue.ts";
+import { captionTail, formatDuration, rowState, serialNumbers } from "./queue.ts";
 
 test("formatDuration", () => {
   assert.equal(formatDuration(65), "1:05");
@@ -25,6 +25,13 @@ test("rowState flags skeletons only while downloading", () => {
 
 test("rowState treats completing items as completed", () => {
   const s = rowState({ ...base, status: "in_progress", completing: true });
-  assert.ok(s.isCompleted && s.isInProgress);
+  assert.ok(s.isCompleted && !s.isInProgress);
   assert.ok(rowState({ ...base, status: "failed" }).isFailed);
+});
+
+test("captionTail keeps the newest words within the limit", () => {
+  assert.equal(captionTail("short text"), "short text");
+  const tail = captionTail("one two three four five", 12);
+  assert.equal(tail, "four five");
+  assert.ok(captionTail("x".repeat(500), 20).length <= 20);
 });

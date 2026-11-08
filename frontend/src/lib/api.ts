@@ -143,6 +143,7 @@ export interface Recipe {
   notes: string | null;
   share_token: string | null;
   thumbnail_url: string | null;
+  queue_item_id: string | null;
   created_at: string;
 }
 

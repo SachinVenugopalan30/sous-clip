@@ -127,6 +127,15 @@ def test_recipe_response_includes_thumbnail_url(client, auth_headers, thumb_reci
     assert client.get(f"/api/recipes/{recipe_id}", headers=auth_headers).json()["thumbnail_url"] == "/thumbnails/abc.webp"
 
 
+def test_recipe_response_includes_queue_item_id(client, auth_headers, test_db):
+    with Session(test_db) as session:
+        recipe = Recipe(title="T", source_url="u", ingredients_json="[]", instructions_json="[]", queue_item_id="q-1")
+        session.add(recipe)
+        session.commit()
+        recipe_id = recipe.id
+    assert client.get(f"/api/recipes/{recipe_id}", headers=auth_headers).json()["queue_item_id"] == "q-1"
+
+
 @pytest.mark.parametrize("bulk", [False, True], ids=["single", "bulk"])
 def test_delete_removes_thumbnail_file(client, auth_headers, thumb_recipe, bulk):
     recipe_id, thumb = thumb_recipe
@@ -170,3 +179,12 @@ def test_patch_rejects_bad_bodies(client, seeded_db, auth_headers, payload, stat
 
 def test_patch_missing_recipe(client, test_db, auth_headers):
     assert client.patch("/api/recipes/999", json={"title": "x"}, headers=auth_headers).status_code == 404
+
+
+def test_public_share_hides_queue_item_id(client, test_db):
+    with Session(test_db) as session:
+        recipe = Recipe(title="T", source_url="u", ingredients_json="[]", instructions_json="[]", queue_item_id="q-1", share_token="tok")
+        session.add(recipe)
+        session.commit()
+    body = client.get("/api/share/tok").json()
+    assert body["title"] == "T" and body["queue_item_id"] is None

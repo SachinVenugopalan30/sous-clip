@@ -15,7 +15,7 @@ interface RowInput {
 }
 
 export function rowState({ status, completing, step, hasThumbnail, hasMeta }: RowInput) {
-  const isInProgress = status === "in_progress";
+  const isInProgress = status === "in_progress" && !completing;
   // Meta is available once download finishes (step moves past "downloading")
   const downloading = isInProgress && (step === "downloading" || !step);
   return {
@@ -32,4 +32,12 @@ export function rowState({ status, completing, step, hasThumbnail, hasMeta }: Ro
 export function serialNumbers(ids: string[], completingIds?: Set<string>): number[] {
   let n = 0;
   return ids.map((id) => (completingIds?.has(id) ? 0 : ++n));
+}
+
+/** The latest words of a transcript, cut on a word boundary, so live captions stay bounded. */
+export function captionTail(text: string, max = 130): string {
+  if (text.length <= max) return text;
+  const tail = text.slice(-max);
+  const space = tail.indexOf(" ");
+  return space < 0 ? tail : tail.slice(space + 1);
 }

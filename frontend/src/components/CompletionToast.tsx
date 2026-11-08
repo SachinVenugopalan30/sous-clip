@@ -39,27 +39,27 @@ export function CompletionToast({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.96 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="w-[356px] overflow-hidden rounded-xl border border-accent-alt/30 bg-surface shadow-lg"
+      className="w-[min(356px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius)] border border-border bg-card text-card-foreground shadow-lg"
     >
       <div className="flex items-start gap-3 px-4 py-3">
-        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-alt/15">
-          <Check className="h-3.5 w-3.5 text-accent-alt" />
+        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success/15">
+          <Check className="h-3.5 w-3.5 text-success" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Recipe extracted!</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <p className="font-display text-base">Order up.</p>
+          <p className="mt-0.5 truncate mono">
             {title}
           </p>
         </div>
-        <span className="shrink-0 tabular-nums text-xs text-muted-foreground/60">
+        <span className="shrink-0 mono">
           {seconds}s
         </span>
       </div>
 
       {/* Countdown bar */}
-      <div className="h-1 w-full bg-accent-alt/10">
+      <div className="h-1 w-full bg-success/15">
         <motion.div
-          className="h-full bg-accent-alt"
+          className="h-full bg-success"
           initial={{ scaleX: 1 }}
           animate={{ scaleX: 0 }}
           transition={{ duration: duration / 1000, ease: "linear" }}

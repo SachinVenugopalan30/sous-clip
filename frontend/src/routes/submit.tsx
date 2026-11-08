@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClipboardPaste, Send } from "lucide-react";
-import { motion } from "motion/react";
 import { toast } from "sonner";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 import { QueueList } from "../components/QueueList";
 import { showCompletionToast } from "../components/CompletionToast";
+import type { QueueItem } from "../lib/api";
 import { useExtractRecipe } from "../hooks/useExtract";
 import { useQueue } from "../hooks/useQueue";
 import { useProgress } from "../hooks/useProgress";
 import { useVisibilityTimer } from "../hooks/useVisibilityTimer";
+import { useRecipes } from "../hooks/useRecipes";
 import { useMealieConfigured } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/submit")({
@@ -29,9 +28,11 @@ function SubmitPage() {
     () => sharedParam()?.match(/https?:\/\/[^\s]+/)?.[0] ?? ""
   );
   const [forwardToMealie, setForwardToMealie] = useState(false);
+  const [error, setError] = useState("");
   const userId = "default";
   const extract = useExtractRecipe();
   const { data: queueData } = useQueue(userId);
+  const { data: library } = useRecipes();
   const mealieConfigured = useMealieConfigured();
   const queryClient = useQueryClient();
 
@@ -54,7 +55,7 @@ function SubmitPage() {
     [startTimer, queryClient, userId]
   );
 
-  const { progress, metaMap } = useProgress(userId, handleComplete);
+  const { progress, metaMap, transcripts } = useProgress(userId, handleComplete);
 
   const submit = (link: string) =>
     extract.mutate(
@@ -64,7 +65,7 @@ function SubmitPage() {
           toast.success("Video queued for extraction");
           setUrl("");
         },
-        onError: (err) => toast.error(err.message || "Failed to queue extraction"),
+        onError: (err) => setError(err.message || "Failed to queue extraction"),
       }
     );
 
@@ -90,96 +91,92 @@ function SubmitPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) return;
-
-    submit(url.trim());
+    const link = url.trim();
+    if (!/^https?:\/\/\S+$/i.test(link)) {
+      setError("Paste a full video link that starts with http:// or https://");
+      return;
+    }
+    setError("");
+    submit(link);
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-    >
-      <h1 className="font-display text-2xl font-bold sm:text-3xl">
-        Extract Recipe
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-        Paste a YouTube Short, Instagram Reel, or TikTok URL.
-      </p>
+  // queue.complete() drops an item from GET /queue at once, so a finished row is kept here for its hold.
+  // Order follows the previous render; ponytail: an item that vanishes before its saved event lands is not kept.
+  const shown = useRef<QueueItem[]>([]);
+  const live = queueData?.items ?? [];
+  const liveById = new Map(live.map((i) => [i.id, i]));
+  const kept = shown.current
+    .filter((i) => liveById.has(i.id) || completingIds.has(i.id))
+    .map((i) => liveById.get(i.id) ?? { ...i, status: "completed" as const });
+  const keptIds = new Set(kept.map((i) => i.id));
+  const rows = [...kept, ...live.filter((i) => !keptIds.has(i.id))];
+  useEffect(() => {
+    shown.current = rows;
+  });
+  const cooking = rows.filter((i) => (i.status === "pending" || i.status === "in_progress") && !completingIds.has(i.id)).length;
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-6 flex flex-col gap-3 sm:flex-row"
-      >
-        <div className="relative flex-1">
-          <Input
-            placeholder="https://youtube.com/shorts/..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            inputMode="url"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-label="Video URL"
-            className="h-11 pr-20 sm:h-9"
-          />
-          {/* On phones the link is usually already copied from the video app */}
-          {canPaste && !url && (
-            <Button type="button" variant="ghost" size="sm" onClick={handlePaste} className="absolute right-1 top-1/2 h-9 -translate-y-1/2 sm:h-7">
-              <ClipboardPaste className="mr-1 h-4 w-4" />
-              Paste
-            </Button>
-          )}
+  return (
+    <div className="ord display">
+      <h1 className="in">
+        Order <em>in.</em>
+      </h1>
+
+      <form onSubmit={handleSubmit} noValidate className="ord-form in" style={{ "--i": 1 } as React.CSSProperties}>
+        <div className="req">
+          <div className="ord-in">
+            <label htmlFor="video-url" className="sr-only">Video URL</label>
+            <input
+              id="video-url"
+              placeholder="Paste a video link"
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setError("");
+              }}
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-invalid={!!error}
+              aria-describedby="video-url-err"
+            />
+            {/* On phones the link is usually already copied from the video app */}
+            {canPaste && !url && (
+              <button type="button" onClick={handlePaste} className="ord-paste press">
+                <ClipboardPaste className="h-4 w-4" /> Paste
+              </button>
+            )}
+          </div>
+          <button type="submit" disabled={extract.isPending} className="ord-go press">
+            <Send className="h-4 w-4" /> Extract recipe
+          </button>
         </div>
-        <Button
-          type="submit"
-          disabled={extract.isPending || !url.trim()}
-          className="h-11 bg-accent text-white hover:bg-accent/90 active:scale-[0.97] sm:h-9"
-        >
-          <Send className="mr-2 h-4 w-4" />
-          Extract
-        </Button>
+        <p id="video-url-err" className="ord-err" role="alert">{error}</p>
+
+        {mealieConfigured && (
+          <button type="button" role="switch" aria-checked={forwardToMealie} onClick={() => setForwardToMealie(!forwardToMealie)} className="ord-sw">
+            <i /> Also send to Mealie
+          </button>
+        )}
       </form>
 
-      {mealieConfigured && (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={forwardToMealie}
-          onClick={() => setForwardToMealie(!forwardToMealie)}
-          className="mt-3 flex min-h-11 items-center gap-2.5 cursor-pointer select-none group sm:min-h-0"
-        >
-          <span
-            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors duration-200 ${
-              forwardToMealie
-                ? "border-accent bg-accent"
-                : "border-border bg-border/50"
-            }`}
-          >
-            <span
-              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                forwardToMealie ? "translate-x-4" : "translate-x-0.5"
-              }`}
-            />
-          </span>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            Also send to Mealie
-          </span>
-        </button>
-      )}
-
-      {queueData && queueData.items.length > 0 && (
-        <div className="mt-8">
+      {rows.length > 0 && (
+        <>
+          <div className="lineh">
+            <h2>On the line</h2>
+            {cooking > 0 && <span className="mono">{cooking} still cooking</span>}
+          </div>
           <QueueList
-            items={queueData.items}
+            items={rows}
             userId={userId}
             progress={progress}
             metaMap={metaMap}
+            transcripts={transcripts}
+            recipes={library?.recipes ?? []}
             completingIds={completingIds}
           />
-        </div>
+        </>
       )}
-    </motion.div>
+    </div>
   );
 }
