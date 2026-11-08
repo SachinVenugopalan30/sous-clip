@@ -43,16 +43,13 @@ class MealieClient:
             ingredients = recipe_data.get("ingredients", [])
             recipe_ingredient = []
             for ing in ingredients:
-                if isinstance(ing, dict):
-                    parts = []
-                    if ing.get("quantity"):
-                        parts.append(str(ing["quantity"]))
-                    if ing.get("unit"):
-                        parts.append(ing["unit"])
-                    parts.append(ing.get("name", ""))
-                    recipe_ingredient.append({"note": " ".join(parts)})
-                else:
-                    recipe_ingredient.append({"note": str(ing)})
+                parts = []
+                if ing.get("quantity"):
+                    parts.append(str(ing["quantity"]))
+                if ing.get("unit"):
+                    parts.append(ing["unit"])
+                parts.append(ing.get("name", ""))
+                recipe_ingredient.append({"note": " ".join(parts)})
 
             instructions = recipe_data.get("instructions", [])
             recipe_instructions = [{"text": step} for step in instructions]
