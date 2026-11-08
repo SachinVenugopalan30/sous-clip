@@ -12,6 +12,7 @@ import { Button } from "./ui/button";
 import { PipelineSteps } from "./PipelineSteps";
 import { useCancelQueueItem, useRetryQueueItem } from "../hooks/useQueue";
 import type { QueueItem } from "../lib/api";
+import { formatDuration, rowState, serialNumbers } from "../lib/queue";
 import type { PipelineProgress, VideoMeta } from "../hooks/useProgress";
 
 interface QueueListProps {
@@ -20,12 +21,6 @@ interface QueueListProps {
   progress: Map<string, PipelineProgress>;
   metaMap: Map<string, VideoMeta>;
   completingIds?: Set<string>;
-}
-
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 /** Placeholder shown while fetching video info */
@@ -114,6 +109,7 @@ export function QueueList({
   // Count non-completing items for the summary
   const activeItems = items.filter((i) => !completingIds?.has(i.id));
   const completedCount = items.length - activeItems.length;
+  const serials = serialNumbers(items.map((i) => i.id), completingIds);
 
   return (
     <div>
@@ -137,27 +133,15 @@ export function QueueList({
         {items.map((item, index) => {
           const prog = progress.get(item.id);
           const meta = metaMap.get(item.id);
-          const isCompleting = completingIds?.has(item.id);
-          const isInProgress = item.status === "in_progress";
-          const isPending = item.status === "pending";
-          const isFailed = item.status === "failed";
-          const isCompleted = item.status === "completed" || isCompleting;
-
-          // Serial number: count only non-completing items up to this index
-          const serialNumber = isCompleting
-            ? 0
-            : items
-                .slice(0, index)
-                .filter((i) => !completingIds?.has(i.id)).length + 1;
-
-          // Meta is available once download finishes (step moves past "downloading")
+          const isCompleting = !!completingIds?.has(item.id);
           const hasMeta = !!meta;
-          const showMetaSkeleton =
-            isInProgress &&
-            !hasMeta &&
-            (prog?.step === "downloading" || !prog);
-          const showThumbnailSkeleton =
-            isInProgress && !meta?.thumbnail && (prog?.step === "downloading" || !prog);
+          const { isInProgress, isPending, isFailed, isCompleted, showMetaSkeleton, showThumbnailSkeleton } = rowState({
+            status: item.status,
+            completing: isCompleting,
+            step: prog?.step,
+            hasThumbnail: !!meta?.thumbnail,
+            hasMeta,
+          });
 
           return (
             <motion.div
@@ -215,7 +199,7 @@ export function QueueList({
                       layout
                       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-bg text-[11px] font-bold tabular-nums text-muted-foreground"
                     >
-                      {serialNumber}
+                      {serials[index]}
                     </motion.div>
                   )}
 

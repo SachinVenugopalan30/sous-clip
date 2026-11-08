@@ -14,7 +14,6 @@ export type StepKey = (typeof BASE_STEPS)[number]["key"] | "mealie";
 
 interface PipelineStepsProps {
   currentStep: StepKey | null;
-  error?: boolean;
   percent?: number;
   isComplete?: boolean;
   showMealie?: boolean;
@@ -22,7 +21,6 @@ interface PipelineStepsProps {
 
 export function PipelineSteps({
   currentStep,
-  error,
   percent,
   isComplete,
   showMealie,
@@ -50,7 +48,7 @@ export function PipelineSteps({
             <div className="relative flex flex-col items-center">
               <div className="relative">
                 {/* Pulse ring for active node */}
-                {isActive && !error && (
+                {isActive && (
                   <motion.div
                     className="absolute -inset-1 rounded-full bg-accent/20"
                     animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
@@ -64,9 +62,7 @@ export function PipelineSteps({
                     isDone
                       ? "border-accent-alt bg-accent-alt text-white"
                       : isActive
-                        ? error
-                          ? "border-destructive bg-destructive/10 text-destructive"
-                          : "border-accent bg-accent/10 text-accent-text"
+                        ? "border-accent bg-accent/10 text-accent-text"
                         : "border-border bg-surface text-muted-foreground/40"
                   }`}
                   initial={false}
@@ -91,9 +87,7 @@ export function PipelineSteps({
                   isDone
                     ? "text-accent-alt"
                     : isActive
-                      ? error
-                        ? "text-destructive"
-                        : "text-accent-text"
+                      ? "text-accent-text"
                       : "text-muted-foreground/40"
                 }`}
               >
