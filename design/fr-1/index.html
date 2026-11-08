@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sous Clip v2 · Four directions</title>
+<meta name="description" content="Four complete visual directions for Sous Clip v2: Mise, Order Up, Night Kitchen and Larder.">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+:root {
+  --bg: #f1efe9;
+  --surface: #e8e4db;
+  --paper: #fbf9f4;
+  --ink: #1b1917;
+  --muted: #6b665f;
+  --faint: #99938a;
+  --line: #d8d2c7;
+  --red: #c2410c;
+  --display: "Instrument Serif", Georgia, serif;
+  --sans: "Inter Tight", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(241, 239, 233, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.top__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  height: 66px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.brand .icon {
+  width: 19px;
+  height: 19px;
+  color: var(--red);
+}
+
+.brand em {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+  padding-left: 10px;
+  margin-left: 3px;
+}
+
+.top__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top__right span {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.top__right a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  transition: background-color 0.2s ease;
+}
+
+.top__right a:hover {
+  background: var(--paper);
+}
+
+.top__right .icon {
+  width: 11px;
+  height: 11px;
+}
+
+.hero {
+  padding: clamp(56px, 8vw, 106px) 0 clamp(40px, 5vw, 66px);
+}
+
+.hero__grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: clamp(30px, 6vw, 80px);
+  align-items: end;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.kicker::before {
+  content: "";
+  width: 30px;
+  height: 1px;
+  background: var(--red);
+}
+
+.hero h1 {
+  margin-top: 18px;
+  font-family: var(--display);
+  font-size: clamp(58px, 8vw, 112px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--red);
+}
+
+.hero__side p {
+  font-size: 15px;
+  line-height: 1.68;
+  color: var(--muted);
+}
+
+.hero__side p + p {
+  margin-top: 12px;
+}
+
+.hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.hero__meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero__meta i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  padding-bottom: clamp(60px, 8vw, 100px);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 26px 50px -38px rgba(27, 25, 23, 0.45);
+}
+
+.card__preview {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.card__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.8s var(--ease);
+}
+
+.card:hover .card__preview img {
+  transform: scale(1.02);
+}
+
+.card__num {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(251, 249, 244, 0.92);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card__tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 18px 20px 18px;
+}
+
+.card__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.card__title h2 {
+  font-family: var(--display);
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.card__title span {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.card__body p {
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.card__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.card__swatches span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card__swatches i {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(27, 25, 23, 0.12);
+}
+
+.card__type {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.card__foot span {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.card__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 3px;
+}
+
+.card__open .icon {
+  width: 10px;
+  height: 10px;
+  transition: transform 0.3s var(--ease);
+}
+
+.card:hover .card__open .icon {
+  transform: translateX(3px);
+}
+
+.compare {
+  padding: clamp(46px, 6vw, 72px) 0 clamp(60px, 8vw, 96px);
+  border-top: 1px solid var(--line);
+}
+
+.compare h2 {
+  font-family: var(--display);
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.compare > p {
+  max-width: 58ch;
+  margin-top: 10px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.table {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 0.8fr 1.3fr 1.2fr 1.2fr 1.2fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+  align-items: baseline;
+}
+
+.row.head {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.row b {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.row span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.footer {
+  padding: 40px 0 70px;
+  border-top: 1px solid var(--line);
+}
+
+.footer__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 26px;
+}
+
+.footer p {
+  max-width: 54ch;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.footer a {
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 2px;
+}
+
+.footer a:hover {
+  border-color: var(--ink);
+}
+
+.footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 30px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@media (max-width: 900px) {
+  .hero__grid {
+    grid-template-columns: 1fr;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 18px;
+  }
+  .row.head {
+    display: none;
+  }
+  .row b {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .top__right span {
+    display: none;
+  }
+  .brand em {
+    display: none;
+  }
+  .card__title h2 {
+    font-size: 28px;
+  }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-hat" viewBox="0 0 24 24"><path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"/><path d="M6 17h12"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap top__inner">
+    <a class="brand" href="index.html">
+      <svg class="icon"><use href="#i-hat"/></svg>
+      <span>Sous Clip</span>
+      <em>v2 / four directions</em>
+    </a>
+    <div class="top__right">
+      <span>Branch fr-1 · design only</span>
+      <a href="README.md">Read the notes <svg class="icon"><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero__grid">
+      <div class="reveal">
+        <p class="kicker">Sous Clip v2 / A redesign in four worlds</p>
+        <h1>Four ways to<br><em>keep a recipe.</em></h1>
+      </div>
+      <div class="hero__side reveal" style="--d:120ms">
+        <p>The product is the same in every direction: a private library, a visible extraction line, a recipe you can cook from, and a phone that takes the link. Only the room changes.</p>
+        <p>Each direction is a complete set of live screens, not a mood board: library, extraction, recipe, phone and settings. One uses the palette already in the app; the other three are new.</p>
+        <div class="hero__meta">
+          <span><i></i>5 screens each</span>
+          <span><i></i>Real content</span>
+          <span><i></i>Live HTML, not images</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="grid">
+    <a class="card reveal" href="01-mise.html">
+      <div class="card__preview">
+        <img src="previews/01-mise.png" alt="Mise direction preview: warm editorial library">
+        <span class="card__num">01</span>
+        <span class="card__tag">Current palette</span>
+      </div>
+      <div class="card__body">
+        <div class="card__title"><h2>Mise</h2><span>Warm editorial</span></div>
+        <p>The cream and terracotta you already have, rebuilt as an editorial cookbook. Fraunces, hairline rules, a featured plate and a running index. The safest move from where the app is today, with much more craft.</p>
+        <div class="card__swatches">
+          <span><i style="background:#FDFAF5"></i>Paper</span>
+          <span><i style="background:#F5F0E8"></i>Surface</span>
+          <span><i style="background:#1C1917"></i>Espresso</span>
+          <span><i style="background:#C2410C"></i>Terracotta</span>
+          <span><i style="background:#15803D"></i>Herb</span>
+        </div>
+        <p class="card__type">Fraunces · DM Sans · JetBrains Mono</p>
+        <div class="card__foot"><span>Library / pass / recipe / mobile / system</span><span class="card__open">Open direction <svg class="icon"><use href="#i-arrow"/></svg></span></div>
+      </div>
+    </a>
+
+    <a class="card reveal" href="02-order-up.html" style="--d:80ms">
+      <div class="card__preview">
+        <img src="previews/02-order-up.png" alt="Order Up direction preview: steel rail and paper tickets">
+        <span class="card__num">02</span>
+        <span class="card__tag">Most on-brand</span>
+      </div>
+      <div class="card__body">
+        <div class="card__title"><h2>Order Up</h2><span>Kitchen pass</span></div>
+        <p>The strongest thing the marketing site already owns, taken all the way inside: a steel rail, paper tickets, rubber stamps and Big Shoulders. The library becomes a rail, extraction becomes a three-column pass.</p>
+        <div class="card__swatches">
+          <span><i style="background:#F7F1E3"></i>Ticket</span>
+          <span><i style="background:#E3E5E7"></i>Steel</span>
+          <span><i style="background:#15130F"></i>Ink</span>
+          <span><i style="background:#D9480F"></i>Signal</span>
+          <span><i style="background:#2F6B4F"></i>Done</span>
+        </div>
+        <p class="card__type">Big Shoulders Display · Hanken Grotesk · IBM Plex Mono</p>
+        <div class="card__foot"><span>Rail / pass / ticket / pad / clipboard</span><span class="card__open">Open direction <svg class="icon"><use href="#i-arrow"/></svg></span></div>
+      </div>
+    </a>
+
+    <a class="card reveal" href="03-night-kitchen.html" style="--d:160ms">
+      <div class="card__preview">
+        <img src="previews/03-night-kitchen.png" alt="Night Kitchen direction preview: dark cinematic hero">
+        <span class="card__num">03</span>
+        <span class="card__tag">Most cinematic</span>
+      </div>
+      <div class="card__body">
+        <div class="card__title"><h2>Night Kitchen</h2><span>After hours</span></div>
+        <p>A dark room with one warm light on the pass. Photography leads the library, the extraction screen becomes a service monitor with a live waveform, and the recipe is a full-bleed plate. Copper, sage and warm white.</p>
+        <div class="card__swatches">
+          <span><i style="background:#0B0B0C"></i>Night</span>
+          <span><i style="background:#141416"></i>Surface</span>
+          <span><i style="background:#F4EFE6"></i>Warm white</span>
+          <span><i style="background:#D98E4A"></i>Copper</span>
+          <span><i style="background:#8FA98A"></i>Sage</span>
+        </div>
+        <p class="card__type">Instrument Serif · Inter Tight · Geist Mono</p>
+        <div class="card__foot"><span>Library / pass / recipe / pocket / control</span><span class="card__open">Open direction <svg class="icon"><use href="#i-arrow"/></svg></span></div>
+      </div>
+    </a>
+
+    <a class="card reveal" href="04-larder.html" style="--d:240ms">
+      <div class="card__preview">
+        <img src="previews/04-larder.png" alt="Larder direction preview: bright green and cream hero">
+        <span class="card__num">04</span>
+        <span class="card__tag">Most distinctive</span>
+      </div>
+      <div class="card__body">
+        <div class="card__title"><h2>Larder</h2><span>Specialty grocer</span></div>
+        <p>A bright shop for the recipes you find in the feed. Deep green shelves, tomato stickers, butter labels and a market scale for extraction. Bricolage Grotesque gives it a voice nothing else in this category has.</p>
+        <div class="card__swatches">
+          <span><i style="background:#FFF9EF"></i>Cream</span>
+          <span><i style="background:#143D2B"></i>Deep green</span>
+          <span><i style="background:#E94B35"></i>Tomato</span>
+          <span><i style="background:#F6C453"></i>Butter</span>
+          <span><i style="background:#2B4C9B"></i>Cobalt</span>
+        </div>
+        <p class="card__type">Bricolage Grotesque · DM Mono</p>
+        <div class="card__foot"><span>Shelf / weigh in / label / pocket / label maker</span><span class="card__open">Open direction <svg class="icon"><use href="#i-arrow"/></svg></span></div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="compare">
+  <div class="wrap">
+    <div class="reveal">
+      <h2>What actually changes.</h2>
+      <p>Every direction covers the same product truth and the same five screens. The differences are in the room, not the workflow: how the library is browsed, how extraction shows its work, and how a recipe reads at the stove.</p>
+    </div>
+    <div class="table reveal" style="--d:100ms">
+      <div class="row head"><span>Direction</span><span>Library</span><span>Extraction</span><span>Recipe</span><span>Motion signature</span></div>
+      <div class="row"><b>Mise</b><span>Featured plate + running index</span><span>Horizontal station line</span><span>Cookbook spread</span><span>Plate clip-in, hairline fills</span></div>
+      <div class="row"><b>Order Up</b><span>Steel rail + ticket grid</span><span>Three-column pass</span><span>Single long order ticket</span><span>Stamp-in, ticket lift</span></div>
+      <div class="row"><b>Night Kitchen</b><span>Photo mosaic + icon rail</span><span>Vertical glowing stations</span><span>Full-bleed plate</span><span>Slow image scale, copper glow</span></div>
+      <div class="row"><b>Larder</b><span>Window + shelf rows</span><span>Market scale dial</span><span>Green label card</span><span>Dial sweep, shelf lift</span></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <p>All four directions are standalone HTML in <a href="README.md">design/fr-1</a>. They use the same real content, the same product truth in <a href="../../PRODUCT.md">PRODUCT.md</a>, and local webfonts. Open any file directly in a browser; no build step.</p>
+      <a class="card__open" href="01-mise.html">Start with Mise <svg class="icon"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="footer__bottom">
+      <span>Sous Clip v2 · Four directions · Branch fr-1</span>
+      <span>Design only · no app code changed</span>
+      <span>Photography: Unsplash</span>
+    </div>
+  </div>
+</footer>
+
+</main>
+
+<script src="assets/mock.js"></script>
+</body>
+</html>

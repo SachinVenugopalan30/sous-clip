@@ -1,0 +1,3553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Larder · Sous Clip v2 · Direction 04</title>
+<meta name="description" content="Larder: Sous Clip as a bright specialty grocer. Deep green, tomato, butter, cobalt, Bricolage Grotesque. A v2 design direction.">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+@property --p {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* ------------------------------------------------------------------
+   LARDER
+   A bright specialty grocer. Deep green, tomato, butter, cobalt.
+   ------------------------------------------------------------------ */
+
+:root {
+  --cream: #fff9ef;
+  --paper: #fffdf8;
+  --ink: #17251c;
+  --green: #143d2b;
+  --green-2: #1e5a3e;
+  --green-3: #2f7352;
+  --tomato: #e94b35;
+  --tomato-deep: #c93a26;
+  --butter: #f6c453;
+  --butter-soft: #fbe9b8;
+  --cobalt: #2b4c9b;
+  --sage: #dde8d8;
+  --sage-2: #c9dcc2;
+  --line: #dce5d7;
+  --muted: #5f6f63;
+  --faint: #8b988d;
+  --display: "Bricolage Grotesque", system-ui, sans-serif;
+  --sans: "Bricolage Grotesque", system-ui, sans-serif;
+  --mono: "DM Mono", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  background: var(--cream);
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--cream);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--tomato);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  z-index: 100;
+}
+
+/* Header ------------------------------------------------------------- */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--green);
+  color: var(--cream);
+  border-bottom: 1px solid rgba(255, 249, 239, 0.16);
+}
+
+.top__inner {
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--display);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand .icon {
+  width: 20px;
+  height: 20px;
+  color: var(--butter);
+}
+
+.brand em {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 7.5px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.62);
+  border-left: 1px solid rgba(255, 249, 239, 0.24);
+  padding-left: 10px;
+  margin-left: 3px;
+}
+
+.top nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.top nav a {
+  position: relative;
+  padding: 4px 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.66);
+  transition: color 0.2s ease;
+}
+
+.top nav a:hover,
+.top nav a.is-active {
+  color: var(--cream);
+}
+
+.top nav a.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  background: var(--butter);
+}
+
+.top__back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 249, 239, 0.28);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cream);
+  transition: background-color 0.2s ease;
+}
+
+.top__back:hover {
+  background: rgba(255, 249, 239, 0.1);
+}
+
+.top__back .icon {
+  width: 11px;
+  height: 11px;
+}
+
+@media (max-width: 940px) {
+  .top nav {
+    display: none;
+  }
+  .brand em {
+    display: none;
+  }
+}
+
+/* Hero --------------------------------------------------------------- */
+
+.ld-hero {
+  position: relative;
+  padding: clamp(48px, 6vw, 86px) 0 clamp(58px, 7vw, 96px);
+  overflow: hidden;
+}
+
+.ld-hero__grid {
+  display: grid;
+  grid-template-columns: 1.02fr 0.98fr;
+  gap: clamp(36px, 6vw, 84px);
+  align-items: center;
+}
+
+.ld-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--sage);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ld-kicker i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tomato);
+}
+
+.ld-hero h1 {
+  margin-top: 18px;
+  font-family: var(--display);
+  font-size: clamp(58px, 8vw, 110px);
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.ld-hero h1 mark {
+  display: inline;
+  padding: 0 0.08em;
+  background: var(--butter);
+  color: var(--green);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ld-hero h1 .tomato {
+  color: var(--tomato);
+}
+
+.ld-hero__lede {
+  max-width: 46ch;
+  margin-top: 22px;
+  font-size: 17px;
+  line-height: 1.62;
+  color: var(--muted);
+}
+
+.ld-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background-color 0.22s ease,
+    transform 0.22s var(--ease);
+}
+
+.btn .icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.3s var(--ease);
+}
+
+.btn:hover .icon {
+  transform: translateX(3px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--tomato {
+  background: var(--tomato);
+  color: #fff;
+  box-shadow: 0 16px 28px -18px rgba(20, 61, 43, 0.5);
+}
+
+.btn--tomato:hover {
+  background: var(--tomato-deep);
+}
+
+.link-quiet {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  border-bottom: 2px solid var(--butter);
+  padding-bottom: 3px;
+}
+
+.link-quiet:hover {
+  color: var(--tomato);
+  border-color: var(--tomato);
+}
+
+.ld-hero__meta {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.swatch i {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 5px;
+  border: 1px solid rgba(23, 37, 28, 0.12);
+}
+
+.type-note {
+  font-family: var(--mono);
+  font-size: 7px;
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.type-note b {
+  color: var(--green);
+  font-weight: 500;
+}
+
+/* Hero market board -------------------------------------------------- */
+
+.ld-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 22px;
+  background: var(--green);
+  box-shadow: 0 30px 60px -34px rgba(20, 61, 43, 0.55);
+}
+
+.ld-board__photo {
+  position: relative;
+  grid-row: 1 / 3;
+  min-height: 420px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--green-2);
+}
+
+.ld-board__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.96) contrast(1.02);
+  transition: transform 0.8s var(--ease);
+  animation: boardIn 1.3s var(--ease) 0.2s backwards;
+}
+
+@keyframes boardIn {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: scale(1.08);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: scale(1);
+  }
+}
+
+.ld-board__photo:hover img {
+  transform: scale(1.03);
+}
+
+.ld-board__photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(12, 30, 20, 0.84), transparent 55%);
+}
+
+.ld-board__caption {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  z-index: 2;
+  color: var(--cream);
+}
+
+.ld-board__caption span {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--butter);
+}
+
+.ld-board__caption h2 {
+  margin-top: 5px;
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+}
+
+.ld-board__caption p {
+  margin-top: 5px;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.78);
+}
+
+.ld-board__label {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 198px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--butter);
+  color: var(--green);
+}
+
+.ld-board__label span {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ld-board__label b {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.ld-board__label .sticker {
+  align-self: flex-end;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: var(--tomato);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+}
+
+.ld-board__note {
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.ld-board__note span {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-board__note p {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.ld-board__note b {
+  color: var(--tomato);
+}
+
+/* Hero shelf --------------------------------------------------------- */
+
+.ld-shelf {
+  margin-top: 38px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.ld-shelf__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-shelf__head b {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.ld-shelf__row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.ld-shelf__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s var(--ease);
+}
+
+.ld-shelf__item:hover {
+  border-color: var(--green-3);
+  transform: translateY(-2px);
+}
+
+.ld-shelf__item img {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.ld-shelf__item h4 {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.ld-shelf__item span {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  color: var(--muted);
+}
+
+.ld-hero__folio {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 24px;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@media (max-width: 1000px) {
+  .ld-hero__grid {
+    grid-template-columns: 1fr;
+  }
+  .ld-board {
+    max-width: 620px;
+  }
+  .ld-hero__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .type-note {
+    text-align: left;
+  }
+}
+
+@media (max-width: 620px) {
+  .ld-hero h1 {
+    font-size: 58px;
+  }
+  .ld-board {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .ld-board__photo {
+    grid-row: auto;
+    min-height: 300px;
+  }
+  .ld-shelf__row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ld-hero__folio {
+    display: none;
+  }
+}
+
+/* Chapter scaffolding ------------------------------------------------ */
+
+.ld-chapter {
+  padding: clamp(70px, 8vw, 108px) 0;
+  border-top: 1px solid var(--line);
+}
+
+.ld-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 5vw, 64px);
+  align-items: end;
+  margin-bottom: 38px;
+}
+
+.ld-index {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tomato);
+}
+
+.ld-index::after {
+  content: "";
+  width: 28px;
+  height: 2px;
+  background: var(--butter);
+}
+
+.ld-head h2 {
+  margin-top: 12px;
+  font-family: var(--display);
+  font-size: clamp(40px, 5.4vw, 74px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.ld-head h2 mark {
+  padding: 0 0.06em;
+  background: var(--butter);
+  color: var(--green);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ld-head p {
+  max-width: 50ch;
+  font-size: 14.5px;
+  line-height: 1.68;
+  color: var(--muted);
+}
+
+.ld-head p + p {
+  margin-top: 10px;
+}
+
+.ld-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.ld-notes span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ld-notes i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tomato);
+}
+
+@media (max-width: 860px) {
+  .ld-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}
+
+/* App surface -------------------------------------------------------- */
+
+.ld-app {
+  --cream: #fff9ef;
+  --paper: #fffdf8;
+  --ink: #17251c;
+  --green: #143d2b;
+  --green-2: #1e5a3e;
+  --green-3: #2f7352;
+  --tomato: #e94b35;
+  --butter: #f6c453;
+  --butter-soft: #fbe9b8;
+  --cobalt: #2b4c9b;
+  --sage: #dde8d8;
+  --sage-2: #c9dcc2;
+  --line: #dce5d7;
+  --muted: #5f6f63;
+  position: relative;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ld-app a {
+  color: inherit;
+}
+
+.ld-top {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  height: 58px;
+  padding: 0 24px;
+  background: var(--green);
+  color: var(--cream);
+}
+
+.ld-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.ld-brand .icon {
+  width: 17px;
+  height: 17px;
+  color: var(--butter);
+}
+
+.ld-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  margin-right: auto;
+}
+
+.ld-nav a {
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.68);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.ld-nav a:hover {
+  color: var(--cream);
+}
+
+.ld-nav a.on {
+  background: var(--cream);
+  color: var(--green);
+}
+
+.ld-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ld-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 249, 239, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ld-btn .icon {
+  width: 11px;
+  height: 11px;
+}
+
+.ld-btn--butter {
+  background: var(--butter);
+  border-color: var(--butter);
+  color: var(--green);
+}
+
+.ld-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 249, 239, 0.3);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cream);
+}
+
+.ld-icon .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.ld-user {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.68);
+}
+
+.ld-main {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 22px 26px 44px;
+}
+
+.ld-headrow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.ld-title {
+  font-family: var(--display);
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.ld-sub {
+  margin-top: 5px;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-search {
+  position: relative;
+  margin-top: 16px;
+}
+
+.ld-search input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11.5px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.ld-search input:focus {
+  border-color: var(--green-3);
+}
+
+.ld-search input::placeholder {
+  color: var(--muted);
+}
+
+.ld-search .icon {
+  position: absolute;
+  left: 15px;
+  top: 14px;
+  width: 13px;
+  height: 13px;
+  color: var(--muted);
+}
+
+.ld-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ld-tab {
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ld-tab:hover {
+  border-color: var(--green-3);
+  color: var(--green);
+}
+
+.ld-tab.on {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--cream);
+}
+
+.ld-feature {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 0;
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: 0 20px 40px -30px rgba(20, 61, 43, 0.35);
+}
+
+.ld-feature__img {
+  position: relative;
+  min-height: 280px;
+  overflow: hidden;
+}
+
+.ld-feature__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ease);
+}
+
+.ld-feature:hover .ld-feature__img img {
+  transform: scale(1.03);
+}
+
+.ld-feature__tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--butter);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ld-feature__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 24px 22px;
+  border-left: 1px solid var(--line);
+}
+
+.ld-feature__no {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tomato);
+}
+
+.ld-feature h3 {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+.ld-feature__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ld-pill {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-feature__body p {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.ld-feature__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.ld-feature__link .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.ld-shelf-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding-bottom: 7px;
+  border-bottom: 3px solid var(--green);
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-shelf-label b {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.ld-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.ld-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s ease;
+}
+
+.ld-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px -26px rgba(20, 61, 43, 0.35);
+}
+
+.ld-card__img {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.ld-card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--ease);
+}
+
+.ld-card:hover .ld-card__img img {
+  transform: scale(1.04);
+}
+
+.ld-card__check {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  color: transparent;
+}
+
+.ld-card.selected .ld-card__check {
+  background: var(--tomato);
+  border-color: var(--tomato);
+  color: #fff;
+}
+
+.ld-card.selected {
+  outline: 2px solid var(--tomato);
+  outline-offset: 2px;
+}
+
+.ld-card__check .icon {
+  width: 10px;
+  height: 10px;
+}
+
+.ld-card__body {
+  padding: 11px 12px 12px;
+}
+
+.ld-card h4 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.ld-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ld-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.ld-card__tags span {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--sage);
+  color: var(--green-2);
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ld-bulk {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--cream);
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 14px 28px -16px rgba(20, 61, 43, 0.6);
+}
+
+.ld-bulk b {
+  color: var(--butter);
+  font-weight: 500;
+}
+
+.ld-bulk button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  text-transform: inherit;
+  opacity: 0.72;
+}
+
+.ld-bulk button:hover {
+  opacity: 1;
+}
+
+.ld-bulk .icon {
+  width: 9px;
+  height: 9px;
+}
+
+@media (max-width: 1000px) {
+  .ld-feature {
+    grid-template-columns: 1fr;
+  }
+  .ld-feature__body {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .ld-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .ld-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Weigh in ----------------------------------------------------------- */
+
+.ld-pass {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 22px 26px 38px;
+}
+
+.ld-weigh {
+  display: grid;
+  grid-template-columns: 0.92fr 1.08fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.ld-weigh__card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+}
+
+.ld-weigh__card h3 {
+  font-family: var(--display);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ld-weigh__card p {
+  margin-top: 4px;
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.ld-url {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream);
+}
+
+.ld-url .icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  color: var(--muted);
+}
+
+.ld-url input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 9px;
+  outline: none;
+}
+
+.ld-url input::placeholder {
+  color: var(--muted);
+}
+
+.ld-url button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--tomato);
+  border-radius: 999px;
+  background: var(--tomato);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ld-url button .icon {
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  color: inherit;
+}
+
+.ld-live {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--cream);
+}
+
+.ld-live img {
+  width: 72px;
+  height: 54px;
+  flex: none;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.ld-live h4 {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.ld-live span {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-live__bar {
+  height: 7px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sage);
+}
+
+.ld-live__bar i {
+  display: block;
+  width: 62%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--tomato);
+}
+
+.ld-weigh__hint {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.ld-weigh__hint b {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.ld-weigh__hint p {
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.ld-scale {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--green);
+  color: var(--cream);
+}
+
+.ld-scale__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 249, 239, 0.16);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.66);
+}
+
+.ld-scale__head b {
+  color: var(--butter);
+  font-weight: 500;
+}
+
+.ld-dial {
+  --p: 0%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 214px;
+  height: 214px;
+  margin-top: 14px;
+  border-radius: 50%;
+  background: conic-gradient(var(--tomato) 0 var(--p), rgba(255, 249, 239, 0.14) var(--p) 100%);
+}
+
+.ld-dial.is-running {
+  --p: 62%;
+  animation: dialSweep 1.2s var(--ease) both;
+}
+
+@keyframes dialSweep {
+  from {
+    --p: 0%;
+  }
+  to {
+    --p: 62%;
+  }
+}
+
+.ld-dial::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.ld-dial::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 249, 239, 0.2);
+}
+
+.ld-dial__inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.ld-dial__inner b {
+  display: block;
+  font-family: var(--display);
+  font-size: 54px;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--butter);
+}
+
+.ld-dial__inner span {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.66);
+}
+
+.ld-stations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 14px;
+}
+
+.ld-station {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 249, 239, 0.1);
+  color: rgba(255, 249, 239, 0.66);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ld-station.done {
+  background: var(--sage);
+  color: var(--green);
+}
+
+.ld-station.active {
+  background: var(--butter);
+  color: var(--green);
+}
+
+.ld-scale__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 249, 239, 0.16);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  text-transform: uppercase;
+  color: rgba(255, 249, 239, 0.66);
+}
+
+.ld-scale__foot button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+  font-family: inherit;
+  font-size: inherit;
+  text-transform: inherit;
+}
+
+.ld-scale__foot .icon {
+  width: 9px;
+  height: 9px;
+}
+
+.ld-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.ld-queue__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.ld-queue__row img {
+  width: 46px;
+  height: 36px;
+  flex: none;
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.ld-queue__row h4 {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.ld-queue__row span {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-queue__row .status {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.ld-queue__row .status.done {
+  color: var(--green-3);
+}
+
+.ld-queue__row .status.void {
+  color: var(--tomato);
+}
+
+/* The label ---------------------------------------------------------- */
+
+.ld-label-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: 0 22px 44px -34px rgba(20, 61, 43, 0.4);
+}
+
+.ld-label-card__head {
+  padding: 24px 26px 22px;
+  background: var(--green);
+  color: var(--cream);
+}
+
+.ld-label-card__head span {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--butter);
+}
+
+.ld-label-card__head h1 {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.ld-label-card__head .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ld-label-card__head .meta span {
+  padding: 4px 9px;
+  border: 1px solid rgba(255, 249, 239, 0.26);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.ld-label-card__img {
+  height: 300px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.ld-label-card__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.96);
+}
+
+.ld-label-card__body {
+  display: grid;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 26px;
+  padding: 22px 26px 26px;
+}
+
+.ld-ing h2,
+.ld-method h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ld-ing__list {
+  margin-top: 10px;
+}
+
+.ld-ing__row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+}
+
+.ld-ing__row:last-child {
+  border-bottom: 0;
+}
+
+.ld-ing__dot {
+  position: relative;
+  top: 1px;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border: 1px solid var(--green-3);
+  border-radius: 50%;
+}
+
+.ld-ing__row.checked .ld-ing__dot {
+  background: var(--tomato);
+  border-color: var(--tomato);
+}
+
+.ld-ing__row.checked .ld-ing__name {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.ld-ing__qty {
+  min-width: 34px;
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--green-3);
+}
+
+.ld-ing__side {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--butter-soft);
+}
+
+.ld-ing__side b {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.ld-ing__side p {
+  margin-top: 4px;
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--green-2);
+}
+
+.ld-method h2 {
+  margin-bottom: 4px;
+}
+
+.ld-method__step {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ld-method__step:last-child {
+  border-bottom: 0;
+}
+
+.ld-method__step b {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--tomato);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 500;
+}
+
+.ld-method__step p {
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+
+.ld-method__time {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--sage);
+  font-family: var(--mono);
+  font-size: 6px;
+  text-transform: uppercase;
+  color: var(--green-2);
+}
+
+.ld-label-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 26px 26px;
+}
+
+.ld-label-actions button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ld-label-actions .primary {
+  background: var(--tomato);
+  border-color: var(--tomato);
+  color: #fff;
+}
+
+.ld-label-actions .icon {
+  width: 10px;
+  height: 10px;
+}
+
+/* Mobile band -------------------------------------------------------- */
+
+.ld-pocket {
+  background: var(--green);
+  color: var(--cream);
+}
+
+.ld-pocket .ld-index {
+  color: var(--butter);
+}
+
+.ld-pocket .ld-index::after {
+  background: var(--tomato);
+}
+
+.ld-pocket .ld-head h2 {
+  color: var(--cream);
+}
+
+.ld-pocket .ld-head h2 mark {
+  background: var(--butter);
+  color: var(--green);
+}
+
+.ld-pocket .ld-head p {
+  color: rgba(255, 249, 239, 0.72);
+}
+
+.ld-pocket .ld-notes {
+  color: rgba(255, 249, 239, 0.55);
+}
+
+.ld-pocket .ld-notes i {
+  background: var(--butter);
+}
+
+.ld-phones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 26px;
+}
+
+.phone--ld {
+  --phone-shell: #0f1f16;
+  --phone-screen: #fff9ef;
+  --phone-notch: #0f1f16;
+}
+
+.phone--ld .phone__screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.phone--ld:nth-child(2) {
+  margin-top: 36px;
+}
+
+.phone--ld:nth-child(3) {
+  margin-top: 72px;
+}
+
+.ld-m-app {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.ld-m-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--green);
+  color: var(--cream);
+}
+
+.ld-m-brand {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ld-m-brand .icon {
+  width: 13px;
+  height: 13px;
+  color: var(--butter);
+}
+
+.ld-m-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 249, 239, 0.3);
+  border-radius: 50%;
+  color: var(--cream);
+}
+
+.ld-m-icon .icon {
+  width: 10px;
+  height: 10px;
+}
+
+.ld-m-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 14px 0;
+}
+
+.ld-m-title {
+  font-family: var(--display);
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.ld-m-sub {
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-m-search {
+  position: relative;
+  margin-top: 8px;
+}
+
+.ld-m-search input {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px 0 26px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 8.5px;
+}
+
+.ld-m-search .icon {
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  width: 11px;
+  height: 11px;
+  color: var(--muted);
+}
+
+.ld-m-feature {
+  position: relative;
+  height: 158px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.ld-m-feature img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ld-m-feature::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(12, 30, 20, 0.86), transparent 60%);
+}
+
+.ld-m-feature h3 {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 9px;
+  z-index: 2;
+  color: var(--cream);
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.ld-m-list {
+  margin-top: 7px;
+}
+
+.ld-m-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ld-m-row img {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.ld-m-row h4 {
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.ld-m-row span {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-m-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 42px;
+  flex: none;
+  border-top: 1px solid var(--line);
+  background: var(--green);
+  color: rgba(255, 249, 239, 0.66);
+  font-family: var(--mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+}
+
+.ld-m-nav div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ld-m-nav .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.ld-m-nav .on {
+  color: var(--butter);
+}
+
+.ld-m-write {
+  margin-top: 9px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.ld-m-write span {
+  font-family: var(--mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-m-write p {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ld-m-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--tomato);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ld-m-btn .icon {
+  width: 9px;
+  height: 9px;
+}
+
+.ld-m-live {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.ld-m-live h4 {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.ld-m-live span {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-m-dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  margin: 8px auto 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--tomato) 0 62%, var(--sage) 62% 100%);
+}
+
+.ld-m-dial::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.ld-m-dial b {
+  position: relative;
+  z-index: 2;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--green);
+}
+
+.ld-m-steps {
+  margin-top: 6px;
+}
+
+.ld-m-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-m-step.done {
+  color: var(--green-3);
+}
+
+.ld-m-step.active {
+  color: var(--tomato);
+}
+
+.ld-m-recipe-img {
+  height: 124px;
+  margin: 0 -14px;
+  overflow: hidden;
+}
+
+.ld-m-recipe-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ld-m-recipe-title {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+.ld-m-recipe-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 5.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-m-ings {
+  margin-top: 6px;
+}
+
+.ld-m-ing {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 7px;
+}
+
+.ld-m-ing b {
+  font-family: var(--mono);
+  font-size: 5.5px;
+  font-weight: 400;
+  color: var(--green-3);
+}
+
+/* System ------------------------------------------------------------- */
+
+.ld-system-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 34px;
+}
+
+.ld-block {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.ld-block h3 {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-palette {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ld-paint {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+}
+
+.ld-paint i {
+  display: block;
+  height: 42px;
+  border-radius: 6px;
+  border: 1px solid rgba(23, 37, 28, 0.08);
+}
+
+.ld-paint b {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.ld-paint span {
+  font-family: var(--mono);
+  font-size: 6px;
+  color: var(--muted);
+}
+
+.ld-type-big {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 116px;
+  font-weight: 800;
+  line-height: 0.72;
+  letter-spacing: -0.06em;
+}
+
+.ld-type-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+
+.ld-type-row span {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-type-row b {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.ld-type-row.mono b {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.ld-motion {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.ld-motion__row {
+  display: grid;
+  grid-template-columns: 1fr 0.7fr 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 9px;
+}
+
+.ld-motion__row b {
+  font-weight: 600;
+}
+
+.ld-motion__row span,
+.ld-motion__row em {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  font-style: normal;
+  color: var(--muted);
+}
+
+.ld-motion__row em {
+  text-align: right;
+}
+
+.ld-states {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ld-state {
+  min-height: 82px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+}
+
+.ld-state h4 {
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-state p {
+  margin-top: 5px;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.ld-state .sk {
+  height: 5px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.ld-state .sk.short {
+  width: 55%;
+}
+
+.ld-state .err {
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+  margin-top: 5px;
+  font-size: 7px;
+  line-height: 1.35;
+  color: var(--tomato);
+}
+
+.ld-state .err .icon {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  margin-top: 1px;
+}
+
+/* Label maker settings ----------------------------------------------- */
+
+.ld-maker {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 20px;
+  margin-top: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.ld-maker__side {
+  padding-right: 14px;
+  border-right: 1px solid var(--line);
+}
+
+.ld-maker__side h4 {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ld-maker__side nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+}
+
+.ld-maker__side button {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.03em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ld-maker__side button.is-active {
+  background: var(--sage);
+  color: var(--green);
+}
+
+.ld-maker__side .version {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 6px;
+  line-height: 1.7;
+  color: var(--faint);
+}
+
+.ld-form h4 {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.ld-form p {
+  margin-top: 3px;
+  font-size: 8.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.ld-providers {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.ld-providers span {
+  flex: 1;
+  padding: 5px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-providers span.on {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--cream);
+}
+
+.ld-field {
+  margin-top: 8px;
+}
+
+.ld-field label {
+  display: block;
+  margin-bottom: 3px;
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ld-field input {
+  width: 100%;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 8px;
+  outline: none;
+}
+
+.ld-field input:focus {
+  border-color: var(--green-3);
+}
+
+.ld-form__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.ld-form__foot span {
+  font-family: var(--mono);
+  font-size: 6px;
+  text-transform: uppercase;
+  color: var(--green-3);
+}
+
+.ld-form__foot button {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--tomato);
+  border-radius: 999px;
+  background: var(--tomato);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 6px;
+  text-transform: uppercase;
+}
+
+/* Footer ------------------------------------------------------------- */
+
+.footer {
+  padding: 50px 0 70px;
+  border-top: 1px solid var(--line);
+}
+
+.footer__grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.footer h2 {
+  font-family: var(--display);
+  font-size: clamp(38px, 5vw, 68px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.footer p {
+  max-width: 46ch;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.footer__next {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--green);
+  border-radius: 12px;
+  background: var(--paper);
+  transition: background-color 0.2s ease;
+}
+
+.footer__next:hover {
+  background: var(--sage);
+}
+
+.footer__next span {
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.footer__next b {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.footer__next .icon {
+  width: 15px;
+  height: 15px;
+  color: var(--tomato);
+}
+
+.footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@media (max-width: 1000px) {
+  .ld-weigh {
+    grid-template-columns: 1fr;
+  }
+  .ld-label-card__body {
+    grid-template-columns: 1fr;
+  }
+  .ld-system-grid {
+    grid-template-columns: 1fr;
+  }
+  .ld-maker {
+    grid-template-columns: 1fr;
+  }
+  .ld-maker__side {
+    padding-right: 0;
+    padding-bottom: 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ld-maker__side nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .phone--ld:nth-child(2),
+  .phone--ld:nth-child(3) {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .ld-states {
+    grid-template-columns: 1fr;
+  }
+  .ld-palette {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ld-url {
+    flex-wrap: wrap;
+  }
+  .ld-url input {
+    flex-basis: 100%;
+    padding: 5px 0;
+  }
+  .ld-label-card__head h1 {
+    font-size: 36px;
+  }
+  .ld-label-card__img {
+    height: 220px;
+  }
+}
+
+.capture .ld-board__photo img {
+  transition: none !important;
+  animation: none !important;
+  clip-path: none !important;
+  transform: none !important;
+}
+
+.capture .ld-dial {
+  --p: 62% !important;
+  animation: none !important;
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-hat" viewBox="0 0 24 24"><path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"/><path d="M6 17h12"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42Z"/><circle cx="7.5" cy="7.5" r="1"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.2.49.66.84 1.19.95H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24"><path d="M15 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="9" y="2" width="6" height="4" rx="1"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></symbol>
+</svg>
+
+<div class="progress" data-progress></div>
+
+<header class="top">
+  <div class="wrap top__inner">
+    <a class="brand" href="index.html">
+      <svg class="icon"><use href="#i-hat"/></svg>
+      <span>Sous Clip</span>
+      <em>V2 / 04 Larder</em>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#shelf" data-nav>The shelf</a>
+      <a href="#weigh" data-nav>Weigh in</a>
+      <a href="#label" data-nav>The label</a>
+      <a href="#pocket" data-nav>Pocket</a>
+      <a href="#system" data-nav>System</a>
+    </nav>
+    <a class="top__back" href="index.html"><svg class="icon"><use href="#i-arrow"/></svg>All directions</a>
+  </div>
+</header>
+
+<main>
+
+<section class="ld-hero">
+  <div class="wrap">
+    <div class="ld-hero__grid">
+      <div>
+        <p class="ld-kicker"><i></i>Direction 04 / Larder</p>
+        <h1>Keep the <mark>good ones.</mark></h1>
+        <p class="ld-hero__lede">A bright specialty grocer for the recipes you find in the feed. Deep green shelves, tomato stickers, butter labels and one cobalt accent. The library feels like a shop you want to browse, not a database you have to manage.</p>
+        <div class="ld-hero__actions">
+          <a class="btn btn--tomato" href="#shelf">Browse the shelf <svg class="icon"><use href="#i-arrow"/></svg></a>
+          <a class="link-quiet" href="#label">Read a label</a>
+        </div>
+        <div class="ld-hero__meta">
+          <div class="palette" aria-label="Palette">
+            <span class="swatch"><i style="background:#FFF9EF"></i>Cream</span>
+            <span class="swatch"><i style="background:#143D2B"></i>Deep green</span>
+            <span class="swatch"><i style="background:#E94B35"></i>Tomato</span>
+            <span class="swatch"><i style="background:#F6C453"></i>Butter</span>
+            <span class="swatch"><i style="background:#2B4C9B"></i>Cobalt</span>
+          </div>
+          <p class="type-note"><b>Bricolage Grotesque</b> display + text<br><b>DM Mono</b> labels</p>
+        </div>
+      </div>
+
+      <div class="ld-board">
+        <div class="ld-board__photo">
+          <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=900&q=80&auto=format&fit=crop" alt="A bright bowl of vegetables and grains">
+          <div class="ld-board__caption">
+            <span>No. 0421 / Vegetarian</span>
+            <h2>Green Bowl,<br>Lemon Tahini</h2>
+            <p>15 min / 2 servings / No cook</p>
+          </div>
+        </div>
+        <div class="ld-board__label">
+          <div>
+            <span>On the shelf</span>
+            <b>Everything<br>you saved.</b>
+          </div>
+          <span class="sticker">Order<br>in</span>
+        </div>
+        <div class="ld-board__note">
+          <span>Today's note</span>
+          <p>Three recipes from the feed, <b>one shelf</b>, and nothing leaving your server.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ld-shelf">
+      <div class="ld-shelf__head">
+        <span>Just landed</span>
+        <b>04 / 14</b>
+      </div>
+      <div class="ld-shelf__row">
+        <a class="ld-shelf__item" href="#label"><img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Steamed Pork Dumplings</h4><span>20 min / Chinese</span></div></a>
+        <a class="ld-shelf__item" href="#label"><img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Shrimp Ramen, Soft Egg</h4><span>25 min / Japanese</span></div></a>
+        <a class="ld-shelf__item" href="#label"><img src="https://images.unsplash.com/photo-1525755662778-989d0524087e?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Teriyaki Chicken</h4><span>35 min / Japanese</span></div></a>
+        <a class="ld-shelf__item" href="#label"><img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Smashed Cucumber Salad</h4><span>10 min / Chinese</span></div></a>
+      </div>
+    </div>
+
+    <div class="ld-hero__folio">
+      <span>Sous Clip / Direction 04 / Larder</span>
+      <span>Cream, green, tomato, butter, cobalt</span>
+    </div>
+  </div>
+</section>
+
+<section class="ld-chapter" id="shelf">
+  <div class="wrap">
+    <div class="ld-head">
+      <div class="reveal">
+        <p class="ld-index">01 / The shelf</p>
+        <h2>Browse it like a <mark>good shop.</mark></h2>
+      </div>
+      <div class="reveal" style="--d:120ms">
+        <p>The library is a shelf, not a spreadsheet. One recipe gets the window, the rest sit in rows with their labels facing out, and the filters read like the signs above a counter.</p>
+        <div class="ld-notes">
+          <span><i></i>One window recipe</span>
+          <span><i></i>Labels facing out</span>
+          <span><i></i>Tomato means selected</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="browser-scroll reveal" style="--d:160ms">
+      <div class="browser" style="--chrome-bg:#e7eee3;--chrome-ink:#5f6f63;--chrome-line:#c9dcc2;--chrome-screen:#fff9ef">
+        <div class="browser__bar">
+          <span class="browser__dots"><i></i><i></i><i></i></span>
+          <span class="browser__url"><svg class="icon"><use href="#i-lock"/></svg>localhost:3000</span>
+        </div>
+        <div class="browser__body">
+          <div class="ld-app">
+            <div class="ld-top">
+              <a class="ld-brand" href="#shelf"><svg class="icon"><use href="#i-hat"/></svg><span>Sous Clip</span></a>
+              <nav class="ld-nav">
+                <a class="on" href="#shelf">The shelf</a>
+                <a href="#weigh">Weigh in</a>
+                <a href="#system">Settings</a>
+              </nav>
+              <div class="ld-actions">
+                <a class="ld-btn ld-btn--butter" href="#weigh"><svg class="icon"><use href="#i-plus"/></svg>Order in</a>
+                <button class="ld-icon" type="button" aria-label="Toggle theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+                <span class="ld-user">Sachin</span>
+              </div>
+            </div>
+
+            <div class="ld-main">
+              <div class="ld-headrow">
+                <div>
+                  <h1 class="ld-title">The shelf</h1>
+                  <p class="ld-sub">14 recipes / 3 landed this week</p>
+                </div>
+                <span class="ld-sub">Newest first</span>
+              </div>
+
+              <div class="ld-search">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <input type="search" placeholder="Search the shelf by name, ingredient or tag..." aria-label="Search recipes">
+              </div>
+
+              <div class="ld-tabs">
+                <button class="ld-tab on" type="button">All</button>
+                <button class="ld-tab" type="button">Weeknight</button>
+                <button class="ld-tab" type="button">Noodles</button>
+                <button class="ld-tab" type="button">Sauces</button>
+                <button class="ld-tab" type="button">Breakfast</button>
+                <button class="ld-tab" type="button">No cook</button>
+              </div>
+
+              <div class="ld-feature">
+                <div class="ld-feature__img">
+                  <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=1000&q=80&auto=format&fit=crop" alt="Steamed pork dumplings in a bamboo steamer">
+                  <span class="ld-feature__tag">In the window</span>
+                </div>
+                <div class="ld-feature__body">
+                  <p class="ld-feature__no">No. 0417 / Chinese</p>
+                  <h3>Steamed Pork Dumplings<br>(Layered Wrapper Style)</h3>
+                  <div class="ld-feature__meta"><span class="ld-pill">20 min</span><span class="ld-pill">4 servings</span><span class="ld-pill">Steamed</span></div>
+                  <p>Ground pork, garlic, ginger and a wet wrapper. The kind of thing you save at midnight and cook on a Sunday.</p>
+                  <a class="ld-feature__link" href="#label">Read the label <svg class="icon"><use href="#i-arrow"/></svg></a>
+                </div>
+              </div>
+
+              <div class="ld-shelf-label">
+                <span>Weeknight shelf</span>
+                <b>03 / 09</b>
+              </div>
+              <div class="ld-grid">
+                <article class="ld-card selected">
+                  <div class="ld-card__img">
+                    <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&q=75&auto=format&fit=crop" alt="Shrimp ramen with soft egg">
+                    <span class="ld-card__check"><svg class="icon"><use href="#i-check"/></svg></span>
+                  </div>
+                  <div class="ld-card__body">
+                    <h4>Shrimp Ramen, Soft Egg</h4>
+                    <div class="ld-card__meta"><span class="ld-pill">25 min</span><span class="ld-pill">2 servings</span></div>
+                    <div class="ld-card__tags"><span>Japanese</span><span>Noodles</span><span>Seafood</span></div>
+                  </div>
+                </article>
+                <article class="ld-card">
+                  <div class="ld-card__img">
+                    <img src="https://images.unsplash.com/photo-1525755662778-989d0524087e?w=600&q=75&auto=format&fit=crop" alt="Teriyaki chicken with rice">
+                    <span class="ld-card__check"><svg class="icon"><use href="#i-check"/></svg></span>
+                  </div>
+                  <div class="ld-card__body">
+                    <h4>Teriyaki Chicken</h4>
+                    <div class="ld-card__meta"><span class="ld-pill">35 min</span><span class="ld-pill">4 servings</span></div>
+                    <div class="ld-card__tags"><span>Japanese</span><span>Sauce</span><span>Weeknight</span></div>
+                  </div>
+                </article>
+                <article class="ld-card">
+                  <div class="ld-card__img">
+                    <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&q=75&auto=format&fit=crop" alt="Smashed cucumber salad">
+                    <span class="ld-card__check"><svg class="icon"><use href="#i-check"/></svg></span>
+                  </div>
+                  <div class="ld-card__body">
+                    <h4>Smashed Cucumber Salad</h4>
+                    <div class="ld-card__meta"><span class="ld-pill">10 min</span><span class="ld-pill">2 servings</span></div>
+                    <div class="ld-card__tags"><span>Chinese</span><span>No cook</span><span>Crunchy</span></div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="ld-bulk">
+              <b>1 selected</b>
+              <button type="button">Select all</button>
+              <button type="button"><svg class="icon"><use href="#i-send"/></svg>Mealie</button>
+              <button type="button"><svg class="icon"><use href="#i-trash"/></svg>Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ld-chapter" id="weigh">
+  <div class="wrap">
+    <div class="ld-head">
+      <div class="reveal">
+        <p class="ld-index">02 / Weigh in</p>
+        <h2>Put the video <mark>on the scale.</mark></h2>
+      </div>
+      <div class="reveal" style="--d:120ms">
+        <p>Extraction is a weigh-in: paste the link, watch the dial fill as the server downloads, transcribes and writes, then take the finished label off the counter. The percentage is the one big number on the page.</p>
+        <div class="ld-notes">
+          <span><i></i>One big progress dial</span>
+          <span><i></i>Station pills</span>
+          <span><i></i>Queue below the counter</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="browser-scroll reveal" style="--d:160ms" data-pipeline-scope>
+      <div class="browser" style="--chrome-bg:#e7eee3;--chrome-ink:#5f6f63;--chrome-line:#c9dcc2;--chrome-screen:#fff9ef">
+        <div class="browser__bar">
+          <span class="browser__dots"><i></i><i></i><i></i></span>
+          <span class="browser__url"><svg class="icon"><use href="#i-lock"/></svg>localhost:3000/submit</span>
+        </div>
+        <div class="browser__body">
+          <div class="ld-app">
+            <div class="ld-top">
+              <a class="ld-brand" href="#shelf"><svg class="icon"><use href="#i-hat"/></svg><span>Sous Clip</span></a>
+              <nav class="ld-nav">
+                <a href="#shelf">The shelf</a>
+                <a class="on" href="#weigh">Weigh in</a>
+                <a href="#system">Settings</a>
+              </nav>
+              <div class="ld-actions">
+                <button class="ld-icon" type="button" aria-label="GitHub"><svg class="icon"><use href="#i-github"/></svg></button>
+                <button class="ld-icon" type="button" aria-label="Toggle theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+                <span class="ld-user">Sachin</span>
+              </div>
+            </div>
+
+            <div class="ld-pass">
+              <div class="ld-headrow">
+                <div>
+                  <h1 class="ld-title">Weigh in</h1>
+                  <p class="ld-sub">3 on the counter / 1 ready / 1 waiting</p>
+                </div>
+                <button class="replay" type="button" data-replay style="font-size:7px"><svg class="icon"><use href="#i-refresh"/></svg>Replay</button>
+              </div>
+
+              <div class="ld-weigh">
+                <div class="ld-weigh__card">
+                  <h3>Order in</h3>
+                  <p>Paste a Short, Reel or TikTok. The scale starts as soon as the link lands.</p>
+                  <div class="ld-url">
+                    <svg class="icon"><use href="#i-link"/></svg>
+                    <input type="url" value="https://www.tiktok.com/@maangchi/video/7312..." aria-label="Video URL">
+                    <button type="button"><svg class="icon"><use href="#i-send"/></svg>Weigh in</button>
+                  </div>
+
+                  <div class="ld-live">
+                    <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=200&q=70&auto=format&fit=crop" alt="Shrimp ramen">
+                    <div style="flex:1;min-width:0">
+                      <h4>Shrimp Ramen, Soft Egg</h4>
+                      <span>@maangchi / 0:48 / No. 0420</span>
+                      <div class="ld-live__bar"><i></i></div>
+                    </div>
+                  </div>
+
+                  <div class="ld-live" style="background:var(--sage)">
+                    <div style="flex:1;min-width:0">
+                      <h4>Crispy Chili Oil</h4>
+                      <span>@frankie.gao / 1:12 / queued</span>
+                    </div>
+                    <span class="ld-pill" style="background:var(--paper)">Waiting</span>
+                  </div>
+
+                  <div class="ld-weigh__hint">
+                    <b>What the scale does</b>
+                    <p>Downloads the video, transcribes it on your server, writes the recipe with your model, then files the label on the shelf.</p>
+                  </div>
+                </div>
+
+                <div class="ld-scale">
+                  <div class="ld-scale__head"><span>On the scale</span><b>No. 0420</b></div>
+                  <div class="ld-dial" data-pipeline>
+                    <div class="ld-dial__inner"><b>62%</b><span>written</span></div>
+                  </div>
+                  <div class="ld-stations">
+                    <span class="ld-station done">Download</span>
+                    <span class="ld-station done">Transcribe</span>
+                    <span class="ld-station active">Write</span>
+                    <span class="ld-station">Save</span>
+                  </div>
+                  <div class="ld-scale__foot">
+                    <span>About 18s left</span>
+                    <button type="button"><svg class="icon"><use href="#i-x"/></svg>Cancel</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ld-queue">
+                <div class="ld-queue__row">
+                  <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=120&q=70&auto=format&fit=crop" alt="">
+                  <div><h4>Steamed Pork Dumplings</h4><span>12 ingredients / 9 steps</span></div>
+                  <span class="status done">On the shelf</span>
+                </div>
+                <div class="ld-queue__row">
+                  <img src="https://images.unsplash.com/photo-1525755662778-989d0524087e?w=120&q=70&auto=format&fit=crop" alt="">
+                  <div><h4>Teriyaki Chicken</h4><span>8 ingredients / 6 steps</span></div>
+                  <span class="status done">On the shelf</span>
+                </div>
+                <div class="ld-queue__row">
+                  <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=120&q=70&auto=format&fit=crop" alt="">
+                  <div><h4>Korean BBQ Sliders</h4><span>Mealie unreachable / saved here</span></div>
+                  <span class="status void">Retry</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ld-chapter" id="label">
+  <div class="wrap">
+    <div class="ld-head">
+      <div class="reveal">
+        <p class="ld-index">03 / The label</p>
+        <h2>A recipe with its <mark>own label.</mark></h2>
+      </div>
+      <div class="reveal" style="--d:120ms">
+        <p>The recipe is a label you can read across the counter: a green header with the name and the counts, the photograph, then the ingredients and method. The quantities are in mono so the columns stay straight.</p>
+        <div class="ld-notes">
+          <span><i></i>Green header band</span>
+          <span><i></i>Ingredients with dots</span>
+          <span><i></i>Method in tomato numbers</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="browser-scroll reveal" style="--d:160ms">
+      <div class="browser" style="--chrome-bg:#e7eee3;--chrome-ink:#5f6f63;--chrome-line:#c9dcc2;--chrome-screen:#fff9ef">
+        <div class="browser__bar">
+          <span class="browser__dots"><i></i><i></i><i></i></span>
+          <span class="browser__url"><svg class="icon"><use href="#i-lock"/></svg>localhost:3000/recipe/417</span>
+        </div>
+        <div class="browser__body">
+          <div class="ld-app">
+            <div class="ld-top">
+              <a class="ld-brand" href="#shelf"><svg class="icon"><use href="#i-hat"/></svg><span>Sous Clip</span></a>
+              <nav class="ld-nav">
+                <a class="on" href="#shelf">The shelf</a>
+                <a href="#weigh">Weigh in</a>
+                <a href="#system">Settings</a>
+              </nav>
+              <div class="ld-actions">
+                <button class="ld-btn" type="button"><svg class="icon"><use href="#i-edit"/></svg>Edit</button>
+                <button class="ld-btn" type="button"><svg class="icon"><use href="#i-link"/></svg>Share</button>
+                <span class="ld-user">Sachin</span>
+              </div>
+            </div>
+
+            <div class="ld-main" style="padding-top:16px">
+              <article class="ld-label-card">
+                <div class="ld-label-card__head">
+                  <span>No. 0417 / Chinese / Steamed</span>
+                  <h1>Steamed Pork Dumplings<br>(Layered Wrapper Style)</h1>
+                  <div class="meta"><span>20 min cook</span><span>8 min prep</span><span>4 servings</span><span>Saved today</span></div>
+                </div>
+                <div class="ld-label-card__img">
+                  <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=1400&q=80&auto=format&fit=crop" alt="Steamed pork dumplings in a bamboo steamer">
+                </div>
+                <div class="ld-label-card__body">
+                  <div class="ld-ing">
+                    <h2>Ingredients / 12</h2>
+                    <div class="ld-ing__list">
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">400 g</span><span class="ld-ing__name">ground pork</span></div>
+                      <div class="ld-ing__row checked"><span class="ld-ing__dot"></span><span class="ld-ing__qty">4 cloves</span><span class="ld-ing__name">garlic, grated</span></div>
+                      <div class="ld-ing__row checked"><span class="ld-ing__dot"></span><span class="ld-ing__qty">1 tbsp</span><span class="ld-ing__name">ginger, grated</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">3</span><span class="ld-ing__name">green onions</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">2 tbsp</span><span class="ld-ing__name">light soy sauce</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">1 tbsp</span><span class="ld-ing__name">oyster sauce</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">1 tbsp</span><span class="ld-ing__name">cornstarch</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">2 tbsp</span><span class="ld-ing__name">water</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">1 tsp</span><span class="ld-ing__name">salt</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">½ tsp</span><span class="ld-ing__name">white pepper</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">24</span><span class="ld-ing__name">gyoza wrappers</span></div>
+                      <div class="ld-ing__row"><span class="ld-ing__dot"></span><span class="ld-ing__qty">to serve</span><span class="ld-ing__name">chili oil</span></div>
+                    </div>
+                    <div class="ld-ing__side">
+                      <b>From the video</b>
+                      <p>“Do not skip the wet wrapper. The water steams the layer from the inside and keeps it from cracking.”</p>
+                    </div>
+                  </div>
+
+                  <div class="ld-method">
+                    <h2>Method / 9</h2>
+                    <div class="ld-method__step"><b>1</b><div><p>Grate the garlic and ginger. Slice the green onions, keeping the white and green parts apart.</p></div></div>
+                    <div class="ld-method__step"><b>2</b><div><p>Combine the pork, garlic, ginger, onion whites, soy, oyster sauce, cornstarch, water, salt and white pepper.</p><span class="ld-method__time">2 min</span></div></div>
+                    <div class="ld-method__step"><b>3</b><div><p>Mix the filling until it is sticky and well combined. Fold it over itself rather than stirring in circles.</p></div></div>
+                    <div class="ld-method__step"><b>4</b><div><p>Place a wet gyoza wrapper in a ramekin. Add a spoon of filling, press a second wrapper on top, and repeat to build the layers.</p><span class="ld-method__time">8 min</span></div></div>
+                    <div class="ld-method__step"><b>5</b><div><p>Steam over rolling water for 12 minutes, until the wrapper turns translucent and pulls away cleanly.</p><span class="ld-method__time">12 min</span></div></div>
+                    <div class="ld-method__step"><b>6</b><div><p>Turn out onto a plate, spoon over the chili oil and finish with the green onion tops.</p></div></div>
+                  </div>
+                </div>
+                <div class="ld-label-actions">
+                  <button class="primary" type="button"><svg class="icon"><use href="#i-flame"/></svg>Start cooking</button>
+                  <button type="button"><svg class="icon"><use href="#i-send"/></svg>Send to Mealie</button>
+                  <button type="button"><svg class="icon"><use href="#i-link"/></svg>Share label</button>
+                  <button type="button"><svg class="icon"><use href="#i-external"/></svg>Source video</button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ld-chapter ld-pocket" id="pocket">
+  <div class="wrap">
+    <div class="ld-head">
+      <div class="reveal">
+        <p class="ld-index">04 / Pocket</p>
+        <h2>The shop fits in a <mark>pocket.</mark></h2>
+      </div>
+      <div class="reveal" style="--d:120ms">
+        <p>The phone keeps the same green header, the same labels and the same bright shelf. Capture from the feed, watch the scale fill, then cook from the same label at the stove.</p>
+        <div class="ld-notes">
+          <span><i></i>Share sheet first</span>
+          <span><i></i>One-thumb controls</span>
+          <span><i></i>Same labels</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ld-phones">
+      <div class="phone phone--ld reveal" style="--d:80ms">
+        <div class="phone__screen">
+          <div class="phone__status"><span data-time="short">9:41</span><span class="battery"><i></i><b></b></span></div>
+          <div class="ld-m-app">
+            <div class="ld-m-top">
+              <span class="ld-m-brand"><svg class="icon"><use href="#i-hat"/></svg>Sous Clip</span>
+              <span class="ld-m-icon"><svg class="icon"><use href="#i-settings"/></svg></span>
+            </div>
+            <div class="ld-m-body">
+              <h1 class="ld-m-title">The shelf</h1>
+              <p class="ld-m-sub">14 recipes / 3 this week</p>
+              <div class="ld-m-search"><svg class="icon"><use href="#i-search"/></svg><input type="search" placeholder="Search the shelf" aria-label="Search recipes"></div>
+              <div class="ld-m-feature">
+                <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&q=75&auto=format&fit=crop" alt="">
+                <h3>Steamed Pork Dumplings</h3>
+              </div>
+              <div class="ld-m-list">
+                <div class="ld-m-row"><img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Shrimp Ramen, Soft Egg</h4><span>25 min / Japanese</span></div></div>
+                <div class="ld-m-row"><img src="https://images.unsplash.com/photo-1525755662778-989d0524087e?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Teriyaki Chicken</h4><span>35 min / Japanese</span></div></div>
+                <div class="ld-m-row"><img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Smashed Cucumber Salad</h4><span>10 min / Chinese</span></div></div>
+                <div class="ld-m-row"><img src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=100&q=70&auto=format&fit=crop" alt=""><div><h4>Roast Salmon, Herb Oil</h4><span>22 min / Seafood</span></div></div>
+              </div>
+            </div>
+            <div class="ld-m-nav">
+              <div class="on"><svg class="icon"><use href="#i-book"/></svg>Shelf</div>
+              <div><svg class="icon"><use href="#i-plus"/></svg>Weigh</div>
+              <div><svg class="icon"><use href="#i-settings"/></svg>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone phone--ld reveal" style="--d:180ms">
+        <div class="phone__screen">
+          <div class="phone__status"><span data-time="short">9:42</span><span class="battery"><i></i><b></b></span></div>
+          <div class="ld-m-app">
+            <div class="ld-m-top">
+              <span class="ld-m-brand"><svg class="icon"><use href="#i-hat"/></svg>Sous Clip</span>
+              <span class="ld-m-icon"><svg class="icon"><use href="#i-x"/></svg></span>
+            </div>
+            <div class="ld-m-body">
+              <h1 class="ld-m-title">Weigh in.</h1>
+              <p class="ld-m-sub">Paste a Short, Reel or TikTok</p>
+              <div class="ld-m-write"><span>Video link</span><p>https://www.tiktok.com/@maangchi/...</p></div>
+              <div class="ld-m-btn"><svg class="icon"><use href="#i-send"/></svg>Weigh in</div>
+              <div class="ld-m-live">
+                <h4>Shrimp Ramen, Soft Egg</h4>
+                <span>@maangchi / 0:48 / 62%</span>
+                <div class="ld-m-dial"><b>62%</b></div>
+                <div class="ld-m-steps">
+                  <div class="ld-m-step done"><span>Download</span><span>Done</span></div>
+                  <div class="ld-m-step done"><span>Transcribe</span><span>Done</span></div>
+                  <div class="ld-m-step active"><span>Write</span><span>62%</span></div>
+                  <div class="ld-m-step"><span>Save</span><span>Waiting</span></div>
+                </div>
+              </div>
+              <div class="ld-m-live" style="background:var(--sage)">
+                <h4 style="font-size:12px">Crispy Chili Oil</h4>
+                <span>@frankie.gao / queued</span>
+              </div>
+            </div>
+            <div class="ld-m-nav">
+              <div><svg class="icon"><use href="#i-book"/></svg>Shelf</div>
+              <div class="on"><svg class="icon"><use href="#i-plus"/></svg>Weigh</div>
+              <div><svg class="icon"><use href="#i-settings"/></svg>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone phone--ld reveal" style="--d:280ms">
+        <div class="phone__screen">
+          <div class="phone__status"><span data-time="short">9:44</span><span class="battery"><i></i><b></b></span></div>
+          <div class="ld-m-app">
+            <div class="ld-m-top">
+              <span class="ld-m-brand"><svg class="icon"><use href="#i-hat"/></svg>Sous Clip</span>
+              <span class="ld-m-icon"><svg class="icon"><use href="#i-link"/></svg></span>
+            </div>
+            <div class="ld-m-body">
+              <div class="ld-m-recipe-img"><img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&q=75&auto=format&fit=crop" alt=""></div>
+              <h1 class="ld-m-recipe-title">Steamed Pork Dumplings</h1>
+              <div class="ld-m-recipe-meta"><span>20 min</span><span>4 servings</span><span>No. 0417</span></div>
+              <div class="ld-m-ings">
+                <div class="ld-m-ing"><span>ground pork</span><b>400 g</b></div>
+                <div class="ld-m-ing"><span>garlic</span><b>4 cloves</b></div>
+                <div class="ld-m-ing"><span>ginger</span><b>1 tbsp</b></div>
+                <div class="ld-m-ing"><span>green onions</span><b>3</b></div>
+                <div class="ld-m-ing"><span>light soy</span><b>2 tbsp</b></div>
+                <div class="ld-m-ing"><span>gyoza wrappers</span><b>24</b></div>
+              </div>
+              <div class="ld-m-btn" style="margin-top:8px"><svg class="icon"><use href="#i-flame"/></svg>Start cooking</div>
+            </div>
+            <div class="ld-m-nav">
+              <div class="on"><svg class="icon"><use href="#i-book"/></svg>Shelf</div>
+              <div><svg class="icon"><use href="#i-plus"/></svg>Weigh</div>
+              <div><svg class="icon"><use href="#i-settings"/></svg>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ld-chapter" id="system">
+  <div class="wrap">
+    <div class="ld-head">
+      <div class="reveal">
+        <p class="ld-index">05 / The system</p>
+        <h2>Cream, green, <mark>tomato, butter.</mark></h2>
+      </div>
+      <div class="reveal" style="--d:120ms">
+        <p>Deep green is the shop, cream is the paper, tomato is the thing you should touch, butter is the label, cobalt is the rare third note. Bricolage does the talking; DM Mono does the counting.</p>
+        <div class="ld-notes">
+          <span><i></i>One accent per surface</span>
+          <span><i></i>AA on cream and green</span>
+          <span><i></i>Rounded, never bubbly</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ld-system-grid">
+      <div class="ld-block reveal">
+        <h3>Palette</h3>
+        <div class="ld-palette">
+          <div class="ld-paint"><i style="background:#FFF9EF"></i><b>Cream</b><span>#FFF9EF</span></div>
+          <div class="ld-paint"><i style="background:#143D2B"></i><b>Deep green</b><span>#143D2B</span></div>
+          <div class="ld-paint"><i style="background:#E94B35"></i><b>Tomato</b><span>#E94B35</span></div>
+          <div class="ld-paint"><i style="background:#F6C453"></i><b>Butter</b><span>#F6C453</span></div>
+          <div class="ld-paint"><i style="background:#2B4C9B"></i><b>Cobalt</b><span>#2B4C9B</span></div>
+          <div class="ld-paint"><i style="background:#DDE8D8"></i><b>Sage</b><span>#DDE8D8</span></div>
+        </div>
+      </div>
+
+      <div class="ld-block reveal" style="--d:100ms">
+        <h3>Type</h3>
+        <div class="ld-type-big">Aa</div>
+        <div class="ld-type-row"><span>Display</span><b>Bricolage 800</b></div>
+        <div class="ld-type-row"><span>Text</span><b style="font-size:11px">Bricolage 400 / 500</b></div>
+        <div class="ld-type-row mono"><span>Labels</span><b>DM Mono 400 / 500</b></div>
+        <div class="ld-motion">
+          <div class="ld-motion__row"><b>Shelf lift</b><span>200ms</span><em>2px, soft shadow</em></div>
+          <div class="ld-motion__row"><b>Page reveal</b><span>800ms</span><em>expo-out, 24px</em></div>
+          <div class="ld-motion__row"><b>Dial fill</b><span>1200ms</span><em>conic sweep</em></div>
+          <div class="ld-motion__row"><b>Image zoom</b><span>800ms</span><em>1.04</em></div>
+        </div>
+      </div>
+
+      <div class="ld-block reveal" style="--d:140ms">
+        <h3>States</h3>
+        <div class="ld-states">
+          <div class="ld-state">
+            <h4>Empty shelf</h4>
+            <p>Nothing on the shelf yet.</p>
+            <div class="sk short"></div>
+            <div class="sk" style="width:42%"></div>
+          </div>
+          <div class="ld-state">
+            <h4>Loading</h4>
+            <div class="sk" style="width:70%;height:9px;margin-top:7px"></div>
+            <div class="sk" style="width:45%"></div>
+            <div class="sk" style="width:88%"></div>
+          </div>
+          <div class="ld-state">
+            <h4>Error</h4>
+            <div class="err"><svg class="icon"><use href="#i-x"/></svg><span>Mealie unreachable. Saved here. Retry the forward when the server is back.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ld-block reveal" style="--d:180ms">
+        <h3>Label maker</h3>
+        <div class="ld-maker" data-tabs>
+          <aside class="ld-maker__side">
+            <h4>Settings</h4>
+            <nav role="tablist" aria-label="Settings sections">
+              <button class="is-active" data-tab="ai" type="button" role="tab">AI provider</button>
+              <button data-tab="whisper" type="button" role="tab">Whisper</button>
+              <button data-tab="mealie" type="button" role="tab">Mealie</button>
+              <button data-tab="updates" type="button" role="tab">Updates</button>
+            </nav>
+            <p class="version">v2.0.0<br>MIT / self-hosted</p>
+          </aside>
+          <div class="ld-form" data-panel="ai">
+            <h4>AI provider</h4>
+            <p>The model that writes the recipe. A local model keeps the whole shop offline.</p>
+            <div class="ld-providers"><span class="on">Anthropic</span><span>OpenAI</span><span>Ollama</span><span>Custom</span></div>
+            <div class="ld-field"><label>Model</label><input value="claude-sonnet-4-6" aria-label="Model"></div>
+            <div class="ld-field"><label>API key</label><input value="••••••••••••••••" aria-label="API key"></div>
+            <div class="ld-form__foot"><span>Connection OK</span><button type="button">Save</button></div>
+          </div>
+          <div class="ld-form" data-panel="whisper" hidden>
+            <h4>Whisper</h4>
+            <p>Transcription runs on your server. Auto detects a GPU and falls back to CPU.</p>
+            <div class="ld-field"><label>Model size</label><input value="base" aria-label="Model size"></div>
+            <div class="ld-field"><label>Device</label><input value="auto" aria-label="Device"></div>
+            <div class="ld-form__foot"><span>Saved</span><button type="button">Save</button></div>
+          </div>
+          <div class="ld-form" data-panel="mealie" hidden>
+            <h4>Mealie</h4>
+            <p>Forward recipes to your Mealie instance, one at a time or in bulk.</p>
+            <div class="ld-field"><label>Mealie URL</label><input value="https://mealie.home" aria-label="Mealie URL"></div>
+            <div class="ld-field"><label>API token</label><input value="••••••••••••" aria-label="Mealie token"></div>
+            <div class="ld-form__foot"><span>Connected</span><button type="button">Save</button></div>
+          </div>
+          <div class="ld-form" data-panel="updates" hidden>
+            <h4>Updates</h4>
+            <p>You are on v1.3.0. v2.0.0 is ready to pull.</p>
+            <div class="ld-field"><label>Current</label><input value="v1.3.0 / latest v2.0.0" aria-label="Version"></div>
+            <div class="ld-form__foot"><span>Update available</span><button type="button">Update</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <h2>Keep the shelf full.<br>Keep the good ones.</h2>
+        <p>Larder is the warm, bright version of Sous Clip: a shop for the recipes you actually want to cook, with labels that make the library feel worth browsing.</p>
+      </div>
+      <a class="footer__next" href="01-mise.html">
+        <span>Back to the start<br><b>Mise</b></span>
+        <svg class="icon"><use href="#i-arrow"/></svg>
+      </a>
+    </div>
+    <div class="footer__bottom">
+      <span>Sous Clip v2 / Direction 04 / Larder</span>
+      <span>Bricolage / cream / green / tomato</span>
+      <span>Photography: Unsplash</span>
+      <a href="index.html">All directions</a>
+    </div>
+  </div>
+</footer>
+
+</main>
+
+<script src="assets/mock.js"></script>
+</body>
+</html>
