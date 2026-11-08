@@ -45,15 +45,6 @@ class SettingsService:
             return setting.value
         return DEFAULTS.get(key, default)
 
-    def update(self, key: str, value: str) -> None:
-        setting = self.session.get(AppSetting, key)
-        if setting:
-            setting.value = value
-        else:
-            setting = AppSetting(key=key, value=value)
-            self.session.add(setting)
-        self.session.commit()
-
     def update_many(self, updates: dict[str, str]) -> None:
         for key, value in updates.items():
             setting = self.session.get(AppSetting, key)

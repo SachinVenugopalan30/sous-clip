@@ -13,7 +13,7 @@ def test_get_default_settings(db_session: Session):
 
 def test_update_setting(db_session: Session):
     svc = SettingsService(db_session)
-    svc.update("ai_provider", "openai")
+    svc.update_many({"ai_provider": "openai"})
     settings = svc.get_all()
     assert settings["ai_provider"] == "openai"
 
@@ -33,6 +33,6 @@ def test_update_multiple_settings(db_session: Session):
 
 def test_get_single_setting(db_session: Session):
     svc = SettingsService(db_session)
-    svc.update("ai_provider", "openai")
+    svc.update_many({"ai_provider": "openai"})
     assert svc.get("ai_provider") == "openai"
     assert svc.get("nonexistent", "default") == "default"
