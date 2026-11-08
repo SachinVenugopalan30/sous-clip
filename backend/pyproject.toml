@@ -11,8 +11,8 @@ dependencies = [
     "yt-dlp>=2026.10.26",
     "faster-whisper>=1.2.1",
     "httpx>=0.28.1",
-    "anthropic>=0.42.0",
-    "openai>=1.60.0",
+    "anthropic>=2.6",
+    "openai>=3.46",
     "temporalio>=1.9.0",
     "redis>=5.2.0",
     "sse-starlette>=2.2.0",
@@ -45,8 +45,6 @@ asyncio_mode = "auto"
 # Temporary: hold these at their current major line so the later bump tasks are real upgrades.
 # Those tasks remove the matching entries (and this section once empty).
 constraint-dependencies = [
-    "anthropic<1",
-    "openai<2",
     "redis<6",
     "sse-starlette<3",
     "pytest<9",
