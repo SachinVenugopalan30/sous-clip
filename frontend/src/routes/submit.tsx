@@ -38,25 +38,17 @@ function SubmitPage() {
 
   const { completingIds, startTimer } = useVisibilityTimer(5000, handleExpire);
 
-  const metaMapRef = useRef<Map<string, { title: string }>>(new Map());
-
   const handleComplete = useCallback(
-    (itemId: string) => {
+    (itemId: string, title?: string) => {
       startTimer(itemId);
       queryClient.invalidateQueries({ queryKey: ["queue", userId] });
       queryClient.invalidateQueries({ queryKey: ["recipes"] });
-      const meta = metaMapRef.current.get(itemId);
-      showCompletionToast(meta?.title ?? "New recipe");
+      showCompletionToast(title ?? "New recipe");
     },
     [startTimer, queryClient, userId]
   );
 
   const { progress, metaMap } = useProgress(userId, handleComplete);
-
-  // Keep ref in sync so handleComplete can read latest meta
-  useEffect(() => {
-    metaMapRef.current = metaMap;
-  }, [metaMap]);
 
   // Handle Share Target URL params (from PWA share sheet)
   useEffect(() => {
