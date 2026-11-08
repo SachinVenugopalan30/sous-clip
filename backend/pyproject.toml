@@ -1,6 +1,6 @@
 [project]
 name = "sous-clip"
-version = "0.1.0"
+version = "2.0.0"
 description = "Self-hosted recipe extractor for short-form cooking videos"
 requires-python = ">=3.14"
 dependencies = [

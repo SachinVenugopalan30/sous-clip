@@ -101,6 +101,8 @@ If Mealie is not configured, no Mealie UI elements are shown. If forwarding fail
 
 ## Updating
 
+Upgrading from 1.x? Read [Upgrading to 2.0](docs/upgrading-to-v2.md) first; it needs one extra step.
+
 ```bash
 docker compose pull && docker compose up -d
 ```
@@ -155,6 +157,7 @@ You can also update these settings in the UI under Settings → Whisper Transcri
 ## Documentation
 
 - [Configuration Guide](docs/configuration.md)
+- [Upgrading to 2.0](docs/upgrading-to-v2.md)
 - [Reverse Proxy Setup](docs/reverse-proxy.md)
 - [PWA Installation](docs/pwa.md)
 - [Contributing](CONTRIBUTING.md)
