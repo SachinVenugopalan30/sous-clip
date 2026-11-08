@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     whisper_model_size: str = "base"
     whisper_device: str = "auto"
     whisper_compute_type: str = "auto"
+    whisper_models_dir: str = "./data/whisper-models"
 
     ai_provider: str = "anthropic"  # "anthropic" | "openai" | "ollama"
     anthropic_api_key: str = ""
