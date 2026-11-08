@@ -13,7 +13,7 @@ dependencies = [
     "httpx>=0.28.1",
     "anthropic>=2.6",
     "openai>=3.46",
-    "temporalio>=1.9.0",
+    "temporalio>=1.35",
     "redis>=8.1",
     "sse-starlette>=3.7",
     "pyjwt>=2.15",
@@ -40,10 +40,3 @@ packages = ["backend"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-
-[tool.uv]
-# Temporary: hold these at their current major line so the later bump tasks are real upgrades.
-# Those tasks remove the matching entries (and this section once empty).
-constraint-dependencies = [
-    "temporalio<=1.35.0",
-]

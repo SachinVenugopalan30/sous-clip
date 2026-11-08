@@ -2,9 +2,6 @@ version = 1
 revision = 3
 requires-python = ">=3.14"
 
-[manifest]
-constraints = [{ name = "temporalio", specifier = "<=1.35.0" }]
-
 [[package]]
 name = "annotated-doc"
 version = "0.0.5"
@@ -1051,7 +1048,7 @@ requires-dist = [
     { name = "redis", specifier = ">=8.1" },
     { name = "sqlmodel", specifier = ">=0.0.48" },
     { name = "sse-starlette", specifier = ">=3.7" },
-    { name = "temporalio", specifier = ">=1.9.0" },
+    { name = "temporalio", specifier = ">=1.35" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.54.0" },
     { name = "yt-dlp", specifier = ">=2026.10.26" },
 ]

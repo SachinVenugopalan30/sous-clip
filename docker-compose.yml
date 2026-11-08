@@ -12,8 +12,8 @@ services:
     depends_on:
       valkey:
         condition: service_healthy
-      temporal:
-        condition: service_healthy
+      temporal-namespace:
+        condition: service_completed_successfully
     volumes:
       - app-data:/app/data
     restart: unless-stopped
@@ -26,8 +26,30 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
+  # temporalio/auto-setup is deprecated (last tag 1.29.7). The server image does not set up its
+  # database or the "default" namespace, so two one-shot admin-tools steps do it (both idempotent).
+  # setup-schema errors once tables exist (hence || true); update-schema fails if setup really failed.
+  # If either one-shot fails, check: docker compose logs temporal-schema temporal-namespace
+  temporal-schema:
+    image: docker.io/temporalio/admin-tools:1.32.2
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        for db in temporal visibility; do
+          name=temporal; [ "$$db" = visibility ] && name=temporal_visibility
+          t="temporal-sql-tool --plugin postgres12 --ep temporal-db -p 5432 -u temporal -pw temporal --db $$name"
+          $$t create
+          $$t setup-schema -v 0.0 || true
+          $$t update-schema -d /etc/temporal/schema/postgresql/v12/$$db/versioned
+        done
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+    restart: on-failure:5
+
   temporal:
-    image: docker.io/temporalio/auto-setup:latest
+    image: docker.io/temporalio/server:1.32.2
     expose:
       - "7233"
     environment:
@@ -36,17 +58,29 @@ services:
       - DB_PORT=5432
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
-      - DBNAME=temporal
+      - DYNAMIC_CONFIG_FILE_PATH=/dev/null # the image ships no dynamic config file; none needed
     depends_on:
-      temporal-db:
-        condition: service_healthy
+      temporal-schema:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "nc -z $(hostname -i) 7233"]
+      test: ["CMD-SHELL", "nc -z $$(hostname -i) 7233"]
       interval: 10s
       timeout: 5s
       retries: 30
       start_period: 60s
     restart: unless-stopped
+
+  temporal-namespace:
+    image: docker.io/temporalio/admin-tools:1.32.2
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - temporal operator namespace describe -n default >/dev/null 2>&1 || temporal operator namespace create -n default --retention 24h
+    depends_on:
+      temporal:
+        condition: service_healthy
+    restart: on-failure:5
 
   temporal-db:
     image: docker.io/library/postgres:16-alpine
@@ -90,8 +124,8 @@ services:
     depends_on:
       valkey:
         condition: service_healthy
-      temporal:
-        condition: service_healthy
+      temporal-namespace:
+        condition: service_completed_successfully
     volumes:
       - app-data:/app/data
       - ./data/whisper-models:/app/models:ro,z
