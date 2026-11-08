@@ -1,6 +1,6 @@
 # Reverse Proxy Setup
 
-Sous Clip listens on `127.0.0.1:3000` by default. To expose it on a subdomain with HTTPS, put it behind a reverse proxy.
+Sous Clip listens on `127.0.0.1:3000` by default (change the host port with `SOUS_CLIP_PORT` in `.env`). To expose it on a subdomain with HTTPS, put it behind a reverse proxy.
 
 ## Nginx Proxy Manager
 

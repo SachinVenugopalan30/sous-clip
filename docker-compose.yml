@@ -5,8 +5,10 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${SOUS_CLIP_PORT:-3000}:3000"
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # reach a local LLM on the host (Linux)
     depends_on:
       valkey:
         condition: service_healthy
@@ -81,6 +83,8 @@ services:
       - com.centurylinklabs.watchtower.enable=true
     command: python -m backend.worker
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # reach a local LLM on the host (Linux)
     environment:
       - WHISPER_MODELS_DIR=/app/models
     depends_on:
