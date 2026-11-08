@@ -21,6 +21,7 @@ DEFAULTS = {
 }
 
 # Keys that should never be returned to the frontend in plain text
+MASK = "••••••"
 SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key", "mealie_api_key", "custom_api_key"}
 
 
@@ -36,7 +37,7 @@ class SettingsService:
         if mask_sensitive:
             for key in SENSITIVE_KEYS:
                 if result.get(key):
-                    result[key] = "••••••" + result[key][-4:] if len(result[key]) > 4 else "••••••"
+                    result[key] = MASK + result[key][-4:] if len(result[key]) > 4 else MASK
         return result
 
     def get(self, key: str, default: str | None = None) -> str | None:
