@@ -12,7 +12,8 @@ async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
     },
     ...options,
   });
-  if (res.status === 401) {
+  // A wrong password is also a 401; the sign-in form shows that itself instead of reloading
+  if (res.status === 401 && path !== "/auth/login") {
     useAuthStore.getState().logout();
     window.location.href = "/login";
     throw new Error("Session expired");

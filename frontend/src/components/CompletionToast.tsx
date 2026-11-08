@@ -34,45 +34,28 @@ export function CompletionToast({
   const seconds = Math.ceil(remaining / 1000);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.96 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="w-[min(356px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius)] border border-border bg-card text-card-foreground shadow-lg"
-    >
-      <div className="flex items-start gap-3 px-4 py-3">
-        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success/15">
-          <Check className="h-3.5 w-3.5 text-success" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-base">Order up.</p>
-          <p className="mt-0.5 truncate mono">
-            {title}
-          </p>
-        </div>
-        <span className="shrink-0 mono">
-          {seconds}s
-        </span>
+    <div role="status" className="toast-row">
+      <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-base">Order up.</p>
+        <p className="mono truncate">{title}</p>
       </div>
+      <span className="mono shrink-0">{seconds}s</span>
 
       {/* Countdown bar */}
-      <div className="h-1 w-full bg-success/15">
-        <motion.div
-          className="h-full bg-success"
-          initial={{ scaleX: 1 }}
-          animate={{ scaleX: 0 }}
-          transition={{ duration: duration / 1000, ease: "linear" }}
-          style={{ transformOrigin: "left" }}
-        />
-      </div>
-    </motion.div>
+      <motion.div
+        className="toast-bar"
+        initial={{ scaleX: 1 }}
+        animate={{ scaleX: 0 }}
+        transition={{ duration: duration / 1000, ease: "linear" }}
+      />
+    </div>
   );
 }
 
 export function showCompletionToast(title: string) {
   toast.custom(
     (id) => <CompletionToast id={id} title={title} />,
-    { duration: Infinity, unstyled: true }
+    { duration: Infinity, classNames: { toast: "toast-ok" } }
   );
 }

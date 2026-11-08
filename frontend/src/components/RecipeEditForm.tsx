@@ -52,7 +52,7 @@ export function RecipeEditForm({ recipe, onDone }: { recipe: Recipe; onDone: () 
     <form onSubmit={handleSubmit} className="space-y-5">
       <label className="rec-field">
         Title
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} required className="mt-1 h-11 sm:h-9" />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} required className="mt-1" />
       </label>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-3">
@@ -60,7 +60,7 @@ export function RecipeEditForm({ recipe, onDone }: { recipe: Recipe; onDone: () 
           ([label, value, set]) => (
             <label key={label} className="rec-field">
               {label}
-              <Input type="number" min={0} value={value} onChange={(e) => set(e.target.value)} className="mt-1 h-11 sm:h-9" />
+              <Input type="number" min={0} value={value} onChange={(e) => set(e.target.value)} className="mt-1" />
             </label>
           )
         )}
@@ -71,9 +71,9 @@ export function RecipeEditForm({ recipe, onDone }: { recipe: Recipe; onDone: () 
         <div className="mt-1 space-y-2">
           {ingredients.map((ing, i) => (
             <div key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)_44px] gap-2 sm:grid-cols-[5rem_6rem_minmax(0,1fr)_2.5rem]">
-              <Input aria-label="Quantity" placeholder="Qty" value={ing.quantity ?? ""} onChange={(e) => setIngredient(i, "quantity", e.target.value)} className="h-11 sm:h-9" />
-              <Input aria-label="Unit" placeholder="Unit" value={ing.unit ?? ""} onChange={(e) => setIngredient(i, "unit", e.target.value)} className="h-11 sm:h-9" />
-              <Input aria-label="Ingredient" placeholder="Ingredient" value={ing.name} onChange={(e) => setIngredient(i, "name", e.target.value)} className="order-last col-span-full h-11 sm:order-none sm:col-span-1 sm:h-9" />
+              <Input aria-label="Quantity" placeholder="Qty" value={ing.quantity ?? ""} onChange={(e) => setIngredient(i, "quantity", e.target.value)} />
+              <Input aria-label="Unit" placeholder="Unit" value={ing.unit ?? ""} onChange={(e) => setIngredient(i, "unit", e.target.value)} />
+              <Input aria-label="Ingredient" placeholder="Ingredient" value={ing.name} onChange={(e) => setIngredient(i, "name", e.target.value)} className="order-last col-span-full sm:order-none sm:col-span-1" />
               <button type="button" className="rec-btn press justify-center !px-0" aria-label="Remove ingredient" onClick={() => setIngredients(ingredients.filter((_, j) => j !== i))}>
                 <X className="h-4 w-4" />
               </button>
@@ -93,7 +93,7 @@ export function RecipeEditForm({ recipe, onDone }: { recipe: Recipe; onDone: () 
 
       <label className="rec-field">
         Tags (comma separated)
-        <Input value={tags} onChange={(e) => setTags(e.target.value)} className="mt-1 h-11 sm:h-9" />
+        <Input value={tags} onChange={(e) => setTags(e.target.value)} className="mt-1" />
       </label>
 
       <label className="rec-field">

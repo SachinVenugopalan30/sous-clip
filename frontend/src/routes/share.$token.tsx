@@ -29,7 +29,7 @@ function SharePage() {
           ) : isLoading ? (
             <div className="sk h-64" aria-busy="true" />
           ) : (
-            <p className="text-muted-foreground">Recipe not found or no longer shared.</p>
+            <div className="none"><p>Recipe not found or no longer shared.</p></div>
           )}
           <div className="mt-10 flex items-center justify-center gap-3 border-t border-border pt-6">
             <p className="text-xs text-muted-foreground">

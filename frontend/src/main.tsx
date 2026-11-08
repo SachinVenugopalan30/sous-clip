@@ -51,15 +51,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       </MotionConfig>
       <Toaster
         position="top-right"
-        toastOptions={{
-          style: {
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-            color: "var(--foreground)",
-            borderRadius: "0.75rem",
-            overflow: "hidden",
-          },
-        }}
+        toastOptions={{ unstyled: true, classNames: { toast: "toast", success: "toast-ok", error: "toast-bad", content: "min-w-0 flex-1", closeButton: "toast-x", actionButton: "toast-act" } }}
       />
     </QueryClientProvider>
   </React.StrictMode>

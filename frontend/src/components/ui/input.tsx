@@ -2,20 +2,38 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, ...props }: React.ComponentProps<"input">) {
+  return <input data-slot="input" className={cn("ctl", className)} {...props} />
+}
+
+function Select({ className, ...props }: React.ComponentProps<"select">) {
+  return <select data-slot="select" className={cn("ctl", className)} {...props} />
+}
+
+// Label, hint and error wired to one control: id, aria-describedby and aria-invalid are injected into the child
+function Field({
+  label,
+  hint,
+  error,
+  invalid,
+  children,
+}: {
+  label: React.ReactNode
+  hint?: React.ReactNode
+  error?: string
+  invalid?: boolean // flag the control without its own message
+  children: React.ReactElement<React.HTMLAttributes<HTMLElement>>
+}) {
+  const id = React.useId()
+  const describedBy = [hint && `${id}-hint`, error && `${id}-err`].filter(Boolean).join(" ") || undefined
   return (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(
-        "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30",
-        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
-        className
-      )}
-      {...props}
-    />
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      {React.cloneElement(children, { id, "aria-describedby": describedBy, "aria-invalid": error || invalid ? true : undefined })}
+      {hint && <p id={`${id}-hint`} className="hint">{hint}</p>}
+      {error && <p id={`${id}-err`} role="alert" className="field-err">{error}</p>}
+    </div>
   )
 }
 
-export { Input }
+export { Input, Select, Field }
