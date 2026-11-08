@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Github } from "lucide-react";
+import { GithubIcon } from "../components/Layout";
 import { RecipeView } from "../components/RecipeView";
 import { api } from "../lib/api";
 import { Skeleton } from "../components/ui/skeleton";
@@ -54,7 +54,7 @@ function SharePage() {
             className="text-muted-foreground transition-colors hover:text-text"
             title="GitHub"
           >
-            <Github className="h-4 w-4" />
+            <GithubIcon className="h-4 w-4" />
           </a>
         </div>
       </div>
