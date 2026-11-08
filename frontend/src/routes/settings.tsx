@@ -19,7 +19,7 @@ export const Route = createFileRoute("/settings")({
 
 type FormProps = {
   form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
+  setForm: (patch: Record<string, string>) => void;
 };
 
 function SettingsPage() {
@@ -28,7 +28,7 @@ function SettingsPage() {
   // Unsaved changes layered over the server settings; cleared once a save has refetched them
   const [edits, setEdits] = useState<Record<string, string>>({});
   const form = { ...settings, ...edits };
-  const setForm = setEdits;
+  const setForm = (patch: Record<string, string>) => setEdits((p) => ({ ...p, ...patch }));
 
   const handleSave = () => {
     update.mutate(form, {
@@ -66,7 +66,7 @@ function SettingsPage() {
             <label className="text-sm font-medium">Provider</label>
             <select
               value={form.ai_provider || ""}
-              onChange={(e) => setForm({ ...form, ai_provider: e.target.value })}
+              onChange={(e) => setForm({ ai_provider: e.target.value })}
               className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
             >
               {AI_PROVIDERS.map((p) => (
@@ -79,7 +79,7 @@ function SettingsPage() {
             <label className="text-sm font-medium">Model</label>
             <Input
               value={form.ai_model || ""}
-              onChange={(e) => setForm({ ...form, ai_model: e.target.value })}
+              onChange={(e) => setForm({ ai_model: e.target.value })}
               placeholder="e.g. claude-sonnet-4-6, gpt-4o"
               className="mt-1"
             />
@@ -91,7 +91,7 @@ function SettingsPage() {
               <Input
                 type="password"
                 value={form.anthropic_api_key || ""}
-                onChange={(e) => setForm({ ...form, anthropic_api_key: e.target.value })}
+                onChange={(e) => setForm({ anthropic_api_key: e.target.value })}
                 placeholder="sk-ant-..."
                 className="mt-1"
               />
@@ -104,7 +104,7 @@ function SettingsPage() {
               <Input
                 type="password"
                 value={form.openai_api_key || ""}
-                onChange={(e) => setForm({ ...form, openai_api_key: e.target.value })}
+                onChange={(e) => setForm({ openai_api_key: e.target.value })}
                 placeholder="sk-..."
                 className="mt-1"
               />
@@ -116,7 +116,7 @@ function SettingsPage() {
               <label className="text-sm font-medium">Ollama Base URL</label>
               <Input
                 value={form.ollama_base_url || ""}
-                onChange={(e) => setForm({ ...form, ollama_base_url: e.target.value })}
+                onChange={(e) => setForm({ ollama_base_url: e.target.value })}
                 placeholder="http://localhost:11434"
                 className="mt-1"
               />
@@ -137,7 +137,7 @@ function SettingsPage() {
             <label className="text-sm font-medium">Model Size</label>
             <select
               value={form.whisper_model_size || "base"}
-              onChange={(e) => setForm({ ...form, whisper_model_size: e.target.value })}
+              onChange={(e) => setForm({ whisper_model_size: e.target.value })}
               className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
             >
               {WHISPER_MODELS.map((m) => (
@@ -153,7 +153,7 @@ function SettingsPage() {
             <label className="text-sm font-medium">Device</label>
             <select
               value={form.whisper_device || "auto"}
-              onChange={(e) => setForm({ ...form, whisper_device: e.target.value })}
+              onChange={(e) => setForm({ whisper_device: e.target.value })}
               className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
             >
               {WHISPER_DEVICES.map((d) => (
@@ -169,7 +169,7 @@ function SettingsPage() {
             <label className="text-sm font-medium">Compute Type</label>
             <select
               value={form.whisper_compute_type || "auto"}
-              onChange={(e) => setForm({ ...form, whisper_compute_type: e.target.value })}
+              onChange={(e) => setForm({ whisper_compute_type: e.target.value })}
               className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
             >
               {WHISPER_COMPUTE.map((c) => (
@@ -242,7 +242,7 @@ function MealieSection({ form, setForm }: FormProps) {
           <Input
             value={form.mealie_url || ""}
             onChange={(e) => {
-              setForm({ ...form, mealie_url: e.target.value });
+              setForm({ mealie_url: e.target.value });
               test.reset();
             }}
             placeholder="https://mealie.example.com"
@@ -255,7 +255,7 @@ function MealieSection({ form, setForm }: FormProps) {
             type="password"
             value={form.mealie_api_key || ""}
             onChange={(e) => {
-              setForm({ ...form, mealie_api_key: e.target.value });
+              setForm({ mealie_api_key: e.target.value });
               test.reset();
             }}
             placeholder="Your Mealie API token"
@@ -356,7 +356,7 @@ function UpdatesSection({ form, setForm }: FormProps) {
           type="checkbox"
           className="size-5 accent-[var(--color-accent)]"
           checked={form.update_check !== "false"}
-          onChange={(e) => setForm({ ...form, update_check: e.target.checked ? "true" : "false" })}
+          onChange={(e) => setForm({ update_check: e.target.checked ? "true" : "false" })}
         />
         Check GitHub for new releases and stars (once an hour)
       </label>
@@ -367,7 +367,7 @@ function UpdatesSection({ form, setForm }: FormProps) {
 function CustomEndpointFields({ form, setForm }: FormProps) {
   const test = useTestResult();
   const change = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
+    setForm({ [key]: value });
     test.reset();
   };
 
@@ -380,7 +380,7 @@ function CustomEndpointFields({ form, setForm }: FormProps) {
     try {
       const result = await api.settings.testAI(form.custom_base_url, form.ai_model, form.custom_api_key || "");
       if (result.ok && result.style) {
-        setForm({ ...form, custom_api_style: result.style });
+        setForm({ custom_api_style: result.style });
         test.set("success", `Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
       } else {
         test.set("error", result.error || "Connection failed");
