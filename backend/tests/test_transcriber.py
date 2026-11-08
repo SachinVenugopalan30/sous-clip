@@ -44,3 +44,18 @@ def test_transcriber_auto_device_defaults_to_cpu(mock_model_class):
     call_kwargs = mock_model_class.call_args
     assert call_kwargs[1]["device"] in ("cpu", "cuda")
     assert call_kwargs[1]["compute_type"] in ("int8", "float16")
+
+
+def test_decode_audio_real_path(tmp_path):
+    """Real faster-whisper decode (PyAV), no model: catches av/faster-whisper drift."""
+    import wave
+
+    from faster_whisper.audio import decode_audio
+
+    path = tmp_path / "silence.wav"
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(b"\x00\x00" * 1600)
+    assert len(decode_audio(str(path))) > 0

@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.16.2",
     "yt-dlp>=2026.10.26",
     "faster-whisper>=1.2.1",
+    "av<19",  # faster-whisper 1.2.1 passes metadata_errors, removed in av 19; lift when it stops
     "httpx>=0.28.1",
     "anthropic>=2.6",
     "openai>=3.46",
