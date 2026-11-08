@@ -91,7 +91,12 @@ async def transcribe_activity(audio_path: str, user_id: str, queue_item_id: str)
             device=cfg["whisper_device"],
             compute_type=cfg["whisper_compute_type"],
         )
-        result = transcriber.transcribe(audio_path)
+        result = transcriber.transcribe(
+            audio_path,
+            on_segment=lambda text: queue.publish_progress(
+                user_id, queue_item_id, "transcribing", "active", text=text
+            ),
+        )
         Path(audio_path).unlink(missing_ok=True)  # audio is only needed for transcription
         return {"text": result.text, "language": result.language}
 

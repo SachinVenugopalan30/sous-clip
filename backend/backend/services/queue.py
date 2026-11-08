@@ -159,6 +159,7 @@ class ExtractionQueue:
         status: str,
         percent: int | None = None,
         meta: dict | None = None,
+        text: str | None = None,
     ) -> None:
         message: dict = {
             "item_id": item_id,
@@ -169,4 +170,6 @@ class ExtractionQueue:
             message["percent"] = percent
         if meta is not None:
             message["meta"] = meta
+        if text is not None:
+            message["text"] = text
         self.client.publish(f"progress:{user_id}", json.dumps(message))

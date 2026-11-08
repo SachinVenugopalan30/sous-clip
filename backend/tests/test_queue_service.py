@@ -96,3 +96,15 @@ def test_get_queue_is_cached(mock_redis):
     from backend.services.queue import get_queue
 
     assert get_queue() is get_queue()
+
+
+def test_publish_progress_includes_text(mock_redis):
+    queue = ExtractionQueue(redis_url="redis://localhost:6379/0")
+    queue.publish_progress("user-1", "q-1", "transcribing", "active", text="hello")
+    assert json.loads(mock_redis.publish.call_args[0][1])["text"] == "hello"
+
+
+def test_publish_progress_omits_text_when_none(mock_redis):
+    queue = ExtractionQueue(redis_url="redis://localhost:6379/0")
+    queue.publish_progress("user-1", "q-1", "transcribing", "active")
+    assert "text" not in json.loads(mock_redis.publish.call_args[0][1])

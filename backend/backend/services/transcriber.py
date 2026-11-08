@@ -1,4 +1,5 @@
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from faster_whisper import WhisperModel
@@ -46,7 +47,11 @@ class Transcriber:
             compute_type=resolved_compute,
         )
 
-    def transcribe(self, audio_path: str) -> TranscribeResult:
+    def transcribe(self, audio_path: str, on_segment: Callable[[str], None] | None = None) -> TranscribeResult:
         segments, info = self.model.transcribe(audio_path)
-        text = "".join(segment.text for segment in segments)
-        return TranscribeResult(text=text, language=info.language)
+        parts: list[str] = []
+        for segment in segments:
+            parts.append(segment.text)
+            if on_segment and segment.text.strip():
+                on_segment(segment.text.strip())
+        return TranscribeResult(text="".join(parts), language=info.language)

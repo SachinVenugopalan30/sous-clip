@@ -53,3 +53,22 @@ def test_decode_audio_real_path(tmp_path):
         w.setframerate(16000)
         w.writeframes(b"\x00\x00" * 1600)
     assert len(decode_audio(str(path))) > 0
+
+
+@patch("backend.services.transcriber.WhisperModel")
+def test_transcribe_reports_each_segment(mock_model_class):
+    mock_model = MagicMock()
+    mock_model_class.return_value = mock_model
+    segment1 = MagicMock()
+    segment1.text = " today we're making"
+    segment2 = MagicMock()
+    segment2.text = " garlic butter pasta "
+    blank = MagicMock()
+    blank.text = "  "
+    mock_model.transcribe.return_value = (iter([segment1, blank, segment2]), MagicMock(language="en"))
+
+    seen = []
+    result = Transcriber("base", "cpu", "int8").transcribe("/tmp/audio.mp3", on_segment=seen.append)
+
+    assert seen == ["today we're making", "garlic butter pasta"]
+    assert result.text == segment1.text + blank.text + segment2.text

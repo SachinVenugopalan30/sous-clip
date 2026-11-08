@@ -14,6 +14,7 @@ export interface PipelineProgress {
   status: "pending" | "active" | "complete" | "error";
   percent?: number;
   meta?: VideoMeta;
+  text?: string; // one transcript segment, while transcribing
 }
 
 export function useProgress(
@@ -24,6 +25,7 @@ export function useProgress(
     new Map()
   );
   const [metaMap, setMetaMap] = useState<Map<string, VideoMeta>>(new Map());
+  const [transcripts, setTranscripts] = useState<Map<string, string>>(new Map());
   const token = useAuthStore((s) => s.token);
   const titles = useRef(new Map<string, string>()); // latest title per item, for onComplete
   const complete = useEffectEvent((itemId: string, title?: string) => onComplete?.(itemId, title));
@@ -43,6 +45,22 @@ export function useProgress(
         setMetaMap((prev) => new Map(prev).set(data.item_id, data.meta!));
       }
 
+      // A new attempt (retry) re-emits every segment, so start the transcript over
+      if (data.step === "transcribing" && data.status === "active" && !data.text) {
+        setTranscripts((prev) => {
+          const next = new Map(prev);
+          next.delete(data.item_id);
+          return next;
+        });
+      }
+
+      if (data.text) {
+        const text = data.text;
+        setTranscripts((prev) =>
+          new Map(prev).set(data.item_id, `${prev.get(data.item_id) ?? ""} ${text}`.trim())
+        );
+      }
+
       if (data.step === "saved" && data.status === "complete") {
         complete(data.item_id, titles.current.get(data.item_id));
       }
@@ -55,5 +73,5 @@ export function useProgress(
     return () => eventSource.close();
   }, [userId, token]);
 
-  return { progress, metaMap };
+  return { progress, metaMap, transcripts };
 }
