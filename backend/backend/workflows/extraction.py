@@ -1,16 +1,23 @@
 import json
+import secrets
+import shutil
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 
+from sqlmodel import Session, select
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 
+from backend import database
 from backend.config import settings
+from backend.models import Recipe
 from backend.services.downloader import Downloader
 from backend.services.errors import describe_failure
 from backend.services.extractor import RecipeExtractor
+from backend.services.mealie import MealieClient
 from backend.services.queue import get_queue as _get_queue
+from backend.services.settings import SettingsService
 from backend.services.transcriber import Transcriber
 from backend.telemetry import get_tracer
 
@@ -22,11 +29,7 @@ RETRY = RetryPolicy(maximum_attempts=3)
 
 def _app_settings() -> dict[str, str]:
     """Settings saved in the UI, falling back to env defaults."""
-    from backend.database import engine
-    from backend.services.settings import SettingsService
-    from sqlmodel import Session
-
-    with Session(engine) as session:
+    with Session(database.engine) as session:
         return SettingsService(session).get_all()
 
 
@@ -135,14 +138,7 @@ async def save_recipe_activity(
         queue = _get_queue()
         queue.publish_progress(user_id, queue_item_id, "saved", "active")
 
-        import secrets
-        import shutil
-
-        from backend.database import engine
-        from backend.models import Recipe
-        from sqlmodel import Session, select
-
-        with Session(engine) as session:
+        with Session(database.engine) as session:
             # A retry after a successful commit must not insert a second recipe
             existing = session.exec(select(Recipe).where(Recipe.queue_item_id == queue_item_id)).first()
             recipe_id = existing.id if existing else None
@@ -168,7 +164,7 @@ async def save_recipe_activity(
                 queue_item_id=queue_item_id,
                 thumbnail=thumbnail,
             )
-            with Session(engine) as session:
+            with Session(database.engine) as session:
                 session.add(recipe)
                 session.commit()
                 recipe_id = recipe.id
@@ -189,8 +185,6 @@ async def forward_to_mealie_activity(
 ) -> None:
     if not forward_to_mealie:
         return
-
-    from backend.services.mealie import MealieClient
 
     cfg = _app_settings()
     mealie_url = cfg["mealie_url"]

@@ -11,6 +11,15 @@ from temporalio.worker.workflow_sandbox import (
 )
 
 from backend.config import settings
+from backend.workflows.extraction import (
+    ExtractionWorkflow,
+    download_activity,
+    extract_activity,
+    fail_queue_item_activity,
+    forward_to_mealie_activity,
+    save_recipe_activity,
+    transcribe_activity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +35,6 @@ def check_whisper_model():
         )
         sys.exit(1)
     logger.info("Whisper model found: %s", model_path)
-from backend.workflows.extraction import (
-    ExtractionWorkflow,
-    download_activity,
-    extract_activity,
-    fail_queue_item_activity,
-    forward_to_mealie_activity,
-    save_recipe_activity,
-    transcribe_activity,
-)
 
 
 async def run_worker():
