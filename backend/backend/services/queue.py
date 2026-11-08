@@ -95,25 +95,27 @@ class ExtractionQueue:
                 items.append(item)
         return items
 
-    def cancel(self, user_id: str, item_id: str) -> bool:
+    def _load(self, item_id: str) -> QueueItem | None:
         raw = self.client.hget("queue_items", item_id)
-        if not raw:
-            return False
-        item = QueueItem.from_json(raw)
-        if item.status != QueueStatus.PENDING:
+        return QueueItem.from_json(raw) if raw else None
+
+    def _save(self, item: QueueItem) -> None:
+        self.client.hset("queue_items", item.id, item.to_json())
+
+    def cancel(self, user_id: str, item_id: str) -> bool:
+        item = self._load(item_id)
+        if not item or item.status != QueueStatus.PENDING:
             return False
         item.status = QueueStatus.CANCELLED
-        self.client.hset("queue_items", item_id, item.to_json())
-        self.client.lrem(_queue_key(user_id), 1, item_id.encode() if isinstance(item_id, str) else item_id)
+        self._save(item)
+        self.client.lrem(_queue_key(user_id), 1, item_id)
         return True
 
     def mark_in_progress(self, item_id: str) -> None:
-        raw = self.client.hget("queue_items", item_id)
-        if raw:
-            item = QueueItem.from_json(raw)
-            if item.status == QueueStatus.PENDING:
-                item.status = QueueStatus.IN_PROGRESS
-                self.client.hset("queue_items", item_id, item.to_json())
+        item = self._load(item_id)
+        if item and item.status == QueueStatus.PENDING:
+            item.status = QueueStatus.IN_PROGRESS
+            self._save(item)
 
     def dequeue(self, user_id: str) -> QueueItem | None:
         item_ids = self.client.lrange(_queue_key(user_id), 0, -1)
@@ -128,32 +130,27 @@ class ExtractionQueue:
         return None
 
     def complete(self, item_id: str, user_id: str) -> None:
-        raw = self.client.hget("queue_items", item_id)
-        if raw:
-            item = QueueItem.from_json(raw)
+        item = self._load(item_id)
+        if item:
             item.status = QueueStatus.COMPLETED
-            self.client.hset("queue_items", item_id, item.to_json())
-            self.client.lrem(_queue_key(user_id), 1, item_id.encode() if isinstance(item_id, str) else item_id)
+            self._save(item)
+            self.client.lrem(_queue_key(user_id), 1, item_id)
 
     def fail(self, item_id: str, user_id: str, error: str) -> None:
-        raw = self.client.hget("queue_items", item_id)
-        if raw:
-            item = QueueItem.from_json(raw)
+        item = self._load(item_id)
+        if item:
             item.status = QueueStatus.FAILED
             item.error = error
-            self.client.hset("queue_items", item_id, item.to_json())
+            self._save(item)
 
     def retry(self, user_id: str, item_id: str) -> QueueItem | None:
         """Reset a failed item to PENDING; the caller restarts its workflow."""
-        raw = self.client.hget("queue_items", item_id)
-        if not raw:
-            return None
-        item = QueueItem.from_json(raw)
-        if item.status != QueueStatus.FAILED:
+        item = self._load(item_id)
+        if not item or item.status != QueueStatus.FAILED:
             return None
         item.status = QueueStatus.PENDING
         item.error = None
-        self.client.hset("queue_items", item_id, item.to_json())
+        self._save(item)
         return item
 
     def get_all_active_items(self) -> list[QueueItem]:
