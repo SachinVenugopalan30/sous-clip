@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Save, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
@@ -29,15 +29,17 @@ const WHISPER_COMPUTE = ["auto", "int8", "float16", "float32"];
 function SettingsPage() {
   const { data: settings, isLoading } = useSettings();
   const update = useUpdateSettings();
-  const [form, setForm] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (settings) setForm(settings);
-  }, [settings]);
+  // Unsaved changes layered over the server settings; cleared once a save has refetched them
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const form = { ...settings, ...edits };
+  const setForm = setEdits;
 
   const handleSave = () => {
     update.mutate(form, {
-      onSuccess: () => toast.success("Settings saved"),
+      onSuccess: () => {
+        setEdits({});
+        toast.success("Settings saved");
+      },
       onError: () => toast.error("Failed to save settings"),
     });
   };

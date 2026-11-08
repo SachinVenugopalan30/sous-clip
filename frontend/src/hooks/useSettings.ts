@@ -14,9 +14,11 @@ export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.settings.update,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
-      queryClient.invalidateQueries({ queryKey: ["update"] }); // update_check may have changed
-    },
+    // Returned so the mutation stays pending until the refetch lands (callers clear their edits then)
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["settings"] }),
+        queryClient.invalidateQueries({ queryKey: ["update"] }), // update_check may have changed
+      ]),
   });
 }
