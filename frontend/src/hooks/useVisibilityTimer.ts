@@ -28,7 +28,7 @@ export function useVisibilityTimer(durationMs: number, onExpire: (id: string) =>
       const expired = advanceTimers(timers.current, TICK_MS);
       if (expired.length === 0) return;
       setCompletingIds(new Set(timers.current.keys()));
-      expired.forEach(expire);
+      expired.forEach((id) => expire(id));
     }, TICK_MS);
     return () => clearInterval(interval);
   }, []);

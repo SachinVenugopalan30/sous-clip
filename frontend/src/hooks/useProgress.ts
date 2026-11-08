@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useAuthStore } from "../stores/auth";
 
 export interface VideoMeta {
@@ -25,6 +25,7 @@ export function useProgress(
   );
   const [metaMap, setMetaMap] = useState<Map<string, VideoMeta>>(new Map());
   const token = useAuthStore((s) => s.token);
+  const titles = useRef(new Map<string, string>()); // latest title per item, for onComplete
   const complete = useEffectEvent((itemId: string, title?: string) => onComplete?.(itemId, title));
 
   useEffect(() => {
@@ -32,20 +33,18 @@ export function useProgress(
       `/api/progress/${userId}?token=${token}`
     );
 
-    const titles = new Map<string, string>(); // latest title per item, for onComplete
-
     eventSource.addEventListener("progress", (event) => {
       const data: PipelineProgress = JSON.parse(event.data);
       setProgress((prev) => new Map(prev).set(data.item_id, data));
 
       // Accumulate metadata when it arrives
       if (data.meta) {
-        titles.set(data.item_id, data.meta.title);
+        titles.current.set(data.item_id, data.meta.title);
         setMetaMap((prev) => new Map(prev).set(data.item_id, data.meta!));
       }
 
       if (data.step === "saved" && data.status === "complete") {
-        complete(data.item_id, titles.get(data.item_id));
+        complete(data.item_id, titles.current.get(data.item_id));
       }
     });
 
