@@ -7,18 +7,6 @@ class Ingredient(BaseModel):
     unit: str | None = None
 
 
-class RecipeCreate(BaseModel):
-    title: str
-    source_url: str
-    ingredients: list[Ingredient]
-    instructions: list[str]
-    prep_time_minutes: int | None = None
-    cook_time_minutes: int | None = None
-    servings: int | None = None
-    tags: list[str] = []
-    notes: str | None = None
-
-
 class RecipeUpdate(BaseModel):
     # NOT NULL columns: omitted is fine (defaults aren't validated), explicit null is a 422
     title: str = None
