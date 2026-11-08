@@ -8,23 +8,19 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Separator } from "../components/ui/separator";
 import { Skeleton } from "../components/ui/skeleton";
+import { useApplyUpdate } from "../hooks/useApplyUpdate";
+import { useTestResult } from "../hooks/useTestResult";
+import { AI_PROVIDERS, API_STYLE_LABELS, WHISPER_COMPUTE, WHISPER_DEVICES, WHISPER_MODELS } from "../lib/settingsOptions";
 import { useSettings, useUpdateSettings, useUpdateStatus } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-const AI_PROVIDERS = [
-  { value: "anthropic", label: "Anthropic (Claude)" },
-  { value: "openai", label: "OpenAI" },
-  { value: "ollama", label: "Ollama (Local)" },
-  { value: "custom", label: "Custom endpoint" },
-];
-const API_STYLE_LABELS: Record<string, string> = { openai: "OpenAI-compatible", anthropic: "Anthropic-compatible" };
-
-const WHISPER_MODELS = ["tiny", "base", "small", "medium", "large-v3"];
-const WHISPER_DEVICES = ["auto", "cpu", "cuda"];
-const WHISPER_COMPUTE = ["auto", "int8", "float16", "float32"];
+type FormProps = {
+  form: Record<string, string>;
+  setForm: (f: Record<string, string>) => void;
+};
 
 function SettingsPage() {
   const { data: settings, isLoading } = useSettings();
@@ -210,15 +206,8 @@ function SettingsPage() {
   );
 }
 
-function MealieSection({
-  form,
-  setForm,
-}: {
-  form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
-}) {
-  const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [testMessage, setTestMessage] = useState("");
+function MealieSection({ form, setForm }: FormProps) {
+  const test = useTestResult();
 
   const handleTest = async () => {
     const url = form.mealie_url || "";
@@ -227,19 +216,13 @@ function MealieSection({
       toast.error("Enter both Mealie URL and API key first");
       return;
     }
-    setTestStatus("loading");
+    test.set("loading");
     try {
       const result = await api.settings.testMealie(url, key);
-      if (result.ok) {
-        setTestStatus("success");
-        setTestMessage(`Connected (v${result.version})`);
-      } else {
-        setTestStatus("error");
-        setTestMessage(result.error || "Connection failed");
-      }
+      if (result.ok) test.set("success", `Connected (v${result.version})`);
+      else test.set("error", result.error || "Connection failed");
     } catch {
-      setTestStatus("error");
-      setTestMessage("Connection failed");
+      test.set("error", "Connection failed");
     }
   };
 
@@ -260,7 +243,7 @@ function MealieSection({
             value={form.mealie_url || ""}
             onChange={(e) => {
               setForm({ ...form, mealie_url: e.target.value });
-              setTestStatus("idle");
+              test.reset();
             }}
             placeholder="https://mealie.example.com"
             className="mt-1"
@@ -273,7 +256,7 @@ function MealieSection({
             value={form.mealie_api_key || ""}
             onChange={(e) => {
               setForm({ ...form, mealie_api_key: e.target.value });
-              setTestStatus("idle");
+              test.reset();
             }}
             placeholder="Your Mealie API token"
             className="mt-1"
@@ -288,24 +271,24 @@ function MealieSection({
             variant="outline"
             size="sm"
             onClick={handleTest}
-            disabled={testStatus === "loading"}
+            disabled={test.status === "loading"}
             className="h-10 sm:h-8"
           >
-            {testStatus === "loading" ? (
+            {test.status === "loading" ? (
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
             ) : null}
             Test Connection
           </Button>
-          {testStatus === "success" && (
+          {test.status === "success" && (
             <span className="flex items-center gap-1 text-xs text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {testMessage}
+              {test.message}
             </span>
           )}
-          {testStatus === "error" && (
+          {test.status === "error" && (
             <span className="flex items-center gap-1 text-xs text-destructive">
               <XCircle className="h-3.5 w-3.5" />
-              {testMessage}
+              {test.message}
             </span>
           )}
         </div>
@@ -314,56 +297,9 @@ function MealieSection({
   );
 }
 
-const UPDATE_TIMEOUT_MS = 5 * 60 * 1000;
-
-// Polls /health until the app comes back on a different version; false after the timeout
-async function waitForNewVersion(current: string): Promise<boolean> {
-  const deadline = Date.now() + UPDATE_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    try {
-      const res = await fetch("/health", { cache: "no-store" });
-      if (res.ok && (await res.json()).version !== current) return true;
-    } catch {
-      // app container is restarting
-    }
-  }
-  return false;
-}
-
-async function reloadFresh() {
-  // The PWA precache would otherwise serve the old bundle after the restart
-  const registrations = (await navigator.serviceWorker?.getRegistrations()) ?? [];
-  await Promise.all(registrations.map((r) => r.unregister()));
-  location.reload();
-}
-
-function UpdatesSection({
-  form,
-  setForm,
-}: {
-  form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
-}) {
+function UpdatesSection({ form, setForm }: FormProps) {
   const { data: status } = useUpdateStatus();
-  const [phase, setPhase] = useState<"idle" | "updating" | "failed">("idle");
-
-  const handleUpdate = async () => {
-    if (!status) return;
-    setPhase("updating");
-    try {
-      const result = await api.update.start();
-      if (!result.ok) {
-        toast.error(result.error || "Update failed to start");
-        setPhase("idle");
-        return;
-      }
-    } catch {
-      // Connection dropped: Watchtower is most likely already replacing this container
-    }
-    if (await waitForNewVersion(status.current)) await reloadFresh();
-    else setPhase("failed");
-  };
+  const { phase, applyUpdate } = useApplyUpdate(status?.current);
 
   return (
     <section>
@@ -391,7 +327,7 @@ function UpdatesSection({
       {status?.update_available &&
         (status.watchtower ? (
           <div className="mt-4">
-            <Button onClick={handleUpdate} disabled={phase === "updating"}>
+            <Button onClick={applyUpdate} disabled={phase === "updating"}>
               {phase === "updating" ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -428,18 +364,11 @@ function UpdatesSection({
   );
 }
 
-function CustomEndpointFields({
-  form,
-  setForm,
-}: {
-  form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
-}) {
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+function CustomEndpointFields({ form, setForm }: FormProps) {
+  const test = useTestResult();
   const change = (key: string, value: string) => {
     setForm({ ...form, [key]: value });
-    setStatus("idle");
+    test.reset();
   };
 
   const handleTest = async () => {
@@ -447,20 +376,17 @@ function CustomEndpointFields({
       toast.error("Enter the endpoint URL and a model first");
       return;
     }
-    setStatus("loading");
+    test.set("loading");
     try {
       const result = await api.settings.testAI(form.custom_base_url, form.ai_model, form.custom_api_key || "");
       if (result.ok && result.style) {
         setForm({ ...form, custom_api_style: result.style });
-        setStatus("success");
-        setMessage(`Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
+        test.set("success", `Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
       } else {
-        setStatus("error");
-        setMessage(result.error || "Connection failed");
+        test.set("error", result.error || "Connection failed");
       }
     } catch (e) {
-      setStatus("error");
-      setMessage(e instanceof Error ? e.message : "Connection failed");
+      test.set("error", e instanceof Error ? e.message : "Connection failed");
     }
   };
 
@@ -487,21 +413,21 @@ function CustomEndpointFields({
       </label>
       <div>
         <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={status === "loading"} className="h-10 sm:h-8">
-            {status === "loading" && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={test.status === "loading"} className="h-10 sm:h-8">
+            {test.status === "loading" && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
             Test connection
           </Button>
-          {status === "idle" && form.custom_api_style && form.custom_base_url && (
+          {test.status === "idle" && form.custom_api_style && form.custom_base_url && (
             <span className="text-xs text-muted-foreground">Using the {API_STYLE_LABELS[form.custom_api_style]} API</span>
           )}
         </div>
-        {(status === "success" || status === "error") && (
+        {(test.status === "success" || test.status === "error") && (
           <p
-            role={status === "error" ? "alert" : "status"}
-            className={`mt-2 flex items-start gap-1 text-xs ${status === "success" ? "text-success" : "text-destructive"}`}
+            role={test.status === "error" ? "alert" : "status"}
+            className={`mt-2 flex items-start gap-1 text-xs ${test.status === "success" ? "text-success" : "text-destructive"}`}
           >
-            {status === "success" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
-            {message}
+            {test.status === "success" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
+            {test.message}
           </p>
         )}
         <p className="mt-1 text-xs text-muted-foreground">
