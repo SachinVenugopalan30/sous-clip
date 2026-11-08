@@ -7,7 +7,7 @@ import { useAuthStore } from "../stores/auth";
 function RootComponent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)();
+  const isAuthenticated = useAuthStore((s) => s.token !== null);
   const isLoginPage = location.pathname === "/login";
   const isSharePage = location.pathname.startsWith("/share/");
   const isPublicPage = isLoginPage || isSharePage;

@@ -32,7 +32,6 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ username, password }),
       }),
-    me: () => fetchAPI<{ username: string }>("/auth/me"),
   },
   recipes: {
     list: (search?: string) =>
