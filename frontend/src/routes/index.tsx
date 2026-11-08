@@ -103,15 +103,10 @@ function HomePage() {
   const toggleFilter = (key: "maxMinutes" | "addedWithinDays", value: number) =>
     setFilters({ ...filters, [key]: filters[key] === value ? null : value });
 
-  // Simple debounce
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    clearTimeout((window as any).__searchTimeout);
-    (window as any).__searchTimeout = setTimeout(
-      () => setDebouncedSearch(value),
-      300
-    );
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
@@ -211,7 +206,7 @@ function HomePage() {
         <Input
           placeholder="Search recipes by name or ingredient..."
           value={search}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
         />
       </div>
