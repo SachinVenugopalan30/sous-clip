@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { RecipeCard } from "../components/RecipeCard";
 import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useRecipes";
-import { useSettings, useUpdateStatus } from "../hooks/useSettings";
+import { useMealieConfigured, useUpdateStatus } from "../hooks/useSettings";
 import { api } from "../lib/api";
+import { copyShareLink, sendToMealie } from "../lib/recipeActions";
 import { applyLibraryFilters, type LibraryFilters, type SortKey } from "../lib/library";
 import { Input } from "../components/ui/input";
 import { Skeleton } from "../components/ui/skeleton";
@@ -83,8 +84,7 @@ function HomePage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [bulkSendingToMealie, setBulkSendingToMealie] = useState(false);
   const { data, isLoading } = useRecipes(debouncedSearch || undefined);
-  const { data: settings } = useSettings();
-  const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
+  const mealieConfigured = useMealieConfigured();
   const bulkDelete = useBulkDeleteRecipes();
   const singleDelete = useDeleteRecipe();
   const [gridRef] = useAutoAnimate();
@@ -138,27 +138,6 @@ function HomePage() {
         clearSelection();
       },
     });
-  };
-
-  const handleShare = async (id: number) => {
-    try {
-      const { share_url } = await api.recipes.share(id);
-      const fullUrl = `${window.location.origin}${share_url}`;
-      await navigator.clipboard.writeText(fullUrl);
-      toast.success("Share link copied to clipboard");
-    } catch {
-      toast.error("Failed to share recipe");
-    }
-  };
-
-  const handleSendToMealie = async (id: number) => {
-    try {
-      const result = await api.recipes.sendToMealie(id);
-      if (result.ok) toast.success("Recipe sent to Mealie");
-      else toast.error(result.error || "Failed to send to Mealie");
-    } catch {
-      toast.error("Failed to send to Mealie");
-    }
   };
 
   const handleBulkSendToMealie = async () => {
@@ -312,10 +291,10 @@ function HomePage() {
               recipe={recipe}
               selected={selectedIds.has(recipe.id)}
               onToggle={toggleSelect}
-              onShare={handleShare}
+              onShare={copyShareLink}
               onDelete={handleSingleDelete}
               mealieConfigured={mealieConfigured}
-              onSendToMealie={handleSendToMealie}
+              onSendToMealie={sendToMealie}
             />
           ))}
         </div>

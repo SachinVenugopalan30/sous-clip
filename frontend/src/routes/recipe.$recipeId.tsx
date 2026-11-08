@@ -5,9 +5,10 @@ import { toast } from "sonner";
 import { RecipeEditForm } from "../components/RecipeEditForm";
 import { RecipeView } from "../components/RecipeView";
 import { useRecipe, useDeleteRecipe } from "../hooks/useRecipes";
-import { useSettings } from "../hooks/useSettings";
+import { useMealieConfigured } from "../hooks/useSettings";
 import { api } from "../lib/api";
-import { formatAsMarkdown, formatAsText, downloadFile } from "../lib/export";
+import { formatAsMarkdown, formatAsText, downloadFile, exportFilename } from "../lib/export";
+import { copyShareLink, sendToMealie } from "../lib/recipeActions";
 import { Button } from "../components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../components/ui/dropdown-menu";
 import { Skeleton } from "../components/ui/skeleton";
@@ -23,8 +24,7 @@ function RecipePage() {
   const queryClient = useQueryClient();
   const { data: recipe, isLoading } = useRecipe(Number(recipeId));
   const deleteRecipe = useDeleteRecipe();
-  const { data: settings } = useSettings();
-  const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
+  const mealieConfigured = useMealieConfigured();
   const [sharing, setSharing] = useState(false);
   const [sendingToMealie, setSendingToMealie] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -42,17 +42,8 @@ function RecipePage() {
   const handleShare = async () => {
     if (!recipe) return;
     setSharing(true);
-    try {
-      const { share_url } = await api.recipes.share(recipe.id);
-      const fullUrl = `${window.location.origin}${share_url}`;
-      await navigator.clipboard.writeText(fullUrl);
-      toast.success("Share link copied to clipboard");
-      queryClient.invalidateQueries({ queryKey: ["recipe", recipe.id] });
-    } catch {
-      toast.error("Failed to share recipe");
-    } finally {
-      setSharing(false);
-    }
+    if (await copyShareLink(recipe.id)) queryClient.invalidateQueries({ queryKey: ["recipe", recipe.id] });
+    setSharing(false);
   };
 
   const handleCopyLink = async () => {
@@ -79,32 +70,20 @@ function RecipePage() {
   const handleSendToMealie = async () => {
     if (!recipe) return;
     setSendingToMealie(true);
-    try {
-      const result = await api.recipes.sendToMealie(recipe.id);
-      if (result.ok) {
-        toast.success("Recipe sent to Mealie");
-      } else {
-        toast.error(result.error || "Failed to send to Mealie");
-      }
-    } catch {
-      toast.error("Failed to send to Mealie");
-    } finally {
-      setSendingToMealie(false);
-    }
+    await sendToMealie(recipe.id);
+    setSendingToMealie(false);
   };
 
   const handleExportMarkdown = () => {
     if (!recipe) return;
     const content = formatAsMarkdown(recipe);
-    const filename = `${recipe.title.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}.md`;
-    downloadFile(content, filename, "text/markdown");
+    downloadFile(content, exportFilename(recipe.title, "md"), "text/markdown");
   };
 
   const handleExportText = () => {
     if (!recipe) return;
     const content = formatAsText(recipe);
-    const filename = `${recipe.title.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}.txt`;
-    downloadFile(content, filename, "text/plain");
+    downloadFile(content, exportFilename(recipe.title, "txt"), "text/plain");
   };
 
   if (isLoading) {

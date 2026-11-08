@@ -9,10 +9,12 @@ interface ThemeState {
   toggleTheme: () => void;
 }
 
+export function resolvesDark(theme: Theme): boolean {
+  return theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+
 function applyTheme(theme: Theme, animate = false) {
-  const isDark =
-    theme === "dark" ||
-    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = resolvesDark(theme);
 
   const root = document.documentElement;
 
@@ -36,12 +38,7 @@ export const useThemeStore = create<ThemeState>()(
         applyTheme(theme, true);
       },
       toggleTheme: () => {
-        const current = get().theme;
-        const isDark =
-          current === "dark" ||
-          (current === "system" &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches);
-        const next = isDark ? "light" : "dark";
+        const next = resolvesDark(get().theme) ? "light" : "dark";
         set({ theme: next });
         applyTheme(next, true);
       },

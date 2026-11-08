@@ -2,7 +2,7 @@ import { Link, Outlet } from "@tanstack/react-router";
 import { BookOpen, ChefHat, LogOut, Moon, Plus, Settings, Star, Sun } from "lucide-react";
 import { useUpdateStatus } from "../hooks/useSettings";
 import { useAuthStore } from "../stores/auth";
-import { useThemeStore } from "../stores/theme";
+import { resolvesDark, useThemeStore } from "../stores/theme";
 
 export function GithubIcon({ className }: { className?: string }) {
   return (
@@ -40,11 +40,7 @@ export function Layout() {
   const username = useAuthStore((s) => s.username);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const theme = useThemeStore((s) => s.theme);
-  const isDark =
-    theme === "dark" ||
-    (theme === "system" &&
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = resolvesDark(theme);
 
   return (
     <div className="min-h-screen bg-bg font-sans text-text pb-16 sm:pb-0">

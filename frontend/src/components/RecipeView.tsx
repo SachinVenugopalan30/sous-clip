@@ -3,6 +3,7 @@ import { CalendarDays, Clock, Users, Tag, ExternalLink, Minus, Plus } from "luci
 import { motion } from "motion/react";
 import { Badge } from "./ui/badge";
 import type { Recipe } from "../lib/api";
+import { totalMinutes } from "../lib/library";
 import { scaleQuantity } from "../lib/scale";
 
 interface RecipeViewProps {
@@ -10,8 +11,7 @@ interface RecipeViewProps {
 }
 
 export function RecipeView({ recipe }: RecipeViewProps) {
-  const totalTime =
-    (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
+  const totalTime = totalMinutes(recipe);
   // View-only: scaled values never reach the edit form
   const [servings, setServings] = useState(recipe.servings);
   const factor = recipe.servings && servings ? servings / recipe.servings : 1;
@@ -28,7 +28,7 @@ export function RecipeView({ recipe }: RecipeViewProps) {
       <h1 className="font-display text-2xl font-bold sm:text-3xl">{recipe.title}</h1>
 
       <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-        {totalTime > 0 && (
+        {!!totalTime && (
           <span className="flex items-center gap-1.5">
             <Clock className="h-4 w-4" />
             {recipe.prep_time_minutes && `${recipe.prep_time_minutes}m prep`}

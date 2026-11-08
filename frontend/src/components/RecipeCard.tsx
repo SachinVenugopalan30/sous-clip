@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { CalendarDays, CheckSquare, Clock, Link as LinkIcon, Send, Square, Tag, Trash2, Users } from "lucide-react";
 import { motion } from "motion/react";
 import type { Recipe } from "../lib/api";
-import { formatAdded } from "../lib/library";
+import { formatAdded, totalMinutes } from "../lib/library";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -15,8 +15,7 @@ interface RecipeCardProps {
 }
 
 export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, mealieConfigured, onSendToMealie }: RecipeCardProps) {
-  const totalTime =
-    (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
+  const totalTime = totalMinutes(recipe);
 
   return (
     <motion.div
@@ -37,7 +36,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
         </h3>
 
         <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {totalTime > 0 && (
+          {!!totalTime && (
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
               {totalTime} min

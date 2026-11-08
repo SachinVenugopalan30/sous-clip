@@ -12,7 +12,7 @@ import { useExtractRecipe } from "../hooks/useExtract";
 import { useQueue } from "../hooks/useQueue";
 import { useProgress } from "../hooks/useProgress";
 import { useVisibilityTimer } from "../hooks/useVisibilityTimer";
-import { useSettings } from "../hooks/useSettings";
+import { useMealieConfigured } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/submit")({
   component: SubmitPage,
@@ -32,8 +32,7 @@ function SubmitPage() {
   const userId = "default";
   const extract = useExtractRecipe();
   const { data: queueData } = useQueue(userId);
-  const { data: settings } = useSettings();
-  const mealieConfigured = !!(settings?.mealie_url && settings?.mealie_api_key);
+  const mealieConfigured = useMealieConfigured();
   const queryClient = useQueryClient();
 
   const handleExpire = useCallback(

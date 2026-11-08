@@ -72,6 +72,10 @@ export function formatAsText(recipe: Recipe): string {
   return lines.join("\n");
 }
 
+export function exportFilename(title: string, ext: "md" | "txt"): string {
+  return `${title.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}.${ext}`;
+}
+
 export function downloadFile(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
