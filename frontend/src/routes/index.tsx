@@ -308,7 +308,7 @@ function HomePage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-border bg-surface px-5 py-3 shadow-lg"
+            className="fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-border bg-surface px-5 py-3 shadow-lg"
           >
             <span className="text-sm font-medium">
               {selectedIds.size} selected

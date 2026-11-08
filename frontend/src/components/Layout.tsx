@@ -1,5 +1,6 @@
-import { Link, Outlet } from "@tanstack/react-router";
+import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { BookOpen, ChefHat, LogOut, Moon, Plus, Settings, Star, Sun } from "lucide-react";
+import { useRecipes } from "../hooks/useRecipes";
 import { useUpdateStatus } from "../hooks/useSettings";
 import { useAuthStore } from "../stores/auth";
 import { resolvesDark, useThemeStore } from "../stores/theme";
@@ -41,115 +42,52 @@ export function Layout() {
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const theme = useThemeStore((s) => s.theme);
   const isDark = resolvesDark(theme);
+  const pathname = useLocation().pathname;
+  const hasRecipes = (useRecipes().data?.recipes.length ?? 0) > 0;
+  // Overlay bar sits on a photo hero: library (with recipes) and recipe detail
+  const over = (pathname === "/" && hasRecipes) || pathname.startsWith("/recipe/");
 
   return (
-    <div className="min-h-screen bg-bg font-sans text-text pb-16 sm:pb-0">
-      {/* Desktop header */}
-      <header className="hidden sm:block border-b border-border bg-surface">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <ChefHat className="h-6 w-6 text-accent-text" />
-            <span className="font-display text-xl font-bold">Sous Clip</span>
-          </Link>
-
-          <div className="flex items-center gap-6">
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-text [&.active]:text-accent-text"
-            >
-              <BookOpen className="h-4 w-4" />
-              Library
-            </Link>
-            <Link
-              to="/submit"
-              className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-all hover:bg-accent/90 active:scale-[0.97]"
-            >
-              <Plus className="h-4 w-4" />
-              Extract
-            </Link>
-            <Link
-              to="/settings"
-              className="text-muted-foreground transition-colors hover:text-text [&.active]:text-accent-text"
-            >
-              <Settings className="h-4 w-4" />
-            </Link>
-            <GitHubLink className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-text" />
-            <button
-              onClick={toggleTheme}
-              className="text-muted-foreground transition-colors hover:text-text"
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <span className="text-xs text-muted-foreground">{username}</span>
-            <button
-              onClick={logout}
-              className="text-muted-foreground transition-colors hover:text-text"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
-        </nav>
+    <div className="min-h-screen bg-bg font-sans text-text">
+      <header className={`bar${over ? " over" : ""}`}>
+        <Link to="/" className="bar-logo press">
+          <ChefHat className="h-6 w-6" />
+          <span className="font-display text-xl font-semibold">Sous Clip</span>
+        </Link>
+        <div className="bar-tools">
+          <GitHubLink className="bar-btn press gap-1.5 px-2" />
+          <button
+            onClick={toggleTheme}
+            className="bar-btn press"
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+          </button>
+          <span className="bar-user mono text-xs">{username}</span>
+          <button onClick={logout} className="bar-btn press" aria-label="Sign out" title="Sign out">
+            <LogOut className="h-[18px] w-[18px]" />
+          </button>
+        </div>
       </header>
 
-      {/* Mobile header */}
-      <header className="sm:hidden border-b border-border bg-surface">
-        <nav className="flex items-center justify-between px-2 py-1">
-          <Link to="/" className="flex min-h-11 items-center gap-2 px-2">
-            <ChefHat className="h-5 w-5 text-accent-text" />
-            <span className="font-display text-lg font-bold">SC</span>
-          </Link>
-          <div className="flex items-center">
-            <GitHubLink className="flex h-11 min-w-11 items-center justify-center gap-1 px-2 text-muted-foreground transition-colors hover:text-text" />
-            <button
-              onClick={toggleTheme}
-              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <span className="px-1 text-xs text-muted-foreground">{username}</span>
-            <button
-              onClick={logout}
-              className="grid size-11 place-items-center text-muted-foreground transition-colors hover:text-text"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      {/* ponytail: wrapper + --bar-h padding are temporary until hero tasks make overlay pages full bleed */}
+      <main className={`page${over ? " page-over" : ""}`}>
         <Outlet />
       </main>
 
-      {/* Mobile bottom nav */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface">
-        <div className="flex items-center justify-around py-2">
-          <Link
-            to="/"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
-          >
-            <BookOpen className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Library</span>
-          </Link>
-          <Link
-            to="/submit"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
-          >
-            <Plus className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Extract</span>
-          </Link>
-          <Link
-            to="/settings"
-            className="flex flex-col items-center gap-0.5 px-4 py-1 text-muted-foreground [&.active]:text-accent-text"
-          >
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Settings</span>
-          </Link>
-        </div>
+      <nav className="dock" aria-label="Primary">
+        <Link to="/" className="dock-link press" aria-label="Library">
+          <BookOpen className="h-[18px] w-[18px]" />
+          <span>Library</span>
+        </Link>
+        <Link to="/submit" className="dock-link dock-new press" aria-label="Extract">
+          <Plus className="h-[18px] w-[18px]" />
+          <span>Extract</span>
+        </Link>
+        <Link to="/settings" className="dock-link press" aria-label="Settings">
+          <Settings className="h-[18px] w-[18px]" />
+          <span>Settings</span>
+        </Link>
       </nav>
     </div>
   );
