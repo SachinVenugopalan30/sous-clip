@@ -31,3 +31,13 @@ def db_engine(tmp_path):
 def db_session(db_engine):
     with Session(db_engine) as session:
         yield session
+
+
+@pytest.fixture(autouse=True)
+def _fresh_queue_cache():
+    """get_queue() is process-cached; keep it from leaking between tests."""
+    from backend.services.queue import get_queue
+
+    get_queue.cache_clear()
+    yield
+    get_queue.cache_clear()

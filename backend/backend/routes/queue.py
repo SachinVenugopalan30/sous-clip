@@ -4,14 +4,10 @@ from temporalio.client import Client
 
 from backend.config import settings
 from backend.dependencies import CurrentUser, get_current_user
-from backend.services.queue import ExtractionQueue, QueueItem
+from backend.services.queue import ExtractionQueue, QueueItem, get_queue
 from backend.workflows.extraction import ExtractionWorkflow, ExtractionWorkflowInput
 
 router = APIRouter(prefix="/api/queue", tags=["queue"])
-
-
-def get_queue() -> ExtractionQueue:
-    return ExtractionQueue(redis_url=settings.valkey_url)
 
 
 async def start_extraction(queue: ExtractionQueue, item: QueueItem, forward_to_mealie: bool = False) -> None:

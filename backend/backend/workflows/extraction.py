@@ -10,7 +10,7 @@ from backend.config import settings
 from backend.services.downloader import Downloader
 from backend.services.errors import describe_failure
 from backend.services.extractor import RecipeExtractor
-from backend.services.queue import ExtractionQueue
+from backend.services.queue import get_queue as _get_queue
 from backend.services.transcriber import Transcriber
 from backend.telemetry import get_tracer
 
@@ -18,10 +18,6 @@ tracer = get_tracer("extraction-pipeline")
 
 # ponytail: flat 3 attempts per step; mark permanent errors non_retryable if retries waste time.
 RETRY = RetryPolicy(maximum_attempts=3)
-
-
-def _get_queue() -> ExtractionQueue:
-    return ExtractionQueue(settings.valkey_url)
 
 
 def _app_settings() -> dict[str, str]:

@@ -109,3 +109,9 @@ def test_dequeue_returns_next_pending(mock_redis):
     item = queue.dequeue(user_id="user-1")
     assert item is not None
     assert item.id == "q-123"
+
+
+def test_get_queue_is_cached(mock_redis):
+    from backend.services.queue import get_queue
+
+    assert get_queue() is get_queue()

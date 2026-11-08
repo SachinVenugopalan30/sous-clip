@@ -20,7 +20,7 @@ from backend.routes.auth import router as auth_router
 from backend.routes.recipes import router as recipes_router, share_router
 from backend.routes.settings import router as settings_router
 from backend.routes.updates import router as updates_router
-from backend.services.queue import ExtractionQueue
+from backend.services.queue import get_queue
 from backend.workflows.extraction import ExtractionWorkflow, ExtractionWorkflowInput
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 async def recover_stuck_queue_items() -> None:
     """Reconcile Redis queue items with Temporal workflow state on startup."""
     try:
-        queue = ExtractionQueue(settings.valkey_url)
+        queue = get_queue()
         active_items = queue.get_all_active_items()
         if not active_items:
             return

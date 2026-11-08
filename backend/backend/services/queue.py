@@ -1,3 +1,4 @@
+import functools
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -5,6 +6,8 @@ from datetime import datetime, timezone
 from enum import Enum
 
 import redis
+
+from backend.config import settings
 
 
 class QueueStatus(str, Enum):
@@ -50,6 +53,12 @@ class QueueItem:
             created_at=d["created_at"],
             error=d.get("error"),
         )
+
+
+@functools.cache
+def get_queue() -> "ExtractionQueue":
+    """Shared queue; one Redis connection pool for the process."""
+    return ExtractionQueue(settings.valkey_url)
 
 
 def _queue_key(user_id: str) -> str:
