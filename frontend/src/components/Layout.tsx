@@ -70,8 +70,8 @@ export function Layout() {
         </div>
       </header>
 
-      {/* ponytail: wrapper + --bar-h padding are temporary until hero tasks make overlay pages full bleed */}
-      <main className={`page${over ? " page-over" : ""}`}>
+      {/* ponytail: the recipe route keeps this padding until it goes full bleed (Task 20); the library handles its own */}
+      <main className={pathname === "/" ? undefined : `page${over ? " page-over" : ""}`}>
         <Outlet />
       </main>
 
