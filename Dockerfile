@@ -1,10 +1,10 @@
 # Stage 1: Build frontend
-FROM docker.io/library/node:24-alpine AS frontend-build
+FROM docker.io/oven/bun:1.3.14-alpine AS frontend-build
 WORKDIR /app/frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+COPY frontend/package.json frontend/bun.lock ./
+RUN bun install --frozen-lockfile
 COPY frontend/ ./
-RUN npm run build
+RUN bun --bun run build
 
 # Stage 2: Python backend + serve built frontend
 FROM docker.io/library/python:3.12-slim AS production

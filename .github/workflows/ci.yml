@@ -26,10 +26,10 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 24
-      - run: npm ci
-      - run: npm test
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun test src
       # tsc -b + vite build is the frontend gate; eslint joins once its existing errors are fixed
-      - run: npm run build
+      - run: bun --bun run build

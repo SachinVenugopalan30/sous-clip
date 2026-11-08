@@ -23,8 +23,8 @@ uv pip install -e ".[dev]"
 
 # Frontend
 cd frontend
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 ## Code Style

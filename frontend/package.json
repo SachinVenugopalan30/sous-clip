@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "node --test 'src/**/*.test.ts'",
+    "test": "bun test src",
     "preview": "vite preview"
   },
   "dependencies": {
