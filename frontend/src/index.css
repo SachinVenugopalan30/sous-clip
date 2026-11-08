@@ -13,9 +13,9 @@
   --color-dark-bg: #1C1917;
   --color-dark-surface: #292524;
 
-  --font-display: "Playfair Display", serif;
-  --font-sans: "DM Sans", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 }
 
 @theme inline {
@@ -62,23 +62,28 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --fast: 160ms;
+  --med: 320ms;
+  --slow: 620ms;
+  --radius: 0.25rem;
   /* Map shadcn vars to our warm editorial palette */
   --background: #FDFAF5;
   --foreground: #1C1917;
-  --card: #F5F0E8;
+  --card: #FFFDF9;
   --card-foreground: #1C1917;
-  --popover: #FDFAF5;
+  --popover: #FFFDF9;
   --popover-foreground: #1C1917;
   --primary: #C2410C;
   --primary-foreground: #FDFAF5;
   --secondary: #F5F0E8;
   --secondary-foreground: #1C1917;
   --muted: #F5F0E8;
-  --muted-foreground: #6E6762; /* 4.6:1 on card surfaces (was 4.25) */
+  --muted-foreground: #6E6762; /* 5.47:1 on card */
   --accent: #C2410C;
   --accent-foreground: #FDFAF5;
-  --destructive: #B91C1C; /* red-700: 5.7:1 on card surfaces */
+  --destructive: #B91C1C; /* red-700: 6.37:1 on card */
   --accent-text: #C2410C; /* accent used as text or icon */
   --success: #15803D;
   --border: #E2D9CC;
@@ -108,34 +113,35 @@
   --popover-foreground: #FDFAF5;
   --primary: #C2410C;
   --primary-foreground: #FDFAF5;
-  --secondary: #292524;
+  --secondary: #23201E;
   --secondary-foreground: #FDFAF5;
-  --muted: #292524;
+  --muted: #23201E;
   --muted-foreground: #A8A29E;
   --accent: #C2410C;
   --accent-foreground: #FDFAF5;
-  --accent-text: #FB923C; /* #C2410C text is 2.9:1 on dark surfaces; orange-400 is 6.4:1 */
+  --accent-text: #FB923C; /* #C2410C text is 2.9:1 on dark surfaces; orange-400 is 6.7:1 on card */
   --success: #4ADE80;
   --color-bg: #1C1917;
   --color-surface: #292524;
   --color-text: #FDFAF5;
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: #C2410C;
+  --color-accent-alt: #4ADE80;
+  --destructive: #F87171;
+  --border: #3B3531;
+  --input: #3B3531;
+  --ring: #FB923C;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #292524;
+  --sidebar: #23201E;
   --sidebar-foreground: #FDFAF5;
   --sidebar-primary: #C2410C;
   --sidebar-primary-foreground: #FDFAF5;
   --sidebar-accent: #292524;
   --sidebar-accent-foreground: #FDFAF5;
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: #C2410C;
+  --sidebar-border: #3B3531;
+  --sidebar-ring: #FB923C;
 }
 
 @layer base {
@@ -179,11 +185,68 @@
   display: none;
 }
 
-/* Smooth theme transition */
-html.theme-transition,
-html.theme-transition *,
-html.theme-transition *::before,
-html.theme-transition *::after {
-  transition: background-color 0.5s ease, color 0.3s ease, border-color 0.4s ease,
-    box-shadow 0.4s ease, fill 0.3s ease, stroke 0.3s ease !important;
+/* Night Service utilities. Headings only change under .display until screens are rebuilt. */
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.display :is(h1, h2, h3) {
+  font-family: var(--font-display);
+}
+.display :is(h1, h2, h3) em {
+  font-style: italic;
+  color: var(--accent-text);
+}
+
+/* Motion base */
+.press {
+  transition: transform var(--fast) var(--ease), background-color var(--fast), color var(--fast),
+    border-color var(--fast), box-shadow var(--med) var(--ease);
+}
+.press:active {
+  transform: scale(0.96);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+}
+.in {
+  animation: rise var(--slow) var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* View transitions: screens cross-fade */
+::view-transition-old(root) { animation: vt-out 180ms var(--ease-in-out) both; }
+::view-transition-new(root) { animation: vt-in 360ms var(--ease) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+::view-transition-group(*) { animation-duration: 460ms; animation-timing-function: var(--ease); }
+
+/* Theme flip: circular wipe from the toggle */
+html.theme-flip::view-transition-old(root) { animation: none; z-index: 1; }
+html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) var(--ease) both; z-index: 2; transform: none; }
+@keyframes theme-wipe {
+  from { clip-path: circle(0 at var(--tx, 50%) var(--ty, 50%)); }
+  to { clip-path: circle(150vmax at var(--tx, 50%) var(--ty, 50%)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* Separate rule: an unparseable selector would void the rule above on older browsers */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
 }

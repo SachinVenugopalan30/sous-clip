@@ -16,8 +16,8 @@ export default defineConfig({
         name: "Sous Clip",
         short_name: "Sous Clip",
         description: "Extract recipes from cooking videos",
-        theme_color: "#C2410C",
-        background_color: "#FDFAF5",
+        theme_color: "#1C1917",
+        background_color: "#1C1917",
         display: "standalone",
         start_url: "/",
         icons: [
@@ -42,6 +42,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Fonts: precache latin + latin-ext only; other scripts load on demand
+        globIgnores: ["**/*-{cyrillic,cyrillic-ext,greek,vietnamese}-*.woff2"],
         runtimeCaching: [
           {
             urlPattern: /^\/api\//,
