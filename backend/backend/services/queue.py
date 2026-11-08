@@ -117,18 +117,6 @@ class ExtractionQueue:
             item.status = QueueStatus.IN_PROGRESS
             self._save(item)
 
-    def dequeue(self, user_id: str) -> QueueItem | None:
-        item_ids = self.client.lrange(_queue_key(user_id), 0, -1)
-        for item_id in item_ids:
-            raw = self.client.hget("queue_items", item_id)
-            if raw:
-                item = QueueItem.from_json(raw)
-                if item.status == QueueStatus.PENDING:
-                    item.status = QueueStatus.IN_PROGRESS
-                    self.client.hset("queue_items", item.id, item.to_json())
-                    return item
-        return None
-
     def complete(self, item_id: str, user_id: str) -> None:
         item = self._load(item_id)
         if item:

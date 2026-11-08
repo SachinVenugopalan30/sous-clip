@@ -92,25 +92,6 @@ def test_cancel_in_progress_item_fails(mock_redis):
     assert result is False
 
 
-def test_dequeue_returns_next_pending(mock_redis):
-    queue = ExtractionQueue(redis_url="redis://localhost:6379/0")
-
-    item_data = json.dumps({
-        "id": "q-123",
-        "user_id": "user-1",
-        "url": "https://youtube.com/shorts/abc",
-        "status": "pending",
-        "position": 0,
-        "created_at": "2026-03-03T00:00:00Z",
-    })
-    mock_redis.lrange.return_value = [b"q-123"]
-    mock_redis.hget.return_value = item_data.encode()
-
-    item = queue.dequeue(user_id="user-1")
-    assert item is not None
-    assert item.id == "q-123"
-
-
 def test_get_queue_is_cached(mock_redis):
     from backend.services.queue import get_queue
 
