@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Check, Link as LinkIcon, MoreHorizontal, Send, Trash2 } from "lucide-react";
 import type { Recipe } from "../lib/api";
-import { recipeNo, totalMinutes } from "../lib/library";
+import { CAP_NAME, FROM_LIBRARY, nameClicked, photoName, recipeNo, totalMinutes } from "../lib/library";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,13 +29,16 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
 
   return (
     <div className={`reel in${selected ? " selected" : ""}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
-      <Link to="/recipe/$recipeId" params={{ recipeId: String(recipe.id) }}>
-        <div className="plate" style={transitionName ? { viewTransitionName: `recipe-photo-${recipe.id}` } : undefined}>
+      <Link to="/recipe/$recipeId" params={{ recipeId: String(recipe.id) }} state={FROM_LIBRARY} onClick={(e) => nameClicked(e, ".plate", ".reel-meta", recipe.id)}>
+        <div className="plate" style={transitionName ? { viewTransitionName: photoName(recipe.id) } : undefined}>
           {hasPhoto ? (
             <img src={recipe.thumbnail_url ?? undefined} alt="" loading="lazy" />
           ) : (
             <div className="plate-fb"><span>{recipe.title}</span></div>
           )}
+        </div>
+        {/* Outside the photo frame so it is not scaled up in the photo's snapshot; named separately so it fades instead of popping */}
+        <div className="reel-meta" style={transitionName ? { viewTransitionName: CAP_NAME } : undefined}>
           <span className="tab">{recipeNo(recipe.id)}</span>
           <div className="cap">
             {hasPhoto && <h3>{recipe.title}</h3>}

@@ -1,61 +1,50 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { GithubIcon } from "../components/Layout";
-import { RecipeView } from "../components/RecipeView";
+import { RecipeHero, RecipeView } from "../components/RecipeView";
 import { api } from "../lib/api";
-import { Skeleton } from "../components/ui/skeleton";
+import { useAuthStore } from "../stores/auth";
 
 export const Route = createFileRoute("/share/$token")({
   component: SharePage,
 });
 
+// Signed out there is no top bar, so the hero drops the bar padding (.rec-bare); signed in, Layout supplies the bar
 function SharePage() {
   const { token } = Route.useParams();
-  const { data: recipe, isLoading, error } = useQuery({
+  const signedIn = useAuthStore((s) => s.token !== null);
+  const { data: recipe, isLoading } = useQuery({
     queryKey: ["shared-recipe", token],
     queryFn: () => api.share.get(token),
     retry: false,
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-bg font-sans text-text">
-        <div className="mx-auto max-w-3xl px-4 py-12">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="mt-4 h-4 w-48" />
-          <Skeleton className="mt-8 h-64 w-full" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !recipe) {
-    return (
-      <div className="min-h-screen bg-bg font-sans text-text">
-        <div className="mx-auto max-w-3xl px-4 py-12 text-center">
-          <p className="text-lg text-muted-foreground">Recipe not found or no longer shared.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-bg font-sans text-text">
-      <div className="mx-auto max-w-3xl px-4 py-12">
-        <RecipeView recipe={recipe} />
-        <div className="mt-12 border-t border-border pt-6 flex items-center justify-center gap-3">
-          <p className="text-xs text-muted-foreground">
-            Shared via <span className="font-display font-semibold">Sous Clip</span>
-          </p>
-          <a
-            href="https://github.com/SachinVenugopalan30/sous-clip"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground transition-colors hover:text-text"
-            title="GitHub"
-          >
-            <GithubIcon className="h-4 w-4" />
-          </a>
+    <div className={`rec${signedIn ? "" : " rec-bare"} min-h-screen bg-bg font-sans text-text`}>
+      <RecipeHero recipe={recipe} loading={isLoading} />
+      <div className="rec-wrap">
+        <div className="recipe-sheet">
+          {recipe ? (
+            <RecipeView recipe={recipe} />
+          ) : isLoading ? (
+            <div className="sk h-64" aria-busy="true" />
+          ) : (
+            <p className="text-muted-foreground">Recipe not found or no longer shared.</p>
+          )}
+          <div className="mt-10 flex items-center justify-center gap-3 border-t border-border pt-6">
+            <p className="text-xs text-muted-foreground">
+              Shared via <span className="font-display font-semibold">Sous Clip</span>
+            </p>
+            <a
+              href="https://github.com/SachinVenugopalan30/sous-clip"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex size-11 items-center justify-center text-muted-foreground transition-colors hover:text-text"
+              aria-label="Sous Clip on GitHub"
+            >
+              <GithubIcon className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       </div>
     </div>

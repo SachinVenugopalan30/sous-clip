@@ -44,8 +44,9 @@ export function Layout() {
   const isDark = resolvesDark(theme);
   const pathname = useLocation().pathname;
   const hasRecipes = (useRecipes().data?.recipes.length ?? 0) > 0;
-  // Overlay bar sits on a photo hero: library (with recipes) and recipe detail
-  const over = (pathname === "/" && hasRecipes) || pathname.startsWith("/recipe/");
+  // Overlay bar sits on a photo hero: library (with recipes), recipe detail and a shared recipe opened while signed in
+  const recipePage = pathname.startsWith("/recipe/") || pathname.startsWith("/share/");
+  const over = (pathname === "/" && hasRecipes) || recipePage;
 
   return (
     <div className="min-h-screen bg-bg font-sans text-text">
@@ -70,8 +71,7 @@ export function Layout() {
         </div>
       </header>
 
-      {/* ponytail: the recipe route keeps this padding until it goes full bleed (Task 20); the library handles its own */}
-      <main className={pathname === "/" ? undefined : `page${over ? " page-over" : ""}`}>
+      <main className={pathname === "/" || recipePage ? undefined : "page"}>
         <Outlet />
       </main>
 

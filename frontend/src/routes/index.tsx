@@ -8,7 +8,7 @@ import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useR
 import { useMealieConfigured, useUpdateStatus } from "../hooks/useSettings";
 import { api } from "../lib/api";
 import { copyShareLink, sendToMealie } from "../lib/recipeActions";
-import { applyLibraryFilters, buildShelves, formatAdded, recipeNo, splitTitle, totalMinutes, type LibraryFilters, type SortKey } from "../lib/library";
+import { applyLibraryFilters, buildShelves, CAP_NAME, formatAdded, FROM_LIBRARY, nameClicked, opened, photoName, recipeNo, splitTitle, totalMinutes, type LibraryFilters, type SortKey } from "../lib/library";
 import type { Recipe } from "../lib/api";
 import { Input } from "../components/ui/input";
 
@@ -36,10 +36,10 @@ function Hero({ recipe, collapsed, ownsName }: { recipe: Recipe; collapsed: bool
   const time = totalMinutes(recipe);
   return (
     <section className={`feat${collapsed ? " collapsed" : ""}`}>
-      <div className="feat-photo" style={ownsName ? { viewTransitionName: `recipe-photo-${recipe.id}` } : undefined}>
+      <div className="feat-photo" style={ownsName ? { viewTransitionName: photoName(recipe.id) } : undefined}>
         {recipe.thumbnail_url ? <img src={recipe.thumbnail_url} alt="" fetchPriority="high" /> : <div className="plate-fb" aria-hidden="true" />}
       </div>
-      <div className="fx" aria-hidden={collapsed || undefined} inert={collapsed}>
+      <div className="fx" aria-hidden={collapsed || undefined} inert={collapsed} style={ownsName ? { viewTransitionName: CAP_NAME } : undefined}>
         <div className="lib-wrap fx-wrap">
           <div>
             <h1 className="in" style={{ "--i": 1 } as React.CSSProperties}>
@@ -53,6 +53,8 @@ function Hero({ recipe, collapsed, ownsName }: { recipe: Recipe; collapsed: bool
           <Link
             to="/recipe/$recipeId"
             params={{ recipeId: String(recipe.id) }}
+            state={FROM_LIBRARY}
+            onClick={(e) => nameClicked(e, ".feat-photo", ".fx", recipe.id)}
             className="fx-btn press in"
             style={{ "--i": 3 } as React.CSSProperties}
           >
@@ -208,7 +210,8 @@ function HomePage() {
   const shelves = filteredRecipes && !collapsed && !showAll && filters.sort === "newest" ? buildShelves(filteredRecipes) : null;
   const latestShown = shelves?.find((sh) => sh.key === "latest")?.recipes.length ?? 0;
   const canSeeAll = !!shelves && (filteredRecipes?.length ?? 0) > latestShown;
-  // A recipe in several shelves carries its view-transition name on its first tile only; the expanded hero owns the newest recipe's
+  // Picks which element could carry the opened recipe's names: the expanded hero if it shows that recipe, else its first tile.
+  // Only the recipe in `opened` is actually named (see transitionName below), so a recipe on several shelves never has the name twice.
   const nameOwner = new Map<number, string>();
   if (hero && !collapsed) nameOwner.set(hero.id, "hero");
   for (const sh of shelves ?? [{ key: "grid", recipes: filteredRecipes ?? [] }])
@@ -218,7 +221,7 @@ function HomePage() {
       key={recipe.id}
       recipe={recipe}
       index={i}
-      transitionName={nameOwner.get(recipe.id) === shelfKey}
+      transitionName={nameOwner.get(recipe.id) === shelfKey && recipe.id === opened.id}
       selected={selectedIds.has(recipe.id)}
       onToggle={toggleSelect}
       onShare={copyShareLink}
@@ -240,7 +243,7 @@ function HomePage() {
 
   return (
     <div className="lib">
-      {hero ? <Hero recipe={hero} collapsed={collapsed} ownsName={!collapsed} /> : <div style={{ height: "var(--bar-h)" }} />}
+      {hero ? <Hero recipe={hero} collapsed={collapsed} ownsName={!collapsed && hero.id === opened.id} /> : <div style={{ height: "var(--bar-h)" }} />}
       {(!hero || collapsed) && <h1 className="sr-only">Your recipes</h1>}
 
       <div className="lib-wrap">

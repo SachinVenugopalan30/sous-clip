@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import type { Recipe } from "./api.ts";
 
 type Timed = Pick<Recipe, "created_at" | "prep_time_minutes" | "cook_time_minutes">;
@@ -74,3 +75,37 @@ export function splitTitle(title: string): { main: string; suffix: string | null
 
 /** "No. 0012": one format for hero and tile */
 export const recipeNo = (id: number) => `No. ${String(id).padStart(4, "0")}`;
+
+/** Shared name for the caption of the one tile or hero being opened or left (never on two elements). */
+export const CAP_NAME = "recipe-cap";
+/** Photo transition name for a recipe. Only the opened or left recipe's frame is named: other tiles named too would paint over the morph. */
+export const photoName = (id: number) => `recipe-photo-${id}`;
+/** Id of the recipe being opened or left; the library names only this recipe's photo and caption on return. */
+export const opened = { id: 0 };
+/** Router state marking navigations that start from the library, so "Back to library" can pop history and restore scroll. */
+// ponytail: cast because HistoryState is not augmented (its package is only a transitive dependency)
+export const FROM_LIBRARY = { fromLibrary: true } as never;
+
+const OURS = /^recipe-(photo-\d+|cap)$/;
+type Named = { style: { viewTransitionName: string } };
+
+/** Gives each element its name and strips our names from every other element, so no name is ever on two. */
+export function claimNames<T extends Named>(scope: { querySelectorAll(s: string): Iterable<T> }, claims: [T | null | undefined, string][]) {
+  const keep = new Set(claims.map(([el]) => el));
+  for (const el of scope.querySelectorAll("[style*=view-transition-name]"))
+    if (!keep.has(el) && OURS.test(el.style.viewTransitionName)) el.style.viewTransitionName = "";
+  for (const [el, name] of claims) if (el) el.style.viewTransitionName = name;
+}
+
+/** Link onClick: names the clicked photo frame and caption before the transition captures the old state.
+ *  Modified, non-primary and prevented clicks do not navigate, so they must not leave a name behind.
+ *  React only rewrites a style prop when its value changes, so these inline names survive re-renders; the page unmounts on navigation. */
+export function nameClicked(e: MouseEvent<HTMLElement>, photo: string, cap: string, id: number) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  opened.id = id;
+  const box = e.currentTarget.closest(".reel, .feat");
+  claimNames<HTMLElement>(document, [
+    [box?.querySelector<HTMLElement>(photo), photoName(id)],
+    [box?.querySelector<HTMLElement>(cap), CAP_NAME],
+  ]);
+}

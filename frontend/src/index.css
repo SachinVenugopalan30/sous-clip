@@ -222,11 +222,36 @@
 }
 
 /* View transitions: screens cross-fade */
-::view-transition-old(root) { animation: vt-out 180ms var(--ease-in-out) both; }
+::view-transition-old(root) { animation: vt-fade-out 180ms var(--ease-in-out) both; }
 ::view-transition-new(root) { animation: vt-in 360ms var(--ease) both; }
-@keyframes vt-out { to { opacity: 0; } }
 @keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
 ::view-transition-group(*) { animation-duration: 460ms; animation-timing-function: var(--ease); }
+/* Groups first seen in the new state paint last; keep the chrome above the sheet and photo */
+::view-transition-group(bar), ::view-transition-group(dock) { z-index: 10; }
+
+/* Opening a recipe: the photo frame morphs from its tile or the hero, the sheet rises, the title settles.
+   Closing plays it back. The frame owns corners and scrim, so they scale with it. */
+.plate, .feat-photo, .rec-photo { view-transition-class: photo; }
+::view-transition-old(.photo), ::view-transition-new(.photo) { width: 100%; height: 100%; object-fit: cover; }
+::view-transition-image-pair(.photo) { overflow: clip; }
+:root:active-view-transition-type(open)::view-transition-image-pair(.photo) { animation: 460ms var(--ease) both vt-corners-open; }
+:root:active-view-transition-type(close)::view-transition-image-pair(.photo) { animation: 460ms var(--ease) both vt-corners-close; }
+@keyframes vt-corners-open { from { border-radius: var(--radius); } to { border-radius: 0; } }
+@keyframes vt-corners-close { from { border-radius: 0; } to { border-radius: var(--radius); } }
+::view-transition-old(recipe-sheet) { animation: 180ms ease both vt-fade-out; }
+:root:active-view-transition-type(close)::view-transition-old(recipe-sheet) { animation: 260ms var(--ease-in-out) both vt-sheet-fall; }
+:root:active-view-transition-type(close)::view-transition-old(recipe-title) { animation: 160ms ease both vt-fade-out; }
+:root:active-view-transition-type(open)::view-transition-new(recipe-sheet) { animation: 520ms var(--ease) 120ms both vt-sheet-rise; }
+:root:active-view-transition-type(open)::view-transition-new(recipe-title) { animation: 420ms var(--ease) 220ms both vt-title-in; }
+/* The one named caption fades out early on open and in late on close, once the photo has mostly landed */
+::view-transition-group(recipe-cap) { z-index: 5; }
+:root:active-view-transition-type(open)::view-transition-old(recipe-cap) { animation: 120ms ease both vt-fade-out; }
+:root:active-view-transition-type(close)::view-transition-new(recipe-cap) { animation: 240ms ease 300ms both vt-fade-in; }
+@keyframes vt-fade-in { from { opacity: 0; } }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-sheet-rise { from { opacity: 0; transform: translateY(48px); } }
+@keyframes vt-sheet-fall { to { opacity: 0; transform: translateY(32px); } }
+@keyframes vt-title-in { from { opacity: 0; transform: translateY(14px); } }
 
 /* Theme flip: circular wipe from the toggle */
 html.theme-flip::view-transition-old(root) { animation: none; z-index: 1; }
@@ -247,7 +272,7 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 }
 /* Separate rule: an unparseable selector would void the rule above on older browsers */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) {
+  ::view-transition-group(*), ::view-transition-image-pair(*), ::view-transition-old(*), ::view-transition-new(*) {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
   }
@@ -280,7 +305,6 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 
 .page { max-width: 64rem; margin-inline: auto; padding: 1.5rem 1rem calc(7rem + env(safe-area-inset-bottom)); }
 @media (min-width: 640px) { .page { padding: 2rem 1.5rem calc(7rem + env(safe-area-inset-bottom)); } }
-.page-over { padding-top: calc(var(--bar-h) + 1.5rem); }
 
 .dock {
   position: fixed; z-index: 50; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); translate: -50% 0; display: flex; gap: 2px;
@@ -310,7 +334,8 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 .feat-photo { position: absolute; inset: 0; }
 .feat-photo img { width: 100%; height: 100%; object-fit: cover; animation: slowzoom 18s var(--ease-in-out) infinite alternate; }
 @keyframes slowzoom { to { transform: scale(1.07); } }
-.feat::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+/* The scrim lives inside each photo frame, so it travels with the photo through view transitions */
+.feat-photo::after, .rec-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(rgb(28 25 23 / .55), transparent 18%, transparent 20%, rgb(28 25 23 / .55) 50%, var(--scrim)); }
 .fx { position: absolute; z-index: 2; inset-inline: 0; bottom: 56px; color: #FDFAF5; }
 .fx-wrap { display: flex; justify-content: space-between; align-items: flex-end; gap: 28px; }
@@ -356,7 +381,7 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 .reel { position: relative; flex: 0 0 clamp(170px, 16vw, 226px); scroll-snap-align: start; transition: transform var(--med) var(--ease); }
 @media (max-width: 640px) { .row .reel { flex-basis: 44vw; } }
 @media (hover: hover) { .reel:hover { transform: translateY(-4px); } .reel:hover .plate img { transform: scale(1.04); } }
-.reel > a { display: block; border-radius: var(--radius); }
+.reel > a { position: relative; display: block; border-radius: var(--radius); }
 .plate { position: relative; aspect-ratio: 9 / 16; overflow: hidden; background: #292524; border-radius: var(--radius); box-shadow: 0 10px 22px -16px rgb(0 0 0 / .6); }
 .plate img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--slow) var(--ease); }
 .plate::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(transparent 30%, var(--scrim)); }
@@ -365,9 +390,10 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
   background: radial-gradient(120% 80% at 20% 0%, #44312a, transparent 60%), #292524; }
 .plate-fb span { font-family: var(--font-display); font-style: italic; font-weight: 400; font-optical-sizing: auto; font-size: clamp(20px, 2.2vw, 26px); line-height: 1.15; text-wrap: balance;
   display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
-.feat .plate-fb { padding: 0; background: radial-gradient(90% 90% at 70% 10%, #5a3a2c, transparent 65%), #292524; }
+.feat .plate-fb, .rec-photo .plate-fb { padding: 0; background: radial-gradient(90% 90% at 70% 10%, #5a3a2c, transparent 65%), #292524; }
 .tab { position: absolute; z-index: 2; top: 0; right: 12px; padding: 7px 9px; background: var(--card); color: var(--foreground);
   font: 400 11px var(--font-mono); letter-spacing: .05em; font-variant-numeric: tabular-nums; }
+.reel-meta { position: absolute; inset: 0; pointer-events: none; }
 .cap { position: absolute; z-index: 2; left: 13px; right: 13px; bottom: 13px; color: #FDFAF5; }
 .cap h3 { font-family: var(--font-display); font-weight: 400; font-optical-sizing: auto; font-size: 19px; line-height: 1.15; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -482,3 +508,52 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 .fields { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .fields li { position: relative; padding-left: 16px; font-size: 15px; min-width: 0; overflow-wrap: anywhere; }
 .fields li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+
+/* Night Service recipe: photo with scrim, paper sheet lifted over it */
+.rec { padding-bottom: calc(8rem + env(safe-area-inset-bottom)); }
+.rec-hero { position: relative; display: flex; align-items: flex-end; min-height: min(72vh, 680px); padding: calc(var(--bar-h) + 24px) 0 104px; overflow: hidden; color: #FDFAF5; }
+.rec-bare .rec-hero { padding-top: 48px; min-height: min(56vh, 520px); }
+.rec-photo { position: absolute; inset: 0; overflow: hidden; background: #292524; }
+.rec-photo img { width: 100%; height: 100%; object-fit: cover; }
+.rec-wrap { position: relative; z-index: 2; width: 100%; max-width: 1320px; margin-inline: auto; padding-inline: var(--lib-pad); }
+.recipe-title { display: block; width: fit-content; max-width: 100%; view-transition-name: recipe-title; }
+.recipe-title h1 { font-family: var(--font-display); font-weight: 400; font-optical-sizing: auto; line-height: 1.02; letter-spacing: -.022em; font-size: clamp(38px, 6.6vw, 100px); max-width: 15ch; text-wrap: balance; overflow-wrap: anywhere; text-shadow: 0 2px 24px rgb(0 0 0 / .45); }
+.recipe-title h1 em { font-style: italic; color: #FDBA74; }
+.recipe-title h1 small { display: block; margin-top: 10px; font-size: clamp(18px, 2.2vw, 28px); font-style: italic; color: #E7E0D6; }
+.recipe-title .mono { color: #E7E0D6; margin-top: 12px; }
+.recipe-sheet { position: relative; z-index: 3; max-width: 1140px; margin: -76px auto 0; padding: clamp(18px, 4vw, 50px); background: var(--card); color: var(--card-foreground);
+  border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 30px 60px -36px rgb(0 0 0 / .55); view-transition-name: recipe-sheet; }
+@media (max-width: 640px) { .recipe-sheet { margin: -60px 12px 0; } .rec-hero { padding-bottom: 96px; } }
+.rec-acts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.rec-acts > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rec-btn { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 13px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; color: var(--foreground); }
+.rec-btn:hover:not(:disabled) { border-color: var(--foreground); }
+.rec-btn:disabled { opacity: .5; }
+.rec-btn:focus-visible, .rec-step button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.rec-btn.bad { color: var(--destructive); }
+.rec-btn.hot { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.rec-btn.hot:hover:not(:disabled) { background: var(--foreground); color: var(--background); }
+.rec-btn.back { border-color: transparent; padding-left: 0; color: var(--muted-foreground); }
+@media (min-width: 640px) { .rec-btn { min-height: 40px; } .rec-more { display: none; } }
+@media (max-width: 639px) { .rec-inline { display: none; } }
+.rec-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; margin: 18px 0 4px; }
+.rec-facts a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--accent-text); }
+.rec-facts a:hover { text-decoration: underline; }
+.rec-two { display: grid; gap: 28px clamp(24px, 4vw, 60px); margin-top: 22px; }
+@media (min-width: 821px) { .rec-two { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+.rec-two h2 { font-family: var(--font-display); font-weight: 400; font-optical-sizing: auto; font-size: clamp(26px, 3vw, 32px); line-height: 1.1; }
+.rec-ih { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--input); }
+.rec-step { display: flex; align-items: center; }
+.rec-step button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--input); border-radius: 50%; }
+.rec-step button:hover:not(:disabled) { border-color: var(--foreground); }
+.rec-step button:disabled { opacity: .4; }
+.rec-step span { min-width: 92px; text-align: center; font-weight: 500; font-variant-numeric: tabular-nums; }
+.rec-ing li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 17px; overflow-wrap: anywhere; }
+.rec-ing b { font: 400 15px/1.75 var(--font-mono); color: var(--accent-text); font-variant-numeric: tabular-nums; }
+.rec-mth > h2 { padding-bottom: 10px; border-bottom: 1px solid var(--input); }
+.rec-mth li { display: grid; grid-template-columns: 48px minmax(0, 1fr); padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 18px; line-height: 1.6; }
+.rec-mth li > span { font: italic 400 34px/1 var(--font-display); color: var(--accent-text); }
+.rec-note { margin-top: 18px; padding: 14px 16px; background: color-mix(in oklab, var(--primary) 14%, transparent); border-radius: var(--radius); }
+.rec-field { display: block; font-size: 14px; font-weight: 500; }
+.rec-field textarea { margin-top: 4px; width: 100%; padding: 8px 12px; background: transparent; border: 1px solid var(--input); border-radius: var(--radius); font-size: 15px; }
+.rec-field textarea:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -1px; }

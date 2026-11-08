@@ -24,7 +24,18 @@ if (startVT) {
 }
 
 const queryClient = new QueryClient();
-const router = createRouter({ routeTree, defaultViewTransition: true });
+const router = createRouter({
+  routeTree,
+  scrollRestoration: true,
+  // The type picks which way the recipe-page transition plays: open (sheet rises) or close (sheet falls)
+  defaultViewTransition: {
+    types: ({ fromLocation, toLocation }) => {
+      const from = !!fromLocation?.pathname.startsWith("/recipe/");
+      const to = toLocation.pathname.startsWith("/recipe/");
+      return from === to || !fromLocation ? [] : [to ? "open" : "close"];
+    },
+  },
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

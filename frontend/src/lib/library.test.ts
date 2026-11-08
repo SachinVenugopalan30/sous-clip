@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { applyLibraryFilters, buildShelves, formatAdded, recipeNo, SHELF_MAX, splitTitle } from "./library.ts";
+import { applyLibraryFilters, buildShelves, claimNames, formatAdded, recipeNo, SHELF_MAX, splitTitle } from "./library.ts";
 
 const NOW = Date.parse("2026-09-28T12:00:00Z");
 const daysAgo = (d: number) => new Date(NOW - d * 86_400_000).toISOString();
@@ -75,4 +75,19 @@ test("shelves are capped but the cap leaves older recipes out of Latest only", (
 test("recipe numbers are four digits", () => {
   assert.equal(recipeNo(7), "No. 0007");
   assert.equal(recipeNo(12345), "No. 12345");
+});
+
+test("claimNames keeps each transition name on one element", () => {
+  const el = (n = "") => ({ style: { viewTransitionName: n } });
+  const hero = el("recipe-photo-3"), heroCap = el("recipe-cap"), tile = el(), tileCap = el(), other = el("bar");
+  const scope = { querySelectorAll: () => [hero, heroCap, tile, tileCap, other] };
+  claimNames(scope, [[tile, "recipe-photo-3"], [tileCap, "recipe-cap"]]);
+  assert.equal(hero.style.viewTransitionName, "");
+  assert.equal(heroCap.style.viewTransitionName, "");
+  assert.equal(tile.style.viewTransitionName, "recipe-photo-3");
+  assert.equal(tileCap.style.viewTransitionName, "recipe-cap");
+  assert.equal(other.style.viewTransitionName, "bar"); // names that are not ours are left alone
+  claimNames(scope, [[hero, "recipe-photo-9"]]); // a different recipe clears the old photo name too
+  assert.equal(tile.style.viewTransitionName, "");
+  assert.equal(hero.style.viewTransitionName, "recipe-photo-9");
 });
