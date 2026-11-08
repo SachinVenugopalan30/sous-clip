@@ -14,8 +14,8 @@ dependencies = [
     "anthropic>=2.6",
     "openai>=3.46",
     "temporalio>=1.9.0",
-    "redis>=5.2.0",
-    "sse-starlette>=2.2.0",
+    "redis>=8.1",
+    "sse-starlette>=3.7",
     "python-jose[cryptography]>=3.3.0",
     "opentelemetry-api>=1.45.2",
     "opentelemetry-sdk>=1.45.2",
@@ -25,9 +25,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.3.0",
-    "pytest-asyncio>=0.25.0",
-    "httpx>=0.28.1",
+    "pytest>=9.2",
+    "pytest-asyncio>=1.4",
 ]
 
 [build-system]
@@ -40,14 +39,11 @@ packages = ["backend"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.uv]
 # Temporary: hold these at their current major line so the later bump tasks are real upgrades.
 # Those tasks remove the matching entries (and this section once empty).
 constraint-dependencies = [
-    "redis<6",
-    "sse-starlette<3",
-    "pytest<9",
-    "pytest-asyncio<1",
     "temporalio<=1.35.0",
 ]
