@@ -41,3 +41,9 @@ export function captionTail(text: string, max = 130): string {
   const space = tail.indexOf(" ");
   return space < 0 ? tail : tail.slice(space + 1);
 }
+
+/** Display only: a video title without its trailing #hashtags, or the original if nothing else is left. */
+export function cleanTitle(title: string): string {
+  const clean = title.replace(/(?:(?:^|\s+)#\p{L}\S*)+\s*$/u, "").replace(/\s+/g, " ").trim();
+  return clean || title;
+}
