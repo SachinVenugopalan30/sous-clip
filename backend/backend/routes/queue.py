@@ -31,12 +31,6 @@ async def start_extraction(queue: ExtractionQueue, item: QueueItem, forward_to_m
     queue.mark_in_progress(item.id)
 
 
-class EnqueueRequest(BaseModel):
-    urls: list[str]
-    user_id: str
-    forward_to_mealie: bool = False
-
-
 class QueueItemResponse(BaseModel):
     id: str
     user_id: str
@@ -49,24 +43,6 @@ class QueueItemResponse(BaseModel):
 
 class QueueListResponse(BaseModel):
     items: list[QueueItemResponse]
-
-
-@router.post("", response_model=QueueListResponse)
-def enqueue_urls(request: EnqueueRequest, _user: CurrentUser = Depends(get_current_user)):
-    queue = get_queue()
-    items = []
-    for url in request.urls:
-        item = queue.enqueue(user_id=request.user_id, url=url)
-        items.append(QueueItemResponse(
-            id=item.id,
-            user_id=item.user_id,
-            url=item.url,
-            status=item.status.value,
-            position=item.position,
-            created_at=item.created_at,
-            error=item.error,
-        ))
-    return QueueListResponse(items=items)
 
 
 @router.get("/{user_id}", response_model=QueueListResponse)

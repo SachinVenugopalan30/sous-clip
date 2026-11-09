@@ -99,11 +99,6 @@ export const api = {
     start: () => fetchAPI<{ ok: boolean; error?: string }>("/update", { method: "POST" }),
   },
   queue: {
-    enqueue: (urls: string[], userId: string) =>
-      fetchAPI<{ items: QueueItem[] }>("/queue", {
-        method: "POST",
-        body: JSON.stringify({ urls, user_id: userId }),
-      }),
     list: (userId: string) =>
       fetchAPI<{ items: QueueItem[] }>(`/queue/${userId}`),
     cancel: (userId: string, itemId: string) =>

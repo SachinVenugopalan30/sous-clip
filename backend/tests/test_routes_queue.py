@@ -36,34 +36,6 @@ def _make_item(id="q-123", status=QueueStatus.PENDING):
     )
 
 
-def test_enqueue_single_url(client, mock_queue, auth_headers):
-    mock_queue.enqueue.return_value = _make_item()
-
-    resp = client.post("/api/queue", json={
-        "urls": ["https://youtube.com/shorts/abc"],
-        "user_id": "user-1",
-    }, headers=auth_headers)
-    assert resp.status_code == 200
-    assert len(resp.json()["items"]) == 1
-
-
-def test_enqueue_multiple_urls(client, mock_queue, auth_headers):
-    mock_queue.enqueue.side_effect = [
-        _make_item(id="q-1"),
-        _make_item(id="q-2"),
-    ]
-
-    resp = client.post("/api/queue", json={
-        "urls": [
-            "https://youtube.com/shorts/abc",
-            "https://youtube.com/shorts/def",
-        ],
-        "user_id": "user-1",
-    }, headers=auth_headers)
-    assert resp.status_code == 200
-    assert len(resp.json()["items"]) == 2
-
-
 def test_list_queue(client, mock_queue, auth_headers):
     mock_queue.list_items.return_value = [_make_item()]
 
