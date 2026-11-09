@@ -227,7 +227,7 @@
 @keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
 ::view-transition-group(*) { animation-duration: 460ms; animation-timing-function: var(--ease); }
 /* Groups first seen in the new state paint last; keep the chrome above the sheet and photo */
-::view-transition-group(bar), ::view-transition-group(dock) { z-index: 10; }
+::view-transition-group(bar) { z-index: 10; }
 /* Closing a recipe: the search bar overlaps the hero by 28px, so it needs its own group above the photo's */
 :root:active-view-transition-type(close) .sbar.over-hero { view-transition-name: sbar; }
 ::view-transition-group(sbar) { z-index: 6; }
@@ -282,20 +282,37 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
   }
 }
 
-/* Night Service shell: top bar and dock */
+/* Night Service shell: top bar. Fixed so it can return on scroll up; Layout toggles data-hidden / data-solid. */
 :root { --bar-h: 68px; }
+html { scroll-padding-top: var(--bar-h); }
 .bar {
-  display: flex; align-items: center; justify-content: space-between; height: var(--bar-h);
-  padding: 0 clamp(16px, 4vw, 56px); border-bottom: 1px solid var(--border);
-  background: var(--background); color: var(--foreground); view-transition-name: bar;
+  position: fixed; z-index: 30; inset-inline: 0; top: 0; isolation: isolate;
+  display: flex; align-items: center; justify-content: space-between; gap: 4px; height: var(--bar-h);
+  padding: 0 clamp(16px, 4vw, 56px); color: var(--foreground); --bar-fg: var(--foreground);
+  view-transition-name: bar; transition: transform var(--med) var(--ease), color var(--med) var(--ease);
 }
-.bar.over {
-  position: absolute; z-index: 30; inset-inline: 0; top: 0; background: linear-gradient(rgb(28 25 23 / .68), transparent);
-  color: #FDFAF5; border-color: rgb(253 250 245 / 0.22);
-}
-.bar-logo { display: flex; align-items: center; gap: 8px; min-height: 44px; color: inherit; }
+.bar::before, .bar::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transition: opacity var(--med) var(--ease); }
+.bar::before { background: var(--background); border-bottom: 1px solid var(--border); }
+.bar::after { background: linear-gradient(rgb(28 25 23 / .68), transparent); border-bottom: 1px solid rgb(253 250 245 / 0.22); opacity: 0; }
+.bar.over:not([data-solid]) { color: #FDFAF5; --bar-fg: #FDFAF5; }
+.bar.over:not([data-solid])::before { opacity: 0; }
+.bar.over:not([data-solid])::after { opacity: 1; }
+.bar[data-hidden]:not(:has(:focus-visible)) { transform: translateY(-100%); }
+/* Snapshots for a route change are taken with the bar in place, so it never jumps */
+:root:active-view-transition .bar { transform: none; transition: none; }
+.bar-logo { display: flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; color: inherit; }
 .bar-logo svg { color: var(--accent-text); }
-.bar.over .bar-logo svg { color: #FDBA74; }
+.bar.over:not([data-solid]) .bar-logo svg { color: #FDBA74; }
+.bar-nav { display: flex; align-items: center; gap: 2px; }
+.bar-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 44px; min-width: 44px;
+  padding: 0 14px; border-radius: 9999px; font-size: 15px; font-weight: 500; color: inherit; opacity: 0.8;
+}
+.bar-link:hover { opacity: 1; background: color-mix(in oklab, currentColor 12%, transparent); }
+.bar-link[aria-current="page"] { opacity: 1; background: color-mix(in oklab, currentColor 18%, transparent); }
+.bar-link.bar-new, .bar-link.bar-new:hover { opacity: 1; background: var(--primary); color: #FDFAF5; }
+.bar-link.bar-new:hover { filter: brightness(1.1); }
+.bar-link.bar-new[aria-current="page"] { box-shadow: inset 0 0 0 2px var(--bar-fg); }
 .bar-tools { display: flex; align-items: center; }
 .bar-btn {
   display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px;
@@ -303,32 +320,18 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 }
 .bar-btn:hover { opacity: 1; background: color-mix(in oklab, currentColor 12%, transparent); }
 .bar-user { padding: 0 8px; color: inherit; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 480px) { .bar-user { display: none; } }
-.bar :is(a, button):focus-visible, .dock a:focus-visible { outline: 2px solid var(--ring, var(--primary)); outline-offset: 2px; }
-.bar.over :is(a, button):focus-visible { outline-color: #FDFAF5; }
+@media (max-width: 820px) { .bar-user, .bar-link span { display: none; } .bar-link { padding: 0; } }
+@media (max-width: 480px) { .bar-logo span, .bar-btn.bar-gh { display: none; } }
+.bar :is(a, button):focus-visible { outline: 2px solid var(--ring, var(--primary)); outline-offset: 2px; }
+.bar.over:not([data-solid]) :is(a, button):focus-visible { outline-color: #FDFAF5; }
+@media (prefers-reduced-motion: reduce) { .bar, .bar::before, .bar::after, .bar-btn, .bar-link { transition: none; } }
 
-.page { max-width: 64rem; margin-inline: auto; padding: 1.5rem 1rem calc(7rem + env(safe-area-inset-bottom)); }
-@media (min-width: 640px) { .page { padding: 2rem 1.5rem calc(7rem + env(safe-area-inset-bottom)); } }
-
-.dock {
-  position: fixed; z-index: 50; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); translate: -50% 0; display: flex; gap: 2px;
-  padding: 5px; background: var(--card); color: var(--foreground); border: 1px solid var(--border);
-  border-radius: 12px; box-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.35); view-transition-name: dock;
-}
-.dock-link {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 46px; min-width: 46px;
-  padding: 0 15px; border-radius: 8px; font-size: 15px; font-weight: 500; color: inherit;
-}
-.dock-link:hover { background: var(--muted); }
-.dock-link.active, .dock-link[aria-current="page"] { background: var(--foreground); color: var(--background); }
-.dock-link.dock-new, .dock-link.dock-new:hover { background: var(--primary); color: #FDFAF5; }
-.dock-link.dock-new.active, .dock-link.dock-new[aria-current="page"] { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--foreground); }
-@media (max-width: 820px) { .dock-link span { display: none; } }
-@media (prefers-reduced-motion: reduce) { .bar-btn, .dock-link { transition: none; } }
+.page { max-width: 64rem; margin-inline: auto; padding: calc(var(--bar-h) + 1.5rem) 1rem calc(2rem + env(safe-area-inset-bottom)); }
+@media (min-width: 640px) { .page { padding: calc(var(--bar-h) + 2rem) 1.5rem calc(2rem + env(safe-area-inset-bottom)); } }
 
 /* Night Service library: hero, search panel, reel shelves */
 :root { --lib-pad: clamp(16px, 4vw, 56px); --scrim: rgb(28 25 23 / 0.9); }
-.lib { padding-bottom: calc(8rem + env(safe-area-inset-bottom)); }
+.lib { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
 .lib-wrap { max-width: 1320px; margin-inline: auto; padding-inline: var(--lib-pad); }
 
 .feat { position: relative; height: min(74vh, 700px); overflow: hidden; background: #0f0d0c; transition: height var(--slow) var(--ease); }
@@ -515,7 +518,7 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 .fields li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
 
 /* Night Service recipe: photo with scrim, paper sheet lifted over it */
-.rec { padding-bottom: calc(8rem + env(safe-area-inset-bottom)); }
+.rec { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
 .rec-hero { position: relative; display: flex; align-items: flex-end; min-height: min(72vh, 680px); padding: calc(var(--bar-h) + 24px) 0 104px; overflow: hidden; color: #FDFAF5; }
 .rec-bare .rec-hero { padding-top: 48px; min-height: min(56vh, 520px); }
 .rec-photo { position: absolute; inset: 0; overflow: hidden; background: #292524; }
@@ -653,6 +656,7 @@ html.theme-flip::view-transition-new(root) { animation: theme-wipe var(--slow) v
 .toast [data-description] { font-size: 13px; opacity: 0.7; }
 
 /* Offline: the browser has no network. Pinned under the bar so it shows on every screen, photo hero or not. */
-.offline { position: fixed; z-index: 40; top: calc(var(--bar-h) + 8px); left: 50%; translate: -50% 0; width: min(560px, calc(100vw - 32px)); padding: 12px 16px;
+.offline { position: fixed; z-index: 40; top: calc(var(--bar-h) + 8px); transition: top var(--med) var(--ease); left: 50%; translate: -50% 0; width: min(560px, calc(100vw - 32px)); padding: 12px 16px;
   background: var(--foreground); color: var(--background); border-radius: var(--radius); box-shadow: inset 3px 0 0 var(--destructive), 0 12px 32px -12px rgb(0 0 0 / 0.45);
   text-transform: none; letter-spacing: 0; font-size: 14px; animation: rise var(--med) var(--ease) both; }
+.bar[data-hidden]:not(:has(:focus-visible)) ~ .offline { top: 8px; }

@@ -1,7 +1,8 @@
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { BookOpen, ChefHat, LogOut, Moon, Plus, Settings, Star, Sun } from "lucide-react";
 import { useRecipes } from "../hooks/useRecipes";
+import { nextBar, type BarScroll } from "../lib/scrollBar";
 import { useUpdateStatus } from "../hooks/useSettings";
 import { useAuthStore } from "../stores/auth";
 import { resolvesDark, useThemeStore } from "../stores/theme";
@@ -58,16 +59,76 @@ export function Layout() {
   // Overlay bar sits on a photo hero: library (with recipes), recipe detail and a shared recipe opened while signed in
   const recipePage = pathname.startsWith("/recipe/") || pathname.startsWith("/share/");
   const over = (pathname === "/" && hasRecipes) || recipePage;
+  const bar = useRef<HTMLElement>(null);
+  const scroll = useRef<BarScroll>({ y: 0, travel: 0, hidden: false });
+
+  // Scroll direction drives data-hidden; data-solid marks the bar once it has left the photo hero. Both are attributes
+  // (not state) so scrolling never re-renders. A new route resets and shows the bar.
+  useLayoutEffect(() => {
+    const el = bar.current;
+    if (!el) return;
+    scroll.current = { y: scrollY, travel: 0, hidden: false };
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const barH = el.offsetHeight;
+      const maxY = document.documentElement.scrollHeight - innerHeight;
+      scroll.current = nextBar(scroll.current, scrollY, barH, maxY);
+      el.toggleAttribute("data-hidden", scroll.current.hidden);
+      const hero = document.querySelector(".feat, .rec-hero");
+      el.toggleAttribute("data-solid", !hero || hero.getBoundingClientRect().bottom <= barH);
+    };
+    const queue = () => (raf ||= requestAnimationFrame(apply));
+    // Snap, don't slide, into the new route's shown state. Re-baselined after the router restores scroll (Back),
+    // otherwise the restore would count as scrolling down.
+    const reset = () => {
+      el.style.transition = "none";
+      scroll.current = { y: scrollY, travel: 0, hidden: false };
+      el.removeAttribute("data-hidden");
+      apply();
+      el.getBoundingClientRect();
+      el.style.transition = "";
+    };
+    reset();
+    let r1 = 0, r2 = 0;
+    r1 = requestAnimationFrame(() => (r2 = requestAnimationFrame(reset)));
+    addEventListener("scroll", queue, { passive: true });
+    addEventListener("resize", queue);
+    const ro = new ResizeObserver(queue); // the library hero collapses during search without any scroll
+    ro.observe(document.body);
+    return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
+      removeEventListener("scroll", queue);
+      removeEventListener("resize", queue);
+      ro.disconnect();
+    };
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-bg font-sans text-text">
-      <header className={`bar${over ? " over" : ""}`}>
+      <header ref={bar} className={`bar${over ? " over" : ""}`}>
         <Link to="/" className="bar-logo press">
           <ChefHat className="h-6 w-6" />
           <span className="font-display text-xl font-semibold">Sous Clip</span>
         </Link>
+        <nav aria-label="Primary" className="bar-nav">
+          <Link to="/" activeOptions={{ exact: true }} className="bar-link press" aria-label="Library">
+            <BookOpen className="h-[18px] w-[18px]" />
+            <span>Library</span>
+          </Link>
+          <Link to="/submit" className="bar-link bar-new press" aria-label="Extract">
+            <Plus className="h-[18px] w-[18px]" />
+            <span>Extract</span>
+          </Link>
+          <Link to="/settings" className="bar-link press" aria-label="Settings">
+            <Settings className="h-[18px] w-[18px]" />
+            <span>Settings</span>
+          </Link>
+        </nav>
         <div className="bar-tools">
-          <GitHubLink className="bar-btn press gap-1.5 px-2" />
+          <GitHubLink className="bar-btn bar-gh press gap-1.5 px-2" />
           <button
             onClick={toggleTheme}
             className="bar-btn press"
@@ -92,20 +153,6 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <nav className="dock" aria-label="Primary">
-        <Link to="/" className="dock-link press" aria-label="Library">
-          <BookOpen className="h-[18px] w-[18px]" />
-          <span>Library</span>
-        </Link>
-        <Link to="/submit" className="dock-link dock-new press" aria-label="Extract">
-          <Plus className="h-[18px] w-[18px]" />
-          <span>Extract</span>
-        </Link>
-        <Link to="/settings" className="dock-link press" aria-label="Settings">
-          <Settings className="h-[18px] w-[18px]" />
-          <span>Settings</span>
-        </Link>
-      </nav>
     </div>
   );
 }

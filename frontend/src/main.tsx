@@ -51,6 +51,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       </MotionConfig>
       <Toaster
         position="top-right"
+        offset="calc(var(--bar-h) + 8px)"
+        mobileOffset="calc(var(--bar-h) + 8px)"
         toastOptions={{ unstyled: true, classNames: { toast: "toast", success: "toast-ok", error: "toast-bad", content: "min-w-0 flex-1", closeButton: "toast-x", actionButton: "toast-act" } }}
       />
     </QueryClientProvider>
