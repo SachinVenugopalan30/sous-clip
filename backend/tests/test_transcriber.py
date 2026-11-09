@@ -72,3 +72,14 @@ def test_transcribe_reports_each_segment(mock_model_class):
 
     assert seen == ["today we're making", "garlic butter pasta"]
     assert result.text == segment1.text + blank.text + segment2.text
+
+
+@patch("ctranslate2.get_cuda_device_count")
+def test_auto_device_uses_gpu_when_ctranslate2_sees_one(mock_count):
+    from backend.services.transcriber import _resolve_device
+
+    mock_count.return_value = 1
+    assert _resolve_device("auto") == "cuda"
+    mock_count.return_value = 0
+    assert _resolve_device("auto") == "cpu"
+    assert _resolve_device("cpu") == "cpu"

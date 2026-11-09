@@ -16,11 +16,9 @@ class TranscribeResult:
 def _resolve_device(device: str) -> str:
     if device != "auto":
         return device
-    try:
-        import torch
-        return "cuda" if torch.cuda.is_available() else "cpu"
-    except ImportError:
-        return "cpu"
+    import ctranslate2  # faster-whisper's engine; the image has no torch
+
+    return "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
 
 
 def _resolve_compute_type(compute_type: str, device: str) -> str:
