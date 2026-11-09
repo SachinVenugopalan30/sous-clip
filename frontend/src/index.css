@@ -531,7 +531,7 @@ html { scroll-padding-top: var(--bar-h); }
   transition: background-color var(--med), color var(--med), border-color var(--med); }
 /* Five stations at 320px: only the current one keeps its label */
 @media (min-width: 640px) { .stn li { font-size: 13px; } }
-@media (max-width: 340px) { .stn[data-n="5"] li:not([data-state="active"]) { font-size: 0; } }
+@media (max-width: 340px) { .stn[data-n="5"] li { font-size: 10.5px; } }
 .stn li[data-state="active"] { color: var(--foreground); font-weight: 500; }
 .stn li[data-state="active"] span { border-color: var(--primary); color: var(--accent-text); box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 18%, transparent); }
 .stn li[data-state="done"] span { background: var(--success); border-color: var(--success); color: var(--background); }

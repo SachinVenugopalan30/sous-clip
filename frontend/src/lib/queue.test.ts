@@ -43,4 +43,6 @@ test("cleanTitle drops trailing hashtags and keeps the rest", () => {
   assert.equal(cleanTitle("Plain title"), "Plain title");
   assert.equal(cleanTitle("Pasta #レシピ"), "Pasta");
   assert.equal(cleanTitle("#fyp #food"), "#fyp #food");
+  assert.equal(cleanTitle("Soup #recipe #2024"), "Soup");
+  assert.equal(cleanTitle("Best pizza #1"), "Best pizza #1");
 });

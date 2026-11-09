@@ -115,7 +115,7 @@ export function QueueList({ items, userId, progress, metaMap, transcripts, recip
 
             <div className="jr">
               <div className="jh">
-                <h3 className={untitled ? "jlink" : undefined}>{title ?? (fetching ? "Fetching video info" : link(hostOf(item.url)))}</h3>
+                <h3 className={untitled ? "jlink" : undefined}>{title || (fetching ? "Fetching video info" : link(hostOf(item.url)))}</h3>
                 <p className="mono jmeta">
                   {facts.map((f, i) => <Fragment key={i}>{i > 0 && <i aria-hidden="true">/</i>}{f}</Fragment>)}
                 </p>
