@@ -33,6 +33,36 @@ Rules:
 - Return ONLY the JSON, no markdown fences or extra text"""
 
 
+def _nullable(t: str) -> dict:
+    return {"type": [t, "null"]}
+
+
+# Strict mode: every object lists all its properties in "required" and forbids extras
+RECIPE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "ingredients": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"name": {"type": "string"}, "quantity": _nullable("string"), "unit": _nullable("string")},
+                "required": ["name", "quantity", "unit"],
+                "additionalProperties": False,
+            },
+        },
+        "instructions": {"type": "array", "items": {"type": "string"}},
+        "prep_time_minutes": _nullable("integer"),
+        "cook_time_minutes": _nullable("integer"),
+        "servings": _nullable("integer"),
+        "notes": _nullable("string"),
+        "tags": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["title", "ingredients", "instructions", "prep_time_minutes", "cook_time_minutes", "servings", "notes", "tags"],
+    "additionalProperties": False,
+}
+
+
 @dataclass
 class ExtractionResult:
     title: str
@@ -105,56 +135,65 @@ class RecipeExtractor:
                 result.notes = None
         return result
 
-    async def _call(self, prompt: str) -> str:
+    async def _call(self, prompt: str, max_tokens: int = 2048) -> str:
         if self.provider == "anthropic":
-            return await self._call_anthropic(prompt, self.api_key)
+            return await self._call_anthropic(prompt, self.api_key, max_tokens=max_tokens)
         if self.provider == "openai":
-            return await self._call_openai(prompt, self.api_key)  # base URL: SDK default or OPENAI_BASE_URL
+            return await self._call_openai(prompt, self.api_key, max_tokens=max_tokens)  # base URL: SDK default or OPENAI_BASE_URL
         if self.provider == "ollama":
-            return await self._call_openai(prompt, "ollama", _root(self.base_url or "http://localhost:11434") + "/v1")
+            return await self._call_openai(prompt, "ollama", _root(self.base_url or "http://localhost:11434") + "/v1", max_tokens)
         if self.provider == "custom":
             key = self.api_key or "none"  # both SDKs require a key; keyless endpoints ignore it
             if self.api_style == "anthropic":
-                return await self._call_anthropic(prompt, key, _root(self.base_url or ""))
-            return await self._call_openai(prompt, key, _root(self.base_url or "") + "/v1")
+                return await self._call_anthropic(prompt, key, _root(self.base_url or ""), max_tokens)
+            return await self._call_openai(prompt, key, _root(self.base_url or "") + "/v1", max_tokens)
         raise ValueError(f"Unknown AI provider: {self.provider}")
 
-    async def _call_anthropic(self, prompt: str, api_key: str, base_url: str | None = None) -> str:
+    async def _call_anthropic(self, prompt: str, api_key: str, base_url: str | None = None, max_tokens: int = 2048) -> str:
         client = anthropic.AsyncAnthropic(api_key=api_key, **({"base_url": base_url} if base_url else {}))
         message = await client.messages.create(
             model=self.model,
-            max_tokens=2048,
+            max_tokens=max_tokens,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}],
         )
         return message.content[0].text
 
-    async def _call_openai(self, prompt: str, api_key: str, base_url: str | None = None) -> str:
+    async def _call_openai(self, prompt: str, api_key: str, base_url: str | None = None, max_tokens: int = 2048) -> str:
         client = openai.AsyncOpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
-        response = await client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=2048,
-            response_format={"type": "json_object"},  # guarantees parseable JSON; small models often emit broken JSON otherwise
-        )
+        async def create(response_format: dict):
+            return await client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=max_tokens,
+                response_format=response_format,
+            )
+
+        # A schema pins the recipe shape (json_object let a small model reply "[1, 2, 3]");
+        # endpoints that reject it (400/422) get the looser json_object, which they all accept
+        try:
+            response = await create({"type": "json_schema", "json_schema": {"name": "recipe", "strict": True, "schema": RECIPE_SCHEMA}})
+        except (openai.BadRequestError, openai.UnprocessableEntityError):
+            response = await create({"type": "json_object"})
         return response.choices[0].message.content
 
-    def _parse_response(self, raw: str) -> ExtractionResult:
+    def _parse_response(self, raw: str | None) -> ExtractionResult:
+        raw = raw or ""  # a model that runs out of tokens while reasoning returns content=None
         # Take the outermost JSON object; drops fences and any chatter around it
         data = json.loads(raw[raw.find("{"): raw.rfind("}") + 1])
 
         # "or" defaults: models (small ones especially) return null for lists and title too
         ingredients = [
             Ingredient(
-                name=i["name"],
-                quantity=i.get("quantity"),
-                unit=i.get("unit"),
+                name=str(i["name"]),
+                quantity=None if i.get("quantity") is None else str(i["quantity"]),  # models write 1, not "1"
+                unit=None if i.get("unit") is None else str(i["unit"]),
             )
             for i in data.get("ingredients") or []
-            if i.get("name")
+            if isinstance(i, dict) and i.get("name")
         ]
 
         return ExtractionResult(
@@ -174,7 +213,7 @@ async def detect_api_style(base_url: str, api_key: str, model: str) -> str:
     failures = []
     for style, label in (("openai", "OpenAI"), ("anthropic", "Anthropic")):
         try:
-            await RecipeExtractor("custom", api_key, model, base_url, style)._call("Reply with an empty JSON object: {}")
+            await RecipeExtractor("custom", api_key, model, base_url, style)._call("Reply with a short recipe titled Test.", max_tokens=16)
             return style
         except Exception as e:
             failures.append((label, explain(type(e).__name__, str(e))))
