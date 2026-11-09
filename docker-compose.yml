@@ -18,10 +18,9 @@ services:
       - app-data:/app/data
     restart: unless-stopped
 
-  # temporalio/auto-setup is deprecated (last tag 1.29.7). The server image does not set up its
-  # database or the "default" namespace, so two one-shot admin-tools steps do it (both idempotent).
+  # temporalio/auto-setup is deprecated, so two idempotent one-shot steps create the database and the "default" namespace.
   # setup-schema errors once tables exist (hence || true); update-schema fails if setup really failed.
-  # If either one-shot fails, check: docker compose logs temporal-schema temporal-namespace
+  # If either fails, check: docker compose logs temporal-schema temporal-namespace
   temporal-schema:
     image: docker.io/temporalio/admin-tools:1.32.2
     entrypoint: ["/bin/sh", "-c"]
@@ -131,8 +130,8 @@ services:
     #           count: all
     #           capabilities: [gpu]
 
-  # Optional: "Update now" in Settings. Opt in with COMPOSE_PROFILES=updater in .env.
-  # It gets the Docker socket (root-equivalent on the host), so it only runs when asked for.
+  # Optional "Update now" in Settings; enable with COMPOSE_PROFILES=updater in .env.
+  # It mounts the Docker socket (root-equivalent on the host), so it runs only when enabled.
   watchtower:
     image: docker.io/nickfedor/watchtower:1.22.3 # maintained fork; async update API since v1.17.0
     profiles: [updater]

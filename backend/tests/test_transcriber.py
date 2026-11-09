@@ -34,7 +34,6 @@ def test_transcriber_returns_joined_text(mock_model_class):
 @patch("backend.services.transcriber.WhisperModel")
 def test_transcriber_auto_device_defaults_to_cpu(mock_model_class):
     Transcriber(model_size="base", device="auto", compute_type="auto")
-    # With auto and no CUDA, should resolve to cpu + int8
     mock_model_class.assert_called_once()
     call_kwargs = mock_model_class.call_args
     assert call_kwargs[1]["device"] in ("cpu", "cuda")

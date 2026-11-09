@@ -185,7 +185,7 @@ def unshare_recipe(
     session.commit()
 
 
-# Separate router for public share access (no auth)
+# Public share links (no auth)
 share_router = APIRouter(prefix="/api/share", tags=["share"])
 
 

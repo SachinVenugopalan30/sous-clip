@@ -105,7 +105,7 @@ function useNewReleaseToast() {
 
 function HomePage() {
   useNewReleaseToast();
-  // Once the return transition has played, drop the opened recipe's names: left on, a later theme wipe gives that photo its own group above the search bar
+  // After the return transition, drop the opened recipe's names; left on, a theme wipe puts that photo above the search bar
   useEffect(() => {
     const id = opened.id;
     const timer = setTimeout(() => {
@@ -126,16 +126,14 @@ function HomePage() {
   const mealieConfigured = useMealieConfigured();
   const bulkDelete = useBulkDeleteRecipes();
   const singleDelete = useDeleteRecipe();
-  // Same cache entry as the layout's: the hero is the newest of the whole library, whatever the search
+  // Same cache entry as the layout's: the hero is the newest recipe, whatever the search
   const { data: all } = useRecipes();
   const [showAll, setShowAll] = useState(false);
 
-  // Collect all unique tags from loaded recipes
   const allTags = Array.from(
     new Set(data?.recipes.flatMap((r) => r.tags) ?? [])
   ).sort();
 
-  // Filter by tags, cooking time and date added; then sort
   const filteredRecipes = data && applyLibraryFilters(
     data.recipes.filter((r) => selectedTags.size === 0 || r.tags.some((t) => selectedTags.has(t))),
     filters
@@ -211,7 +209,7 @@ function HomePage() {
     });
   };
 
-  // Layout follows the debounced query, the same one `data` was fetched with, so there is no flash of the wrong layout
+  // Follows the debounced query that `data` was fetched with, so the layout never flashes wrong
   const searching = debouncedSearch !== "";
   const collapsed = filtering || searching;
   const hero = all && all.recipes.length > 0
@@ -220,8 +218,8 @@ function HomePage() {
   const shelves = filteredRecipes && !collapsed && !showAll && filters.sort === "newest" ? buildShelves(filteredRecipes) : null;
   const latestShown = shelves?.find((sh) => sh.key === "latest")?.recipes.length ?? 0;
   const canSeeAll = !!shelves && (filteredRecipes?.length ?? 0) > latestShown;
-  // Picks which element could carry the opened recipe's names: the expanded hero if it shows that recipe, else its first tile.
-  // Only the recipe in `opened` is actually named (see transitionName below), so a recipe on several shelves never has the name twice.
+  // The element that may carry the opened recipe's names: the hero if it shows that recipe, else its first tile.
+  // transitionName names only `opened`, so a recipe on several shelves never gets the name twice.
   const nameOwner = new Map<number, string>();
   if (hero && !collapsed) nameOwner.set(hero.id, "hero");
   for (const sh of shelves ?? [{ key: "grid", recipes: filteredRecipes ?? [] }])
@@ -371,7 +369,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Floating selection toolbar */}
       <AnimatePresence>
         {selectedIds.size > 0 && (
           <motion.div

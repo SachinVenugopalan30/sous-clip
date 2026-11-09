@@ -23,10 +23,8 @@ class ExtractResponse(BaseModel):
 async def extract_recipe(request: ExtractRequest, _user: CurrentUser = Depends(get_current_user)):
     queue = get_queue()
 
-    # Enqueue the URL
     item = queue.enqueue(user_id=request.user_id, url=request.url)
 
-    # Starts the Temporal workflow and marks the item in progress (frontend shows the pipeline)
     await start_extraction(queue, item, request.forward_to_mealie)
     item.status = QueueStatus.IN_PROGRESS
 

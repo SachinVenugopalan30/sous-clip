@@ -39,7 +39,6 @@ export function useProgress(
       const data: PipelineProgress = JSON.parse(event.data);
       setProgress((prev) => new Map(prev).set(data.item_id, data));
 
-      // Accumulate metadata when it arrives
       if (data.meta) {
         titles.current.set(data.item_id, data.meta.title);
         setMetaMap((prev) => new Map(prev).set(data.item_id, data.meta!));

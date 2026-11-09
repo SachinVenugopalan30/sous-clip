@@ -20,7 +20,7 @@ DEFAULTS = {
     "update_check": "true",  # hourly GitHub check (releases, stars); "false" turns it off
 }
 
-# Keys that should never be returned to the frontend in plain text
+# Never returned to the frontend in plain text
 MASK = "••••••"
 SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key", "mealie_api_key", "custom_api_key"}
 

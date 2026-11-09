@@ -13,10 +13,7 @@ export function advanceTimers(timers: Map<string, number>, dt: number): string[]
   return expired;
 }
 
-/**
- * Gives each started id `durationMs` of VISIBLE page time (hidden-tab time doesn't count),
- * then drops it from `completingIds` and calls `onExpire(id)`.
- */
+/** Gives each started id `durationMs` of visible page time (hidden tabs don't count), then drops it from `completingIds` and calls `onExpire(id)`. */
 export function useVisibilityTimer(durationMs: number, onExpire: (id: string) => void) {
   const timers = useRef(new Map<string, number>());
   const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());

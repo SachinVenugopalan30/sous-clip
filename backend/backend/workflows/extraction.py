@@ -54,7 +54,6 @@ async def download_activity(url: str, user_id: str, queue_item_id: str) -> dict:
         downloader = Downloader(media_dir=settings.media_dir)
         result = downloader.download(url, progress_hook=on_progress)
 
-        # Publish video metadata now that we have it
         meta = {"title": result.title}
         if result.channel:
             meta["channel"] = result.channel
@@ -176,7 +175,6 @@ async def save_recipe_activity(
         if thumbnail_path:
             Path(thumbnail_path).unlink(missing_ok=True)
 
-        # Mark queue item completed and publish final event
         queue.complete(queue_item_id, user_id)
         queue.publish_progress(user_id, queue_item_id, "saved", "complete")
 
@@ -226,7 +224,6 @@ class ExtractionWorkflow:
         step = "Download"  # named in the queue's error message if this step fails
 
         try:
-            # Step 1: Download
             download_result = await workflow.execute_activity(
                 download_activity,
                 args=[input.url, user_id, item_id],
@@ -234,7 +231,6 @@ class ExtractionWorkflow:
                 retry_policy=RETRY,
             )
 
-            # Step 2: Transcribe
             step = "Transcription"
             transcribe_result = await workflow.execute_activity(
                 transcribe_activity,
@@ -243,7 +239,6 @@ class ExtractionWorkflow:
                 retry_policy=RETRY,
             )
 
-            # Step 3: Extract recipe via AI
             step = "AI extraction"
             extraction_data = await workflow.execute_activity(
                 extract_activity,
@@ -256,7 +251,6 @@ class ExtractionWorkflow:
                 retry_policy=RETRY,
             )
 
-            # Step 4: Save to database
             step = "Saving the recipe"
             recipe_id = await workflow.execute_activity(
                 save_recipe_activity,
@@ -268,7 +262,7 @@ class ExtractionWorkflow:
                 retry_policy=RETRY,
             )
 
-            # Step 5: Forward to Mealie (non-blocking)
+            # Mealie is best effort
             try:
                 await workflow.execute_activity(
                     forward_to_mealie_activity,
@@ -280,7 +274,6 @@ class ExtractionWorkflow:
 
             return recipe_id
         except Exception as e:
-            # Mark the queue item as failed so the UI reflects the error
             await workflow.execute_activity(
                 fail_queue_item_activity,
                 args=[user_id, item_id, describe_failure(step, e)],

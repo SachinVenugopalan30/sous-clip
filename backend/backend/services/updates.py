@@ -57,8 +57,7 @@ async def watchtower_reachable() -> bool:
 
 
 async def trigger_update() -> dict:
-    """Ask Watchtower to pull and recreate app + worker. async=true returns 202 before it
-    replaces this container; 202 means triggered, not succeeded."""
+    """Ask Watchtower to update the app and worker. 202 means triggered, not succeeded."""
     if not settings.watchtower_http_api_token:
         return {"ok": False, "error": "Watchtower isn't configured"}
     try:

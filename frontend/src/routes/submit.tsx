@@ -69,7 +69,7 @@ function SubmitPage() {
       }
     );
 
-  // Submit a shared link once, then strip it from the address bar (which also stops a StrictMode re-run)
+  // Submit a shared link once, then strip it from the URL (this also stops a StrictMode re-run)
   useEffect(() => {
     if (!sharedParam()) return;
     window.history.replaceState({}, "", "/submit");
@@ -101,7 +101,7 @@ function SubmitPage() {
   };
 
   // queue.complete() drops an item from GET /queue at once, so a finished row is kept here for its hold.
-  // Order follows the previous render; ponytail: an item that vanishes before its saved event lands is not kept.
+  // ponytail: an item that vanishes before its saved event lands is not kept; hold it in state if that matters.
   const shown = useRef<QueueItem[]>([]);
   const live = queueData?.items ?? [];
   const liveById = new Map(live.map((i) => [i.id, i]));

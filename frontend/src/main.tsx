@@ -10,10 +10,10 @@ import "@fontsource-variable/fraunces/opsz-italic.css";
 import "@fontsource-variable/dm-sans/wght.css";
 import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./index.css";
-import "./stores/theme"; // Initialize theme before first render
+import "./stores/theme"; // Sets the theme before first render
 
-// TanStack Router awaits only updateCallbackDone, so `ready` rejects unhandled with an
-// AbortError whenever overlapping navigations skip a transition. Mark it handled.
+// TanStack Router awaits only updateCallbackDone, so `ready` rejects unhandled (AbortError)
+// when overlapping navigations skip a transition. Mark it handled.
 const startVT = document.startViewTransition?.bind(document);
 if (startVT) {
   document.startViewTransition = (...args: Parameters<typeof startVT>) => {
@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 const router = createRouter({
   routeTree,
   scrollRestoration: true,
-  // The type picks which way the recipe-page transition plays: open (sheet rises) or close (sheet falls)
+  // The type picks the direction: open (sheet rises) or close (sheet falls)
   defaultViewTransition: {
     types: ({ fromLocation, toLocation }) => {
       const from = !!fromLocation?.pathname.startsWith("/recipe/");

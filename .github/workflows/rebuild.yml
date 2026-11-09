@@ -1,8 +1,7 @@
 name: Weekly rebuild
 
-# Rebuild the latest release with fresh dependencies so :latest picks up new yt-dlp
-# versions (Instagram/TikTok extraction breaks often). Accepted cost: a full uncached
-# multi-arch build every week.
+# Rebuild the latest release weekly so :latest picks up new yt-dlp versions (extraction breaks often).
+# Cost: a full uncached multi-arch build each time.
 on:
   schedule:
     - cron: "0 6 * * 1"

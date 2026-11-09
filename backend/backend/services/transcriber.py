@@ -39,7 +39,7 @@ class Transcriber:
     def __init__(self, model_size: str, device: str, compute_type: str):
         resolved_device = _resolve_device(device)
         resolved_compute = _resolve_compute_type(compute_type, resolved_device)
-        # Use local model if available, otherwise download from HF
+        # Local model if present, else download
         local_path = model_path(model_size)
         model_ref = local_path if os.path.isdir(local_path) else model_size
         self.model = WhisperModel(

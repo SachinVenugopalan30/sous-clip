@@ -26,7 +26,7 @@ def update_settings(
     session: Session = Depends(get_session),
     user: CurrentUser = Depends(get_current_user),
 ):
-    # Don't overwrite real secrets with masked placeholder values
+    # Keep real secrets when the client sends back masked placeholders
     filtered = {
         k: v for k, v in updates.items()
         if k not in SENSITIVE_KEYS or not v.startswith(MASK)

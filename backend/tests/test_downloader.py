@@ -21,7 +21,6 @@ def test_download_extracts_audio(mock_ydl_class, tmp_path):
         "id": "abc123",
     }
 
-    # Simulate the audio file existing after download
     expected_audio = str(tmp_path / "abc123.mp3")
     open(expected_audio, "w").close()
 

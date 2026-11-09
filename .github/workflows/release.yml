@@ -24,8 +24,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      # Push the image before creating the release, so the in-app "new version" notice
-      # never points at an image that doesn't exist yet
+      # Push the image before creating the release so the in-app update notice never points at a missing image
       - name: Build and push image
         uses: docker/build-push-action@v7
         with:

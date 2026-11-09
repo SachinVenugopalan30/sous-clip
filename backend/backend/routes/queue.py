@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/queue", tags=["queue"])
 
 
 async def start_extraction(queue: ExtractionQueue, item: QueueItem, forward_to_mealie: bool = False) -> None:
-    """Start the Temporal workflow for a queue item and mark it in progress."""
+    """Start the workflow for a queue item."""
     try:
         client = await Client.connect(settings.temporal_host)
         await client.start_workflow(
@@ -75,6 +75,6 @@ async def retry_item(user_id: str, item_id: str, _user: CurrentUser = Depends(ge
     queue = get_queue()
     item = queue.retry(user_id=user_id, item_id=item_id)
     if item:
-        # ponytail: forward_to_mealie isn't stored on the item, so a retry doesn't re-forward; send from the library
+        # ponytail: forward_to_mealie isn't stored, so a retry skips Mealie; send from the library
         await start_extraction(queue, item)
     return {"retried": item is not None}

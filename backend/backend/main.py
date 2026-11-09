@@ -50,12 +50,12 @@ async def recover_stuck_queue_items() -> None:
                     queue.fail(item.id, item.user_id, f"Workflow {status.name.lower()} (recovered on restart)")
                     logger.info("Marked item %s as failed (workflow %s)", item.id, status.name)
                 else:
-                    # Still RUNNING — Temporal will resume it when worker reconnects
+                    # Still running; Temporal resumes it when the worker reconnects
                     logger.info("Item %s workflow still running, will resume", item.id)
 
             except RPCError as e:
                 if e.status == RPCStatusCode.NOT_FOUND:
-                    # Workflow doesn't exist in Temporal — re-submit it
+                    # Missing in Temporal; submit it again
                     logger.info("Re-submitting lost workflow for item %s", item.id)
                     try:
                         await client.start_workflow(
@@ -121,7 +121,6 @@ async def health():
 Path(settings.thumbnails_dir).mkdir(parents=True, exist_ok=True)
 app.mount("/thumbnails", StaticFiles(directory=settings.thumbnails_dir, check_dir=False), name="thumbnails")
 
-# Serve frontend static files in production
 _static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
 if os.path.exists(_static_dir):
     app.mount("/assets", StaticFiles(directory=os.path.join(_static_dir, "assets")), name="assets")

@@ -37,7 +37,7 @@ export function RecipeCard({ recipe, selected, onToggle, onShare, onDelete, meal
             <div className="plate-fb"><span>{recipe.title}</span></div>
           )}
         </div>
-        {/* Outside the photo frame so it is not scaled up in the photo's snapshot; named separately so it fades instead of popping */}
+        {/* Outside the photo frame so the photo's snapshot doesn't scale it; named separately so it fades */}
         <div className="reel-meta" style={transitionName ? { viewTransitionName: CAP_NAME } : undefined}>
           <span className="tab">{recipeNo(recipe.id)}</span>
           <div className="cap">

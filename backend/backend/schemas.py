@@ -8,7 +8,7 @@ class Ingredient(BaseModel):
 
 
 class RecipeUpdate(BaseModel):
-    # NOT NULL columns: omitted is fine (defaults aren't validated), explicit null is a 422
+    # NOT NULL columns: omitted is fine, explicit null is a 422
     title: str = None
     ingredients: list[Ingredient] = None
     instructions: list[str] = None

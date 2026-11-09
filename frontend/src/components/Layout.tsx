@@ -15,7 +15,7 @@ export function GithubIcon({ className }: { className?: string }) {
   );
 }
 
-// Live star count from GET /api/update (server refreshes it hourly; hidden when the GitHub check is off)
+// Star count from GET /api/update; hidden when the GitHub check is off
 function GitHubLink({ className }: { className: string }) {
   const stars = useUpdateStatus().data?.stars;
   const count = stars == null ? null : new Intl.NumberFormat(undefined, { notation: "compact" }).format(stars);
@@ -56,14 +56,14 @@ export function Layout() {
   const isDark = resolvesDark(theme);
   const pathname = useLocation().pathname;
   const hasRecipes = (useRecipes().data?.recipes.length ?? 0) > 0;
-  // Overlay bar sits on a photo hero: library (with recipes), recipe detail and a shared recipe opened while signed in
+  // Overlay bar sits over a photo hero: library, recipe detail, and a shared recipe opened while signed in
   const recipePage = pathname.startsWith("/recipe/") || pathname.startsWith("/share/");
   const over = (pathname === "/" && hasRecipes) || recipePage;
   const bar = useRef<HTMLElement>(null);
   const scroll = useRef<BarScroll>({ y: 0, travel: 0, hidden: false });
 
-  // Scroll direction drives data-hidden; data-solid marks the bar once it has left the photo hero. Both are attributes
-  // (not state) so scrolling never re-renders. A new route resets and shows the bar.
+  // Scroll direction sets data-hidden; data-solid marks the bar once past the hero.
+  // Attributes, not state, so scrolling never re-renders. A new route resets the bar.
   useLayoutEffect(() => {
     const el = bar.current;
     if (!el) return;
@@ -79,8 +79,7 @@ export function Layout() {
       el.toggleAttribute("data-solid", !hero || hero.getBoundingClientRect().bottom <= barH);
     };
     const queue = () => (raf ||= requestAnimationFrame(apply));
-    // Snap, don't slide, into the new route's shown state. Re-baselined after the router restores scroll (Back),
-    // otherwise the restore would count as scrolling down.
+    // Snap to the new route's state, after the router restores scroll (Back); otherwise the restore counts as scrolling down.
     const reset = () => {
       el.style.transition = "none";
       scroll.current = { y: scrollY, travel: 0, hidden: false };

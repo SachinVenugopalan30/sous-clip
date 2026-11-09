@@ -5,7 +5,7 @@ import re
 from temporalio.exceptions import TimeoutError as TemporalTimeoutError
 
 _KEY_HINT = "The AI endpoint rejected the API key. Check it in Settings → AI Provider."
-# Keyed by exception class name: Temporal keeps it as ApplicationError.type across the activity boundary
+# Keyed by class name, which Temporal keeps as ApplicationError.type
 _HINTS = {
     "AuthenticationError": _KEY_HINT,
     "PermissionDeniedError": _KEY_HINT,

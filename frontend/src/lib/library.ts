@@ -49,7 +49,7 @@ export const SHELF_MAX = 12;
 const UNDER_MINUTES = 30;
 const MAX_TAG_SHELVES = 2;
 
-/** Latest, Under 30 minutes (untimed recipes excluded), then up to two most-used tags (2+ recipes, ties alphabetical). Empty shelves are dropped. */
+/** Shelves: Latest, Under 30 minutes (untimed excluded), then the two most-used tags (2+ recipes). Empty shelves are dropped. */
 export function buildShelves<T extends Timed & { tags: string[] }>(recipes: T[]): Shelf<T>[] {
   const newest = [...recipes].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
   const counts = new Map<string, number>();
@@ -76,20 +76,20 @@ export function splitTitle(title: string): { main: string; suffix: string | null
 /** "No. 0012": one format for hero and tile */
 export const recipeNo = (id: number) => `No. ${String(id).padStart(4, "0")}`;
 
-/** Shared name for the caption of the one tile or hero being opened or left (never on two elements). */
+/** Transition name for the caption of the opened or left recipe; never on two elements. */
 export const CAP_NAME = "recipe-cap";
-/** Photo transition name for a recipe. Only the opened or left recipe's frame is named: other tiles named too would paint over the morph. */
+/** Photo transition name for a recipe. Only the opened or left frame is named; naming other tiles would paint over the morph. */
 export const photoName = (id: number) => `recipe-photo-${id}`;
-/** Id of the recipe being opened or left; the library names only this recipe's photo and caption on return. */
+/** Id of the recipe being opened or left; on return only its photo and caption are named. */
 export const opened = { id: 0 };
-/** Router state marking navigations that start from the library, so "Back to library" can pop history and restore scroll. */
+/** Router state marking navigations from the library, so "Back to library" can pop history and restore scroll. */
 // ponytail: cast because HistoryState is not augmented (its package is only a transitive dependency)
 export const FROM_LIBRARY = { fromLibrary: true } as never;
 
 const OURS = /^recipe-(photo-\d+|cap)$/;
 type Named = { style: { viewTransitionName: string } };
 
-/** Gives each element its name and strips our names from every other element, so no name is ever on two. */
+/** Gives each element its name and strips our names from all others, so no name is on two. */
 export function claimNames<T extends Named>(scope: { querySelectorAll(s: string): Iterable<T> }, claims: [T | null | undefined, string][]) {
   const keep = new Set(claims.map(([el]) => el));
   for (const el of scope.querySelectorAll("[style*=view-transition-name]"))
@@ -97,9 +97,9 @@ export function claimNames<T extends Named>(scope: { querySelectorAll(s: string)
   for (const [el, name] of claims) if (el) el.style.viewTransitionName = name;
 }
 
-/** Link onClick: names the clicked photo frame and caption before the transition captures the old state.
- *  Modified, non-primary and prevented clicks do not navigate, so they must not leave a name behind.
- *  React only rewrites a style prop when its value changes, so these inline names survive re-renders; the page unmounts on navigation. */
+/** Link onClick: names the clicked photo and caption before the transition captures the old state.
+ *  Clicks that don't navigate (modified, non-primary, prevented) must not leave a name behind.
+ *  Inline names survive re-renders because React only rewrites a style prop when its value changes. */
 export function nameClicked(e: MouseEvent<HTMLElement>, photo: string, cap: string, id: number) {
   if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   opened.id = id;

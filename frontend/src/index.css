@@ -169,8 +169,7 @@
   }
 }
 
-/* iOS Safari zooms the page when a field under 16px is focused. Unlayered on purpose:
-   it must beat Tailwind's text-xs/text-sm utilities, which live in a higher layer than base. */
+/* iOS Safari zooms when a field under 16px is focused. Unlayered so it beats Tailwind's text-xs/text-sm. */
 @media (max-width: 639px) {
   input, select, textarea {
     font-size: 16px;
@@ -228,13 +227,12 @@
 ::view-transition-group(*) { animation-duration: 460ms; animation-timing-function: var(--ease); }
 /* Groups first seen in the new state paint last; keep the chrome above the sheet and photo */
 ::view-transition-group(bar) { z-index: 10; }
-/* Closing a recipe: the search bar overlaps the hero by 28px, so it needs its own group above the photo's */
+/* Closing a recipe: the search bar overlaps the hero, so it needs its own group above the photo's */
 :root:active-view-transition-type(close) .sbar.over-hero { view-transition-name: sbar; }
 ::view-transition-group(sbar) { z-index: 6; }
 ::view-transition-new(sbar) { animation: vt-in 360ms var(--ease) both; }
 
-/* Opening a recipe: the photo frame morphs from its tile or the hero, the sheet rises, the title settles.
-   Closing plays it back. The frame owns corners and scrim, so they scale with it. */
+/* Opening a recipe: the photo morphs from its tile or the hero, the sheet rises. Closing plays it back. */
 .plate, .feat-photo, .rec-photo { view-transition-class: photo; }
 ::view-transition-old(.photo), ::view-transition-new(.photo) { width: 100%; height: 100%; object-fit: cover; }
 ::view-transition-image-pair(.photo) { overflow: clip; }
@@ -484,7 +482,7 @@ html { scroll-padding-top: var(--bar-h); }
 .jfail { margin-top: 10px; color: var(--destructive); overflow-wrap: anywhere; }
 .jdone { margin-top: 14px; font: italic 400 22px var(--font-display); color: var(--success); }
 
-/* Live captions: wave and text share one bottom column so they cannot overlap; the newest words stay at the bottom, older text fades out the top */
+/* Live captions: wave and text share one column so they cannot overlap; newest words stay at the bottom */
 .live { position: absolute; z-index: 2; left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 8px; color: #FDFAF5; }
 .karaoke { height: 5em; overflow: hidden; display: flex; align-items: flex-end; font: 400 15px/1.25 var(--font-display); overflow-wrap: anywhere;
   mask-image: linear-gradient(transparent, #000 1.3em); }
@@ -497,7 +495,7 @@ html { scroll-padding-top: var(--bar-h); }
 @keyframes eq { to { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .wave b { animation: none; transform: scaleY(0.5); } }
 
-/* Rows with nothing to show yet (queued, failed, done without a photo) keep a small plate so no empty 9:16 panel dominates */
+/* Rows without a photo keep a small plate so no empty 9:16 panel dominates */
 .job.sm { grid-template-columns: 72px minmax(0, 1fr); align-items: start; }
 .job.sm .plate-fb span { display: none; }
 .job.sm .plate-fb { padding: 0; }
@@ -566,7 +564,7 @@ html { scroll-padding-top: var(--bar-h); }
 .rec-field textarea { margin-top: 4px; width: 100%; padding: 8px 12px; background: transparent; border: 1px solid var(--line-ctl); border-radius: var(--radius); font-size: 15px; }
 .rec-field textarea:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -1px; }
 
-/* Night Service primitives: the shared ui/ look (controls, buttons, menu). Layered so utility classes can still adjust them. */
+/* Shared ui/ look (controls, buttons, menu). Layered so utility classes can still adjust it. */
 @layer components {
   .ctl { width: 100%; min-width: 0; height: 46px; padding: 0 12px; background: var(--card); color: var(--foreground); font-size: 15px;
     border: 1px solid var(--line-ctl); border-radius: var(--radius); transition: border-color var(--fast); }
@@ -609,7 +607,7 @@ html { scroll-padding-top: var(--bar-h); }
 .set-up .hint { color: var(--foreground); } /* muted grey on the orange tint is 4.35:1 */
 .set-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 8px; padding-top: 22px; border-top: 1px solid var(--input); }
 
-/* Night Service sign-in: card over drifting reels. The reels are CSS-only stand-ins, so signed-out visitors load no recipe data or photos. */
+/* Sign-in: card over CSS-only drifting reels, so signed-out visitors load no recipe data or photos. */
 .login { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 16px; overflow: clip; background: var(--muted); }
 .login-reels { position: absolute; inset: -18% -4%; display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; opacity: 0.9; pointer-events: none; }
 .login-reels div { display: grid; gap: 16px; align-content: start; animation: drift 42s linear infinite alternate; will-change: transform; }
@@ -641,7 +639,7 @@ html { scroll-padding-top: var(--bar-h); }
 .pal-i[data-selected="true"] { background: color-mix(in oklab, var(--primary) 16%, transparent); }
 .pal-foot { padding: 10px 18px; border-top: 1px solid var(--border); }
 
-/* Toasts: one family. Inverse card, a colour stripe says what happened; the completion toast adds a countdown bar. */
+/* Toasts: inverse card with a colour stripe for the outcome; the completion toast adds a countdown bar. */
 .toast { position: relative; display: flex; align-items: center; gap: 10px; padding: 14px 16px; overflow: hidden; background: var(--foreground); color: var(--background);
   border-radius: var(--radius); font-size: 14px; box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.45); }
 .toast-ok { box-shadow: inset 3px 0 0 var(--success), 0 12px 32px -12px rgb(0 0 0 / 0.45); }
@@ -655,7 +653,7 @@ html { scroll-padding-top: var(--bar-h); }
 .toast .toast-act { flex: none; min-height: 44px; margin: -14px 0; padding: 0 8px; background: none; border: 0; color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .toast [data-description] { font-size: 13px; opacity: 0.7; }
 
-/* Offline: the browser has no network. Pinned under the bar so it shows on every screen, photo hero or not. */
+/* Offline notice, pinned under the bar so it shows on every screen. */
 .offline { position: fixed; z-index: 40; top: calc(var(--bar-h) + 8px); transition: top var(--med) var(--ease); left: 50%; translate: -50% 0; width: min(560px, calc(100vw - 32px)); padding: 12px 16px;
   background: var(--foreground); color: var(--background); border-radius: var(--radius); box-shadow: inset 3px 0 0 var(--destructive), 0 12px 32px -12px rgb(0 0 0 / 0.45);
   text-transform: none; letter-spacing: 0; font-size: 14px; animation: rise var(--med) var(--ease) both; }

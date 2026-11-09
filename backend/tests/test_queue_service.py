@@ -34,7 +34,6 @@ def test_enqueue_adds_item(mock_redis):
     assert item.status == QueueStatus.PENDING
     assert item.id is not None
 
-    # Should store item data and add to user's queue list
     assert mock_redis.hset.called
     assert mock_redis.rpush.called
 

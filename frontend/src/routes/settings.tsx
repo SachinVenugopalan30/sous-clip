@@ -30,7 +30,7 @@ function SettingsPage() {
   const [checked, setChecked] = useState(false);
   const form = { ...settings, ...edits };
   const setForm = (patch: Record<string, string>) => setEdits((p) => ({ ...p, ...patch }));
-  // Only edited URL fields in play are checked (an old stored value never blocks an unrelated save); errors show once Save has been pressed
+  // Only edited URL fields are checked, so an old stored value never blocks an unrelated save; errors show after Save is pressed
   const urlKeys = ["mealie_url", ...(form.ai_provider === "ollama" ? ["ollama_base_url"] : []), ...(form.ai_provider === "custom" ? ["custom_base_url"] : [])];
   const found: Record<string, string | undefined> = {};
   for (const k of urlKeys) if (k in edits) found[k] = badUrl(edits[k].trim());
@@ -66,7 +66,7 @@ function SettingsPage() {
     );
   }
 
-  // No stored values to edit over: showing the form would let Save overwrite them with blanks
+  // Without stored values to edit over, Save would overwrite them with blanks, so hide the form
   if (isError && !settings) {
     return (
       <div className="none" role="alert">
