@@ -5,12 +5,12 @@ const API_BASE = "/api";
 async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
   const token = useAuthStore.getState().token;
   const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
-    ...options,
   });
   // A wrong password is also a 401; the sign-in form shows that itself instead of reloading
   if (res.status === 401 && path !== "/auth/login") {
