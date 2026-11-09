@@ -1,3 +1,4 @@
+import ctypes.util
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -18,7 +19,9 @@ def _resolve_device(device: str) -> str:
         return device
     import ctranslate2  # faster-whisper's engine; the image has no torch
 
-    return "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
+    # A visible GPU isn't enough: CTranslate2 fails at transcribe time without cuBLAS and cuDNN
+    has_libs = all(ctypes.util.find_library(lib) for lib in ("cublas", "cudnn"))
+    return "cuda" if has_libs and ctranslate2.get_cuda_device_count() > 0 else "cpu"
 
 
 def _resolve_compute_type(compute_type: str, device: str) -> str:

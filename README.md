@@ -131,10 +131,10 @@ podman compose up -d   # needs podman-compose >= 1.1, or docker-compose as the p
 
 ## GPU Support
 
-The same Docker image works for CPU and GPU. For GPU acceleration:
+The image runs on CPU out of the box. GPU acceleration also needs the CUDA libraries (cuBLAS and cuDNN) available inside the container; `WHISPER_DEVICE=auto` only picks the GPU when it finds them, and otherwise uses CPU. To pass the GPU to the `worker` service:
 
 ```yaml
-# Uncomment in docker-compose.yml:
+# Uncomment on the worker service in docker-compose.yml:
 deploy:
   resources:
     reservations:

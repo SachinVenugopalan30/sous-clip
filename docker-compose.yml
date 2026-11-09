@@ -17,14 +17,6 @@ services:
     volumes:
       - app-data:/app/data
     restart: unless-stopped
-    # Uncomment for GPU support:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
 
   # temporalio/auto-setup is deprecated (last tag 1.29.7). The server image does not set up its
   # database or the "default" namespace, so two one-shot admin-tools steps do it (both idempotent).
@@ -130,6 +122,14 @@ services:
       - app-data:/app/data
       - ./data/whisper-models:/app/models:ro,z
     restart: unless-stopped
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
 
   # Optional: "Update now" in Settings. Opt in with COMPOSE_PROFILES=updater in .env.
   # It gets the Docker socket (root-equivalent on the host), so it only runs when asked for.

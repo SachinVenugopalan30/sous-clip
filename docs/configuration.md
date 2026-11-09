@@ -63,7 +63,7 @@ You can also change these at runtime from the **Settings** page in the UI.
 | `WHISPER_COMPUTE_TYPE` | `auto` | `auto`, `int8`, `float16`, `float32` |
 
 - **Model size:** Larger models are more accurate but slower and use more memory. `base` is a good starting point; `medium` or `large-v3` recommended if you have a GPU.
-- **Device:** `auto` detects a CUDA GPU and falls back to CPU if unavailable.
+- **Device:** `auto` uses a CUDA GPU only when one is visible and the CUDA libraries (cuBLAS, cuDNN) are present in the container; otherwise CPU.
 - **Compute type:** `int8` is fastest on CPU, `float16` is fastest on GPU.
 
 ## Authentication
@@ -141,7 +141,7 @@ OTEL_ENDPOINT=http://jaeger:4317
 
 ## GPU Support
 
-To enable NVIDIA GPU acceleration for Whisper, uncomment the GPU block in `docker-compose.yml`:
+The image runs on CPU out of the box. To enable NVIDIA GPU acceleration for Whisper, uncomment the GPU block on the `worker` service in `docker-compose.yml` (the worker does the transcribing):
 
 ```yaml
 deploy:
@@ -161,4 +161,4 @@ WHISPER_COMPUTE_TYPE=float16
 WHISPER_MODEL_SIZE=medium  # or large-v3
 ```
 
-Requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to be installed on the host.
+Requires the CUDA libraries (cuBLAS and cuDNN) to be available in the container, and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to be installed on the host.

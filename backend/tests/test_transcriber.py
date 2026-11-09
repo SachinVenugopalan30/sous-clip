@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock, patch
 
 from backend.services.transcriber import Transcriber
@@ -74,12 +75,16 @@ def test_transcribe_reports_each_segment(mock_model_class):
     assert result.text == segment1.text + blank.text + segment2.text
 
 
-@patch("ctranslate2.get_cuda_device_count")
-def test_auto_device_uses_gpu_when_ctranslate2_sees_one(mock_count):
+@pytest.mark.parametrize("gpus, libs, expected", [
+    (1, {"cublas": "libcublas.so", "cudnn": "libcudnn.so"}, "cuda"),
+    (1, {"cublas": "libcublas.so"}, "cpu"),  # the image ships no CUDA libs; CTranslate2 would fail at transcribe time
+    (1, {}, "cpu"),
+    (0, {"cublas": "libcublas.so", "cudnn": "libcudnn.so"}, "cpu"),
+])
+def test_auto_device_needs_a_gpu_and_cuda_libs(gpus, libs, expected):
     from backend.services.transcriber import _resolve_device
 
-    mock_count.return_value = 1
-    assert _resolve_device("auto") == "cuda"
-    mock_count.return_value = 0
-    assert _resolve_device("auto") == "cpu"
-    assert _resolve_device("cpu") == "cpu"
+    with patch("ctranslate2.get_cuda_device_count", return_value=gpus), \
+         patch("ctypes.util.find_library", side_effect=libs.get):
+        assert _resolve_device("auto") == expected
+    assert _resolve_device("cuda") == "cuda" and _resolve_device("cpu") == "cpu"
