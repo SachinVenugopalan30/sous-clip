@@ -1,6 +1,6 @@
 # Upgrading to 2.0
 
-Version 2.0 moves Postgres (used only by Temporal) to a new major version. Postgres cannot read the old data directory, so remove the Temporal volume before you upgrade.
+Version 2.0 is a redesigned UI (Night Service). It also moves Postgres (used only by Temporal) to a new major version, 18. Postgres cannot read the old data directory, so remove the Temporal volume before you upgrade.
 
 If you skip this, the new Postgres refuses to start (it detects the old data and exits with an error), so `temporal-db` keeps failing and Temporal and the app never come up. Removing the volume then re-running the steps fixes it.
 
@@ -38,3 +38,10 @@ Docker prefixes volume names with the Compose project name, which is the folder 
 Temporal now runs as `temporal` plus two one-shot setup services, `temporal-schema` and `temporal-namespace`. After startup, `docker compose ps -a` shows both setup services as `exited (0)`. That is expected.
 
 Valkey also moves to a new major version. It reads the existing `valkey-data` volume without any action from you.
+
+## API changes
+
+If you script against the API:
+
+- The unused `POST /api/queue` route has been removed. Use `POST /api/extract` to submit a link.
+- Recipe responses now include `queue_item_id` (always `null` on public share links).

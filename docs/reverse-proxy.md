@@ -24,7 +24,7 @@ In the Nginx Proxy Manager UI, click **Add Proxy Host** and fill in:
 | Scheme | `http` |
 | Forward Hostname / IP | `127.0.0.1` |
 | Forward Port | `3000` |
-| Websockets Support | **On** (required for live progress updates) |
+| Websockets Support | **On** (for live progress updates) |
 
 ### 3. SSL
 
@@ -114,6 +114,6 @@ Make sure the `app` service is on the same Docker network as Traefik.
 
 ## Important Notes
 
-- **Websockets/SSE:** Sous Clip uses Server-Sent Events for live extraction progress. Make sure your proxy does not buffer responses (`proxy_buffering off` in Nginx, automatic in Caddy/Traefik).
+- **SSE:** live extraction progress and captions use Server-Sent Events. Make sure your proxy does not buffer responses (`proxy_buffering off` in Nginx, automatic in Caddy/Traefik).
 - **Port binding:** The default `docker-compose.yml` binds to `127.0.0.1:3000`, which prevents direct external access. All traffic must go through the reverse proxy. If you need to expose the port directly (not recommended), change it to `"3000:3000"`.
-- **Internal services:** Temporal and Valkey are only exposed internally between containers (`expose` instead of `ports`). Do not open these to the internet.
+- **Internal services:** Temporal and Valkey are only reachable between containers (`expose`, not `ports`). Do not open them to the internet.
