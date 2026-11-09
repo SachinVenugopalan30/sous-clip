@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { BookOpen, ChefHat, LogOut, Moon, Plus, Settings, Star, Sun } from "lucide-react";
 import { useRecipes } from "../hooks/useRecipes";
@@ -36,7 +37,17 @@ function GitHubLink({ className }: { className: string }) {
   );
 }
 
+const onlineStore = (cb: () => void) => {
+  addEventListener("online", cb);
+  addEventListener("offline", cb);
+  return () => {
+    removeEventListener("online", cb);
+    removeEventListener("offline", cb);
+  };
+};
+
 export function Layout() {
+  const online = useSyncExternalStore(onlineStore, () => navigator.onLine);
   const logout = useAuthStore((s) => s.logout);
   const username = useAuthStore((s) => s.username);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
@@ -70,6 +81,12 @@ export function Layout() {
           </button>
         </div>
       </header>
+
+      {!online && (
+        <p role="status" className="offline mono">
+          Offline. Extracting and editing need the server, so they wait for the connection.
+        </p>
+      )}
 
       <main className={pathname === "/" || recipePage ? undefined : "page"}>
         <Outlet />

@@ -23,7 +23,7 @@ const URL_ERROR = "Enter a full address starting with http:// or https://";
 const badUrl = (v?: string) => (v && !/^https?:\/\/\S+$/i.test(v) ? URL_ERROR : undefined);
 
 function SettingsPage() {
-  const { data: settings, isLoading } = useSettings();
+  const { data: settings, isLoading, isError, refetch } = useSettings();
   const update = useUpdateSettings();
   // Unsaved changes layered over the server settings; cleared once a save has refetched them
   const [edits, setEdits] = useState<Record<string, string>>({});
@@ -62,6 +62,18 @@ function SettingsPage() {
         <h1 className="sr-only">Loading settings</h1>
         <div className="sk h-12 w-64" />
         <div className="sk h-64 w-full" />
+      </div>
+    );
+  }
+
+  // No stored values to edit over: showing the form would let Save overwrite them with blanks
+  if (isError && !settings) {
+    return (
+      <div className="none" role="alert">
+        <h1 className="sr-only">Settings</h1>
+        <h2>Can't reach <em>the kitchen</em></h2>
+        <p>The server isn't answering, so the house rules can't load. Check your connection, or that Sous Clip is running.</p>
+        <button type="button" onClick={() => refetch()} className="none-btn press">Try again</button>
       </div>
     );
   }

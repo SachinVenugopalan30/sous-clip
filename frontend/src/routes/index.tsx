@@ -8,7 +8,7 @@ import { useRecipes, useBulkDeleteRecipes, useDeleteRecipe } from "../hooks/useR
 import { useMealieConfigured, useUpdateStatus } from "../hooks/useSettings";
 import { api } from "../lib/api";
 import { copyShareLink, sendToMealie } from "../lib/recipeActions";
-import { applyLibraryFilters, buildShelves, CAP_NAME, formatAdded, FROM_LIBRARY, nameClicked, opened, photoName, recipeNo, splitTitle, totalMinutes, type LibraryFilters, type SortKey } from "../lib/library";
+import { applyLibraryFilters, buildShelves, CAP_NAME, claimNames, formatAdded, FROM_LIBRARY, nameClicked, opened, photoName, recipeNo, splitTitle, totalMinutes, type LibraryFilters, type SortKey } from "../lib/library";
 import type { Recipe } from "../lib/api";
 import { Input } from "../components/ui/input";
 
@@ -105,6 +105,16 @@ function useNewReleaseToast() {
 
 function HomePage() {
   useNewReleaseToast();
+  // Once the return transition has played, drop the opened recipe's names: left on, a later theme wipe gives that photo its own group above the search bar
+  useEffect(() => {
+    const id = opened.id;
+    const timer = setTimeout(() => {
+      if (opened.id !== id) return;
+      opened.id = 0;
+      claimNames(document, []);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -112,7 +122,7 @@ function HomePage() {
   const [filters, setFilters] = useState<LibraryFilters>(NO_FILTERS);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [bulkSendingToMealie, setBulkSendingToMealie] = useState(false);
-  const { data, isLoading } = useRecipes(debouncedSearch || undefined);
+  const { data, isLoading, isError, refetch } = useRecipes(debouncedSearch || undefined);
   const mealieConfigured = useMealieConfigured();
   const bulkDelete = useBulkDeleteRecipes();
   const singleDelete = useDeleteRecipe();
@@ -307,6 +317,14 @@ function HomePage() {
             ))}
           </div>
         </div>
+      ) : isError && !data ? (
+        <div className="lib-wrap">
+          <div className="none in" role="alert">
+            <h2>Can't reach <em>the kitchen</em></h2>
+            <p>The server isn't answering. Check your connection, or that Sous Clip is running.</p>
+            <button type="button" onClick={() => refetch()} className="none-btn press">Try again</button>
+          </div>
+        </div>
       ) : empty ? (
         <div className="lib-wrap">
           <div className="none in">
@@ -344,7 +362,7 @@ function HomePage() {
         ))
       ) : (
         <div className="lib-wrap">
-          {showAll && !collapsed && (
+          {showAll && !collapsed && filters.sort === "newest" && (
             <button type="button" onClick={() => setShowAll(false)} className="mono press mt-6 min-h-11 underline">
               Back to shelves
             </button>

@@ -29,7 +29,7 @@ function LoginPage() {
     try {
       const data = await api.auth.login(username, password);
       setAuth(data.token, data.username);
-      toast.success("Welcome!");
+      toast.success("Signed in");
       navigate({ to: "/" });
     } catch {
       setError("Invalid username or password");
