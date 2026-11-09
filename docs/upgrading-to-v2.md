@@ -4,7 +4,7 @@ Version 2.0 moves Postgres (used only by Temporal) to a new major version. Postg
 
 If you skip this, the new Postgres refuses to start (it detects the old data and exits with an error), so `temporal-db` keeps failing and Temporal and the app never come up. Removing the volume then re-running the steps fixes it.
 
-**Your recipes are not affected.** They live in SQLite in the `app-data` volume, which you keep. The only thing lost is extractions that are in progress when you upgrade, so let the queue finish first if you can.
+**Your recipes are not affected.** They live in SQLite in the `app-data` volume, which you keep. Extractions in progress when you upgrade restart from the beginning once the app is back up, so let the queue finish first if you can.
 
 - Do **not** remove `app-data`.
 - Do **not** run `docker compose down -v`. It deletes every volume, including `app-data`.
@@ -19,7 +19,7 @@ git pull
 
 If you edited `docker-compose.yml` (GPU, Podman), re-apply your edits after `git pull`. Podman users: substitute `podman` for `docker` in the commands below.
 
-Watchtower users: Watchtower updates the `app` and `worker` images but not `docker-compose.yml`, so an auto-updated install may be running 2.0 against the old Temporal, Postgres and Valkey until you follow these steps.
+**Watchtower users:** Watchtower, and the Update button in the app, replace the `app` and `worker` images but not `docker-compose.yml`. An install updated that way runs 2.0 against the old Temporal, Postgres and Valkey and may not work until you follow these steps.
 
 Then, from the same folder:
 

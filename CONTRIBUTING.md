@@ -8,7 +8,7 @@ Thanks for your interest in contributing!
 2. Clone your fork
 3. Create a branch: `git checkout -b feat/your-feature`
 4. Make your changes
-5. Run tests: `cd backend && uv run pytest tests/ -v`
+5. Run tests: `cd backend && uv run pytest tests/ -v`, then `cd frontend && bun test src && bun run lint`
 6. Commit and push
 7. Open a Pull Request
 
