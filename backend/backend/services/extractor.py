@@ -115,6 +115,7 @@ class RecipeExtractor:
         self.api_key = api_key
         self.model = model
         self.base_url = base_url
+        self.client_opts: dict = {}  # extra SDK client kwargs; the connection test sets a short timeout
         self.api_style = api_style  # custom endpoints: "openai" or "anthropic", found by detect_api_style
 
     def _build_prompt(self, transcript: str, caption: str = "") -> str:
@@ -150,7 +151,7 @@ class RecipeExtractor:
         raise ValueError(f"Unknown AI provider: {self.provider}")
 
     async def _call_anthropic(self, prompt: str, api_key: str, base_url: str | None = None, max_tokens: int = 2048) -> str:
-        client = anthropic.AsyncAnthropic(api_key=api_key, **({"base_url": base_url} if base_url else {}))
+        client = anthropic.AsyncAnthropic(api_key=api_key, **self.client_opts, **({"base_url": base_url} if base_url else {}))
         message = await client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
@@ -160,7 +161,7 @@ class RecipeExtractor:
         return message.content[0].text
 
     async def _call_openai(self, prompt: str, api_key: str, base_url: str | None = None, max_tokens: int = 2048) -> str:
-        client = openai.AsyncOpenAI(api_key=api_key, **({"base_url": base_url} if base_url else {}))
+        client = openai.AsyncOpenAI(api_key=api_key, **self.client_opts, **({"base_url": base_url} if base_url else {}))
         async def create(response_format: dict):
             return await client.chat.completions.create(
                 model=self.model,
@@ -213,7 +214,9 @@ async def detect_api_style(base_url: str, api_key: str, model: str) -> str:
     failures = []
     for style, label in (("openai", "OpenAI"), ("anthropic", "Anthropic")):
         try:
-            await RecipeExtractor("custom", api_key, model, base_url, style)._call("Reply with a short recipe titled Test.", max_tokens=16)
+            probe = RecipeExtractor("custom", api_key, model, base_url, style)
+            probe.client_opts = {"timeout": 60, "max_retries": 0}  # a hung endpoint shouldn't wait the SDK's 600s x retries per style
+            await probe._call("Reply with a short recipe titled Test.", max_tokens=16)
             return style
         except Exception as e:
             failures.append((label, explain(type(e).__name__, str(e))))

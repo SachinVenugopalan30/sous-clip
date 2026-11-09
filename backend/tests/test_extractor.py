@@ -323,3 +323,14 @@ def test_parse_response_skips_malformed_ingredients():
     raw = json.dumps({"title": "T", "ingredients": ["salt", {"name": 5}]})
     ings = RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(raw).ingredients
     assert [i.name for i in ings] == ["5"]
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.anthropic.AsyncAnthropic")
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_detect_probe_has_a_timeout_and_no_retries(mock_openai_class, mock_anthropic_class):
+    _openai_reply(mock_openai_class).side_effect = NotFoundError("404")
+    _anthropic_reply(mock_anthropic_class)
+    await detect_api_style("http://h", "", "m")
+    for cls in (mock_openai_class, mock_anthropic_class):
+        assert cls.call_args.kwargs["timeout"] == 60 and cls.call_args.kwargs["max_retries"] == 0
