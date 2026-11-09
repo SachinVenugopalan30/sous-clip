@@ -11,21 +11,7 @@ from temporalio.worker.workflow_sandbox import (
 )
 
 from backend.config import settings
-
-logger = logging.getLogger(__name__)
-
-
-def check_whisper_model():
-    models_dir = os.environ.get("WHISPER_MODELS_DIR", "./data/whisper-models")
-    model_path = os.path.join(models_dir, f"faster-whisper-{settings.whisper_model_size}")
-    if not os.path.isdir(model_path):
-        logger.error(
-            "Whisper model not found at %s. "
-            "Run 'python scripts/download-model.py %s' before starting the worker.",
-            model_path, settings.whisper_model_size,
-        )
-        sys.exit(1)
-    logger.info("Whisper model found: %s", model_path)
+from backend.services.transcriber import model_path
 from backend.workflows.extraction import (
     ExtractionWorkflow,
     download_activity,
@@ -35,6 +21,20 @@ from backend.workflows.extraction import (
     save_recipe_activity,
     transcribe_activity,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def check_whisper_model():
+    path = model_path(settings.whisper_model_size)
+    if not os.path.isdir(path):
+        logger.error(
+            "Whisper model not found at %s. "
+            "Run 'python scripts/download-model.py %s' before starting the worker.",
+            path, settings.whisper_model_size,
+        )
+        sys.exit(1)
+    logger.info("Whisper model found: %s", path)
 
 
 async def run_worker():

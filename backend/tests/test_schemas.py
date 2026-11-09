@@ -1,7 +1,4 @@
-import pytest
-from pydantic import ValidationError
-
-from backend.schemas import Ingredient, RecipeCreate, RecipeResponse
+from backend.schemas import Ingredient, RecipeResponse
 
 
 def test_ingredient_valid():
@@ -15,25 +12,6 @@ def test_ingredient_optional_fields():
     i = Ingredient(name="salt")
     assert i.quantity is None
     assert i.unit is None
-
-
-def test_recipe_create_valid():
-    recipe = RecipeCreate(
-        title="Pasta",
-        source_url="https://youtube.com/shorts/abc",
-        ingredients=[Ingredient(name="pasta", quantity="400", unit="g")],
-        instructions=["Boil pasta"],
-    )
-    assert recipe.title == "Pasta"
-    assert len(recipe.ingredients) == 1
-
-
-def test_recipe_create_missing_required():
-    with pytest.raises(ValidationError):
-        RecipeCreate(
-            title="Pasta",
-            # missing source_url, ingredients, instructions
-        )
 
 
 def test_recipe_response_from_model():

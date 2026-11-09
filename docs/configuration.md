@@ -21,7 +21,7 @@ These must be set before first run:
 
 | Variable | Default | Options |
 |---|---|---|
-| `AI_PROVIDER` | `anthropic` | `anthropic`, `openai`, `ollama` |
+| `AI_PROVIDER` | `anthropic` | `anthropic`, `openai`, `ollama`, `custom` (set up in Settings) |
 | `AI_MODEL` | `claude-sonnet-4-6` | Any model supported by your provider |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Your Anthropic API key |
 | `OPENAI_API_KEY` | _(empty)_ | Your OpenAI API key |
@@ -52,7 +52,9 @@ OLLAMA_BASE_URL=http://host.docker.internal:11434
 
 > When running Ollama on the host machine and Sous Clip in Docker, use `host.docker.internal` instead of `localhost` (`host.containers.internal` on Podman).
 
-You can also change these at runtime from the **Settings** page in the UI.
+**Custom endpoint** (LM Studio, vLLM, a proxy): choose it in **Settings**, enter the URL, an optional key and a model, then click **Test connection**. It tries the OpenAI and Anthropic APIs to see which the endpoint speaks, and gives up after 60 seconds. OpenAI-style endpoints are asked for JSON matching a schema, falling back to JSON mode if they reject it. Small local models can still get details wrong, so check their recipes.
+
+You can change the provider and model at runtime from **Settings**; values saved there override `.env`.
 
 ## Whisper Transcription
 
@@ -63,7 +65,7 @@ You can also change these at runtime from the **Settings** page in the UI.
 | `WHISPER_COMPUTE_TYPE` | `auto` | `auto`, `int8`, `float16`, `float32` |
 
 - **Model size:** Larger models are more accurate but slower and use more memory. `base` is a good starting point; `medium` or `large-v3` recommended if you have a GPU.
-- **Device:** `auto` detects a CUDA GPU and falls back to CPU if unavailable.
+- **Device:** `auto` uses a CUDA GPU only when one is visible and the CUDA libraries (cuBLAS, cuDNN) are present in the container; otherwise CPU.
 - **Compute type:** `int8` is fastest on CPU, `float16` is fastest on GPU.
 
 ## Authentication
@@ -104,20 +106,20 @@ The model directory is mounted read-only into the worker container. Make sure `W
 | Variable | Default | Description |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./data/recipes.db` | SQLite database path |
-| `MEDIA_DIR` | `./data/media` | Directory for downloaded audio files |
+| `MEDIA_DIR` | `./data/media` | Downloaded audio files |
 
-Both paths are inside the `app-data` Docker volume by default, so data persists across container restarts.
+Both live in the `app-data` Docker volume, so data survives restarts. (Postgres in the compose file is for Temporal only.)
 
 ## Infrastructure
 
-These are pre-configured for Docker Compose. Only change them if running services separately.
+Preset for Docker Compose. Change them only when running services yourself.
 
 | Variable | Default | Description |
 |---|---|---|
 | `VALKEY_URL` | `redis://valkey:6379/0` | Valkey (Redis) connection URL |
 | `TEMPORAL_HOST` | `temporal:7233` | Temporal server address |
 
-For local development (outside Docker):
+Outside Docker (the defaults):
 
 ```env
 VALKEY_URL=redis://localhost:6379/0
@@ -130,7 +132,7 @@ TEMPORAL_HOST=localhost:7233
 |---|---|---|
 | `OTEL_ENABLED` | `false` | Enable OpenTelemetry tracing |
 | `OTEL_ENDPOINT` | `http://localhost:4317` | OTLP gRPC collector endpoint |
-| `OTEL_SERVICE_NAME` | `Sous Clip` | Service name in traces |
+| `OTEL_SERVICE_NAME` | `sous-clip` | Service name in traces |
 
 To send traces to Jaeger or Grafana Tempo:
 
@@ -141,7 +143,7 @@ OTEL_ENDPOINT=http://jaeger:4317
 
 ## GPU Support
 
-To enable NVIDIA GPU acceleration for Whisper, uncomment the GPU block in `docker-compose.yml`:
+The image runs on CPU out of the box. To enable NVIDIA GPU acceleration for Whisper, uncomment the GPU block on the `worker` service in `docker-compose.yml` (the worker does the transcribing):
 
 ```yaml
 deploy:
@@ -161,4 +163,4 @@ WHISPER_COMPUTE_TYPE=float16
 WHISPER_MODEL_SIZE=medium  # or large-v3
 ```
 
-Requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to be installed on the host.
+Requires the CUDA libraries (cuBLAS and cuDNN) to be available in the container, and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to be installed on the host.

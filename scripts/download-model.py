@@ -1,13 +1,6 @@
-"""Download the Whisper model for offline use.
+"""Download the Whisper model for offline use. Run once before starting Docker Compose.
 
-Run this once before starting Docker Compose:
-
-    python scripts/download-model.py
-
-By default downloads the "base" model. Pass a different size as an argument:
-
-    python scripts/download-model.py medium
-    python scripts/download-model.py large-v3
+Usage: python scripts/download-model.py [size]   (default: base; e.g. medium, large-v3)
 """
 
 import os

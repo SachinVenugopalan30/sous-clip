@@ -2,12 +2,12 @@ import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   plugins: [
-    TanStackRouterVite(),
+    tanstackRouter(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -16,8 +16,8 @@ export default defineConfig({
         name: "Sous Clip",
         short_name: "Sous Clip",
         description: "Extract recipes from cooking videos",
-        theme_color: "#C2410C",
-        background_color: "#FDFAF5",
+        theme_color: "#1C1917",
+        background_color: "#1C1917",
         display: "standalone",
         start_url: "/",
         icons: [
@@ -42,6 +42,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Fonts: precache latin + latin-ext only; other scripts load on demand
+        globIgnores: ["**/*-{cyrillic,cyrillic-ext,greek,vietnamese}-*.woff2"],
         runtimeCaching: [
           {
             urlPattern: /^\/api\//,
@@ -57,7 +59,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   server: {

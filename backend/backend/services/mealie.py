@@ -10,11 +10,11 @@ class MealieClient:
         }
 
     async def forward_recipe(self, recipe_data: dict, source_url: str = "") -> str:
-        """Push a recipe to Mealie via two-step create + update. Returns the slug."""
+        """Create then update a recipe in Mealie. Returns the slug."""
         title = recipe_data.get("title", "Untitled Recipe")
 
         async with httpx.AsyncClient(timeout=30) as client:
-            # Step 1: Create recipe stub → returns slug
+            # Create a stub to get the slug
             create_resp = await client.post(
                 f"{self.base_url}/api/recipes",
                 json={"name": title},
@@ -23,7 +23,7 @@ class MealieClient:
             create_resp.raise_for_status()
             slug = create_resp.json()
 
-            # Step 2: GET the full recipe Mealie just created
+            # Fetch the full recipe Mealie created
             get_resp = await client.get(
                 f"{self.base_url}/api/recipes/{slug}",
                 headers=self.headers,
@@ -31,8 +31,7 @@ class MealieClient:
             get_resp.raise_for_status()
             full_recipe = get_resp.json()
 
-            # Step 3: Build a clean update payload from the fetched recipe
-            # Only carry over safe top-level fields to avoid 400/422/500 from Mealie
+            # Carry over only safe top-level fields; others make Mealie answer 400/422/500
             CARRY_OVER = {
                 "id", "slug", "userId", "groupId", "householdId",
                 "recipeCategory", "tags", "tools", "dateAdded", "dateUpdated",
@@ -43,16 +42,13 @@ class MealieClient:
             ingredients = recipe_data.get("ingredients", [])
             recipe_ingredient = []
             for ing in ingredients:
-                if isinstance(ing, dict):
-                    parts = []
-                    if ing.get("quantity"):
-                        parts.append(str(ing["quantity"]))
-                    if ing.get("unit"):
-                        parts.append(ing["unit"])
-                    parts.append(ing.get("name", ""))
-                    recipe_ingredient.append({"note": " ".join(parts)})
-                else:
-                    recipe_ingredient.append({"note": str(ing)})
+                parts = []
+                if ing.get("quantity"):
+                    parts.append(str(ing["quantity"]))
+                if ing.get("unit"):
+                    parts.append(ing["unit"])
+                parts.append(ing.get("name", ""))
+                recipe_ingredient.append({"note": " ".join(parts)})
 
             instructions = recipe_data.get("instructions", [])
             recipe_instructions = [{"text": step} for step in instructions]
@@ -68,7 +64,6 @@ class MealieClient:
             full_recipe["notes"] = [{"title": "Notes", "text": recipe_data["notes"]}] if recipe_data.get("notes") else []
             full_recipe["settings"] = full_recipe.get("settings", {})
 
-            # Step 4: PUT the complete updated recipe
             put_resp = await client.put(
                 f"{self.base_url}/api/recipes/{slug}",
                 json=full_recipe,
@@ -86,7 +81,7 @@ class MealieClient:
             return slug
 
     async def test_connection(self) -> dict:
-        """Test connectivity by hitting Mealie's /api/app/about endpoint."""
+        """Check Mealie is reachable (/api/app/about)."""
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 f"{self.base_url}/api/app/about",

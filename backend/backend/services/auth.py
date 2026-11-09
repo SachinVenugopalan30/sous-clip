@@ -1,7 +1,7 @@
 import hmac
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
+import jwt
 
 from backend.config import Settings, settings
 
@@ -23,6 +23,11 @@ def create_token(username: str) -> str:
 
 def decode_token(token: str) -> dict | None:
     try:
-        return jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-    except JWTError:
+        return jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+            options={"require": ["exp", "username"]},
+        )
+    except jwt.PyJWTError:
         return None

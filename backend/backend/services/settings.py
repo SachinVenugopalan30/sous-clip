@@ -20,7 +20,8 @@ DEFAULTS = {
     "update_check": "true",  # hourly GitHub check (releases, stars); "false" turns it off
 }
 
-# Keys that should never be returned to the frontend in plain text
+# Never returned to the frontend in plain text
+MASK = "••••••"
 SENSITIVE_KEYS = {"anthropic_api_key", "openai_api_key", "mealie_api_key", "custom_api_key"}
 
 
@@ -36,7 +37,7 @@ class SettingsService:
         if mask_sensitive:
             for key in SENSITIVE_KEYS:
                 if result.get(key):
-                    result[key] = "••••••" + result[key][-4:] if len(result[key]) > 4 else "••••••"
+                    result[key] = MASK + result[key][-4:] if len(result[key]) > 4 else MASK
         return result
 
     def get(self, key: str, default: str | None = None) -> str | None:
@@ -44,15 +45,6 @@ class SettingsService:
         if setting:
             return setting.value
         return DEFAULTS.get(key, default)
-
-    def update(self, key: str, value: str) -> None:
-        setting = self.session.get(AppSetting, key)
-        if setting:
-            setting.value = value
-        else:
-            setting = AppSetting(key=key, value=value)
-            self.session.add(setting)
-        self.session.commit()
 
     def update_many(self, updates: dict[str, str]) -> None:
         for key, value in updates.items():

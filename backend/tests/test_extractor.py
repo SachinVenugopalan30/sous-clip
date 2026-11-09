@@ -1,10 +1,12 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
+import openai
 import pytest
 
 from backend.schemas import Ingredient
-from backend.services.extractor import SYSTEM_PROMPT, RecipeExtractor, ExtractionResult, _untrusted, detect_api_style
+from backend.services.extractor import RECIPE_SCHEMA, SYSTEM_PROMPT, RecipeExtractor, ExtractionResult, _untrusted, detect_api_style
 
 
 def test_extraction_result():
@@ -136,13 +138,56 @@ def test_parse_response_drops_nameless_ingredients():
 @pytest.mark.asyncio
 @pytest.mark.parametrize("provider", ["openai", "ollama"])
 @patch("backend.services.extractor.openai.AsyncOpenAI")
-async def test_openai_compatible_calls_use_json_mode(mock_openai_class, provider):
-    # Measured on LFM2.5 via oMLX: plain 1/3 valid JSON (~45s), JSON mode 3/3 (~13s)
+async def test_openai_compatible_calls_use_json_schema(mock_openai_class, provider):
+    # json_object let LFM3 reply "[1, 2, 3]"; a schema forces the recipe shape
     create = mock_openai_class.return_value.chat.completions.create = AsyncMock(
         return_value=MagicMock(choices=[MagicMock(message=MagicMock(content=MOCK_AI_RESPONSE))])
     )
     await RecipeExtractor(provider=provider, api_key="k", model="m").extract("pasta")
-    assert create.call_args.kwargs["response_format"] == {"type": "json_object"}
+    assert create.call_args.kwargs["response_format"] == {
+        "type": "json_schema",
+        "json_schema": {"name": "recipe", "strict": True, "schema": RECIPE_SCHEMA},
+    }
+
+
+def _api_error(cls, status):
+    req = httpx.Request("POST", "http://h/v1/chat/completions")
+    return cls("nope", response=httpx.Response(status, request=req), body=None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cls,status", [(openai.BadRequestError, 400), (openai.UnprocessableEntityError, 422)])
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_openai_falls_back_to_json_object_when_schema_rejected(mock_openai_class, cls, status):
+    ok = MagicMock(choices=[MagicMock(message=MagicMock(content=MOCK_AI_RESPONSE))])
+    create = mock_openai_class.return_value.chat.completions.create = AsyncMock(side_effect=[_api_error(cls, status), ok])
+    assert (await RecipeExtractor(provider="openai", api_key="k", model="m").extract("pasta")).title == "Garlic Butter Pasta"
+    assert [c.kwargs["response_format"]["type"] for c in create.call_args_list] == ["json_schema", "json_object"]
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_openai_does_not_retry_other_errors(mock_openai_class):
+    create = mock_openai_class.return_value.chat.completions.create = AsyncMock(
+        side_effect=_api_error(openai.AuthenticationError, 401))
+    with pytest.raises(openai.AuthenticationError):
+        await RecipeExtractor(provider="openai", api_key="k", model="m").extract("pasta")
+    assert create.call_count == 1
+
+
+def test_parse_response_coerces_numeric_quantity_and_unit():
+    raw = json.dumps({"title": "T", "instructions": [], "ingredients": [
+        {"name": "egg", "quantity": 1, "unit": None},
+        {"name": "milk", "quantity": 0.5, "unit": "cup"},
+        {"name": "salt"},
+    ]})
+    ings = RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(raw).ingredients
+    assert [(i.quantity, i.unit) for i in ings] == [("1", None), ("0.5", "cup"), (None, None)]
+
+
+def test_parse_response_none_content_is_json_error():
+    with pytest.raises(json.JSONDecodeError):
+        RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(None)
 
 
 def _openai_reply(mock_openai_class):
@@ -185,9 +230,10 @@ class NotFoundError(Exception):  # same class name as the SDKs' 404 error, which
 @patch("backend.services.extractor.anthropic.AsyncAnthropic")
 @patch("backend.services.extractor.openai.AsyncOpenAI")
 async def test_detect_prefers_openai_then_falls_back_to_anthropic(mock_openai_class, mock_anthropic_class):
-    _openai_reply(mock_openai_class)
+    create = _openai_reply(mock_openai_class)
     _anthropic_reply(mock_anthropic_class)
     assert await detect_api_style("http://h", "", "m") == "openai"
+    assert create.call_args.kwargs["max_tokens"] == 16  # the probe's reply is never parsed
 
     mock_openai_class.return_value.chat.completions.create.side_effect = NotFoundError("404")
     assert await detect_api_style("http://h", "", "m") == "anthropic"
@@ -271,3 +317,20 @@ async def test_title_and_notes_supported_by_the_speech_are_kept():
 async def test_without_a_caption_nothing_is_rewritten():
     result = await _extractor_replying("Something New", "a note").extract("boil the pasta", "", "Video title")
     assert (result.title, result.notes) == ("Something New", "a note")
+
+
+def test_parse_response_skips_malformed_ingredients():
+    raw = json.dumps({"title": "T", "ingredients": ["salt", {"name": 5}]})
+    ings = RecipeExtractor(provider="openai", api_key="k", model="m")._parse_response(raw).ingredients
+    assert [i.name for i in ings] == ["5"]
+
+
+@pytest.mark.asyncio
+@patch("backend.services.extractor.anthropic.AsyncAnthropic")
+@patch("backend.services.extractor.openai.AsyncOpenAI")
+async def test_detect_probe_has_a_timeout_and_no_retries(mock_openai_class, mock_anthropic_class):
+    _openai_reply(mock_openai_class).side_effect = NotFoundError("404")
+    _anthropic_reply(mock_anthropic_class)
+    await detect_api_style("http://h", "", "m")
+    for cls in (mock_openai_class, mock_anthropic_class):
+        assert cls.call_args.kwargs["timeout"] == 60 and cls.call_args.kwargs["max_retries"] == 0

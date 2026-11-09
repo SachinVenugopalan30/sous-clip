@@ -1,98 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 
-/**
- * A timer that only counts down while the page is visible.
- * Returns a set of active item IDs and a function to start a timer for an item.
- * When the timer completes, `onExpire` is called.
- */
-export function useVisibilityTimer(
-  durationMs: number,
-  onExpire: (id: string) => void
-) {
-  const [activeIds, setActiveIds] = useState<Set<string>>(new Set());
-  const timersRef = useRef<Map<string, { remaining: number; startedAt: number }>>(
-    new Map()
-  );
-  const rafRef = useRef<number | null>(null);
-  const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
+const TICK_MS = 250;
 
-  const tick = useCallback(() => {
-    if (document.visibilityState === "hidden") {
-      rafRef.current = requestAnimationFrame(tick);
-      return;
-    }
+/** Subtract `dt` from every timer in place; delete and return the ids that ran out. */
+export function advanceTimers(timers: Map<string, number>, dt: number): string[] {
+  const expired: string[] = [];
+  for (const [id, remaining] of timers) {
+    if (remaining - dt <= 0) expired.push(id);
+    else timers.set(id, remaining - dt);
+  }
+  expired.forEach((id) => timers.delete(id));
+  return expired;
+}
 
-    const now = Date.now();
-    const expired: string[] = [];
+/** Gives each started id `durationMs` of visible page time (hidden tabs don't count), then drops it from `completingIds` and calls `onExpire(id)`. */
+export function useVisibilityTimer(durationMs: number, onExpire: (id: string) => void) {
+  const timers = useRef(new Map<string, number>());
+  const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
+  const expire = useEffectEvent(onExpire);
 
-    timersRef.current.forEach((timer, id) => {
-      const elapsed = now - timer.startedAt;
-      timer.remaining -= elapsed;
-      timer.startedAt = now;
-
-      if (timer.remaining <= 0) {
-        expired.push(id);
-      }
-    });
-
-    if (expired.length > 0) {
-      expired.forEach((id) => {
-        timersRef.current.delete(id);
-        onExpireRef.current(id);
-      });
-      setActiveIds(new Set(timersRef.current.keys()));
-    }
-
-    if (timersRef.current.size > 0) {
-      rafRef.current = requestAnimationFrame(tick);
-    } else {
-      rafRef.current = null;
-    }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      const expired = advanceTimers(timers.current, TICK_MS);
+      if (expired.length === 0) return;
+      setCompletingIds(new Set(timers.current.keys()));
+      expired.forEach((id) => expire(id));
+    }, TICK_MS);
+    return () => clearInterval(interval);
   }, []);
 
-  // Pause/resume: when page becomes hidden, snapshot remaining time.
-  // When visible again, reset startedAt so elapsed doesn't include hidden time.
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        const now = Date.now();
-        timersRef.current.forEach((timer) => {
-          timer.startedAt = now;
-        });
-        if (timersRef.current.size > 0 && rafRef.current === null) {
-          rafRef.current = requestAnimationFrame(tick);
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibility);
-  }, [tick]);
-
-  const start = useCallback(
+  const startTimer = useCallback(
     (id: string) => {
-      timersRef.current.set(id, {
-        remaining: durationMs,
-        startedAt: Date.now(),
-      });
-      setActiveIds(new Set(timersRef.current.keys()));
-
-      if (rafRef.current === null) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
+      timers.current.set(id, durationMs);
+      setCompletingIds(new Set(timers.current.keys()));
     },
-    [durationMs, tick]
+    [durationMs]
   );
 
-  useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, []);
-
-  return { completingIds: activeIds, startTimer: start };
+  return { completingIds, startTimer };
 }

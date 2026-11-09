@@ -43,3 +43,26 @@ def test_progress_endpoint_exists(mock_aioredis, client, auth_token):
     with client.stream("GET", f"/api/progress/user-1?token={auth_token}") as response:
         assert response.status_code == 200
         assert "text/event-stream" in response.headers.get("content-type", "")
+
+
+async def test_generator_emits_progress_event_and_cleans_up():
+    from backend.routes.progress import _progress_generator
+
+    msg = {"type": "message", "data": b'{"item_id": "q-1", "step": "download", "status": "running"}'}
+    mock_pubsub = AsyncMock()
+    mock_pubsub.get_message = AsyncMock(return_value=msg)
+    mock_client = MagicMock()
+    mock_client.pubsub.return_value = mock_pubsub
+    mock_client.aclose = AsyncMock()
+
+    with patch("backend.routes.progress.aioredis") as mock_aioredis:
+        mock_aioredis.from_url.return_value = mock_client
+        gen = _progress_generator("user-1")
+        event = await anext(gen)
+        await gen.aclose()  # what sse-starlette does on client disconnect
+
+    assert event["event"] == "progress"
+    assert '"item_id": "q-1"' in event["data"]
+    mock_pubsub.subscribe.assert_awaited_once_with("progress:user-1")
+    mock_pubsub.unsubscribe.assert_awaited_once_with("progress:user-1")
+    mock_client.aclose.assert_awaited_once()

@@ -5,7 +5,8 @@ from sqlmodel import Session
 from backend.database import get_session
 from backend.dependencies import CurrentUser, get_current_user
 from backend.services.extractor import detect_api_style
-from backend.services.settings import SettingsService
+from backend.services.mealie import MealieClient
+from backend.services.settings import MASK, SENSITIVE_KEYS, SettingsService
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -25,12 +26,10 @@ def update_settings(
     session: Session = Depends(get_session),
     user: CurrentUser = Depends(get_current_user),
 ):
-    from backend.services.settings import SENSITIVE_KEYS
-
-    # Don't overwrite real secrets with masked placeholder values
+    # Keep real secrets when the client sends back masked placeholders
     filtered = {
         k: v for k, v in updates.items()
-        if k not in SENSITIVE_KEYS or not v.startswith("••••••")
+        if k not in SENSITIVE_KEYS or not v.startswith(MASK)
     }
     svc = SettingsService(session)
     svc.update_many(filtered)
@@ -47,8 +46,6 @@ async def test_mealie_connection(
     request: TestMealieRequest,
     _user: CurrentUser = Depends(get_current_user),
 ):
-    from backend.services.mealie import MealieClient
-
     try:
         client = MealieClient(request.mealie_url, request.mealie_api_key)
         result = await client.test_connection()
@@ -70,7 +67,7 @@ async def test_ai_endpoint(
     _user: CurrentUser = Depends(get_current_user),
 ):
     api_key = request.api_key
-    if api_key.startswith("••••••"):  # field left as the masked stored key
+    if api_key.startswith(MASK):  # field left as the masked stored key
         api_key = SettingsService(session).get("custom_api_key") or ""
     try:
         return {"ok": True, "style": await detect_api_style(request.base_url, api_key, request.model)}

@@ -1,0 +1,47 @@
+# Upgrading to 2.0
+
+Version 2.0 is a redesigned UI (Night Service). It also moves Postgres (used only by Temporal) to a new major version, 18. Postgres cannot read the old data directory, so remove the Temporal volume before you upgrade.
+
+If you skip this, the new Postgres refuses to start (it detects the old data and exits with an error), so `temporal-db` keeps failing and Temporal and the app never come up. Removing the volume then re-running the steps fixes it.
+
+**Your recipes are not affected.** They live in SQLite in the `app-data` volume, which you keep. Extractions in progress when you upgrade restart from the beginning once the app is back up, so let the queue finish first if you can.
+
+- Do **not** remove `app-data`.
+- Do **not** run `docker compose down -v`. It deletes every volume, including `app-data`.
+
+## Steps
+
+Compose files are not updated by `docker compose pull` or Watchtower, so fetch the new `docker-compose.yml` first:
+
+```bash
+git pull
+```
+
+If you edited `docker-compose.yml` (GPU, Podman), re-apply your edits after `git pull`. Podman users: substitute `podman` for `docker` in the commands below.
+
+**Watchtower users:** Watchtower, and the Update button in the app, replace the `app` and `worker` images but not `docker-compose.yml`. An install updated that way runs 2.0 against the old Temporal, Postgres and Valkey and may not work until you follow these steps.
+
+Then, from the same folder:
+
+```bash
+docker compose down
+docker volume ls -f label=com.docker.compose.volume=temporal-data
+docker volume rm <project>_temporal-data
+docker compose pull
+docker compose up -d
+```
+
+Docker prefixes volume names with the Compose project name, which is the folder name by default (or whatever `COMPOSE_PROJECT_NAME` / `-p` is set to). For a checkout in `sous-clip/`, the volume is `sous-clip_temporal-data`. Use the name that `docker volume ls` prints. Remove only the `temporal-data` one.
+
+## What you will see
+
+Temporal now runs as `temporal` plus two one-shot setup services, `temporal-schema` and `temporal-namespace`. After startup, `docker compose ps -a` shows both setup services as `exited (0)`. That is expected.
+
+Valkey also moves to a new major version. It reads the existing `valkey-data` volume without any action from you.
+
+## API changes
+
+If you script against the API:
+
+- The unused `POST /api/queue` route has been removed. Use `POST /api/extract` to submit a link.
+- Recipe responses now include `queue_item_id` (always `null` on public share links).

@@ -1,13 +1,12 @@
 # PWA Installation
 
-Sous Clip is a Progressive Web App. Installing it gives you a native app experience with offline support and — most importantly — the ability to share videos directly from your phone's share sheet.
+Sous Clip is a Progressive Web App. Installing it gives you an app icon and, most usefully, the ability to share videos to Sous Clip from your phone's share sheet.
 
 ## Why Install as a PWA?
 
-- **Share sheet integration** — Share a video from YouTube, Instagram, or TikTok directly to Sous Clip, just like sharing to any other app
-- **Home screen icon** — Launch Sous Clip like a native app
-- **Fullscreen experience** — No browser chrome, runs in standalone mode
-- **Works offline** — The UI loads from cache even without a connection (extraction still requires network)
+- **Share sheet**: send a video from YouTube, Instagram or TikTok straight to Sous Clip
+- **Home screen icon** and a fullscreen window with no browser chrome
+- **Offline shell**: the app shell and assets load without a connection and an offline banner shows. Extracting and editing need the server, so they wait until you are back online.
 
 ## Installation
 
@@ -43,9 +42,7 @@ Once installed, you can share cooking videos directly to Sous Clip:
 1. Open a cooking video in YouTube, Instagram, TikTok, or any app
 2. Tap the **Share** button
 3. Select **Sous Clip** from the share sheet
-4. The app opens and automatically starts extracting the recipe
-
-This is the fastest way to save recipes — no need to copy/paste URLs.
+4. The app opens and starts extracting the recipe
 
 ### Supported Platforms
 
@@ -60,25 +57,19 @@ This is the fastest way to save recipes — no need to copy/paste URLs.
 
 ### "Add to Home Screen" not appearing
 
-- Make sure you're using **HTTPS** (required for PWA)
-- Make sure you're using **Safari on iOS** or **Chrome on Android** (other browsers may not support PWA installation)
-- Try refreshing the page and waiting a few seconds
+- Use **HTTPS** (required)
+- Use **Safari on iOS** or **Chrome on Android**; other browsers may not support installing
+- Refresh and wait a few seconds
 
 ### Share sheet doesn't show Sous Clip
 
-- The share target only works after the PWA is installed to the home screen
-- On iOS, share target support may be limited depending on the iOS version
-- Try uninstalling and reinstalling the PWA
+- The share target only works once the PWA is installed
+- iOS support for share targets is limited; paste the link instead
+- Try reinstalling the PWA
 
 ### App shows stale content
 
-The PWA uses a service worker that caches assets. After an update:
-
-1. Open the app
-2. Wait a few seconds while the service worker updates in the background
-3. Close and reopen the app to see the new version
-
-If that doesn't work, you can clear the cache:
+A service worker caches the app. After an update, open the app, wait a few seconds, then close and reopen it. If that fails, clear the cache:
 - **iOS:** Delete the app from home screen, reinstall from Safari
 - **Android:** App Info > Storage > Clear Cache
 - **Desktop:** Chrome DevTools > Application > Service Workers > Unregister

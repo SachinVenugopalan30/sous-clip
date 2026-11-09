@@ -9,9 +9,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-compose-blue)](docker-compose.yml)
 
-Let's face it. Most of us now just watch short form videos. You're scrolling. A certain someone's making a garlic butter pasta that looks incredible. They rattle off the ingredients, the technique, the timing. You juggle between noting things down and watching the video again. By the time you've paused the video, you've already lost half of it.
+You see a great recipe in a short video. They rattle off ingredients and timings, and you end up pausing and rewatching to write it down. Most recipe apps save it on their server, behind their paywall. **Sous Clip** is a self-hosted, privacy-first recipe extractor for the short-form video era: paste a link, get a clean recipe, keep it on your own server.
 
-Every recipe app out there will happily save it for you, on their server, behind their paywall, until they shut down. **Sous Clip** is the only self-hostable, privacy-first recipe extractor built for the short-form video era. The idea is you own the content you save. I know that sounds like the opposite of what I'm talking about, given we still rely on third party LLM providers for the AI stuff, but there is an option to run it through locally hosted systems as well! I plan to add support for other LLM providers in the future, and I'm open to suggestions!
+Transcription runs locally. For the recipe step you choose the AI: Claude, OpenAI, or a model running on your own hardware.
 
 <p align="center">
   <img src="docs/screenshots/library.png" width="100%" alt="Recipe library" />
@@ -24,13 +24,13 @@ Every recipe app out there will happily save it for you, on their server, behind
 
 ## Features
 
-- **Any short-form video** — YouTube Shorts, Instagram Reels, TikTok via yt-dlp (could support long form, haven't tested it yet)
-- **Local transcription** — Whisper runs on your server (GPU or CPU, auto-detected)
-- **Your AI, your key** — Claude, OpenAI, or local Ollama (more coming soon!)
-- **Mobile share sheet** — Install as PWA, share directly from any app
-- **Personal recipe library** — Search, tag, browse all your saved recipes
-- **Mealie integration** — Optionally forward recipes to your [Mealie](https://mealie.io/) instance
-- **Self-hosted forever** — SQLite database, your data never leaves your server
+- **Any short-form video**: YouTube Shorts, Instagram Reels and TikTok via yt-dlp (long-form is untested)
+- **Local transcription**: Whisper runs on your server (GPU or CPU, auto-detected), with live captions while it transcribes
+- **Your AI, your key**: Claude, OpenAI, Ollama, or any OpenAI- or Anthropic-compatible endpoint
+- **Recipe library**: search, filter by time and tag, scale servings, edit, share a public link, export `.md` or `.txt`
+- **Mobile share sheet**: install as a PWA and share links straight from other apps (Android; on iOS paste the link)
+- **Mealie**: optionally forward recipes to your [Mealie](https://mealie.io/) instance
+- **Yours**: recipes live in one SQLite file on your server
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ Every recipe app out there will happily save it for you, on their server, behind
 git clone https://github.com/SachinVenugopalan30/sous-clip.git
 cd sous-clip
 cp .env.example .env
-# Edit .env — set APP_PASSWORD, JWT_SECRET, and your AI API key
+# Edit .env: set APP_PASSWORD, JWT_SECRET and your AI key
 
 # Download the Whisper model (one-time setup)
 python scripts/download-model.py
@@ -52,7 +52,7 @@ Open **http://localhost:3000**
 
 > **Whisper model download notes:**
 >
-> The script requires Python 3 and creates a temporary venv to install `huggingface_hub`. If it fails, make sure `python3-venv` is installed:
+> The script needs Python 3 and makes a temporary venv to install `huggingface_hub`. If it fails, install `python3-venv`:
 >
 > ```bash
 > # Debian/Ubuntu — required if you see "No module named pip" or "externally-managed-environment"
@@ -65,47 +65,45 @@ Open **http://localhost:3000**
 
 ## AI Providers
 
-| Provider | Model | Notes | Requires Key? |
-|---|---|---|---|
-| Anthropic | claude-sonnet-4-6 | Excellent structured output | Yes |
-| OpenAI | gpt-4o | Fast, reliable | Yes |
-| Ollama | any local model | Fully offline | No |
+| Provider | Default model | Key |
+|---|---|---|
+| Anthropic | claude-sonnet-4-6 | Yes |
+| OpenAI | gpt-4o | Yes |
+| Ollama | any local model | No |
+| Custom endpoint | any | Optional |
 
-Set your provider in `.env` or in the Settings UI.
+Set the provider in `.env` or under **Settings**. A custom endpoint can be anything OpenAI- or Anthropic-compatible (LM Studio, vLLM, a proxy); **Test connection** detects which. OpenAI-style endpoints are asked for JSON matching a schema, falling back to plain JSON mode. Small local models can still get details wrong, so check their recipes.
 
 ## Architecture
 
 ```
-URL → yt-dlp → faster-whisper → AI (Claude/GPT/Ollama) → SQLite
-         ↑                                                    ↑
-    Temporal Workflow orchestrates each step              Your data
+URL -> yt-dlp -> faster-whisper -> AI -> SQLite
+        Temporal workflow runs each step
 ```
 
-- **Backend:** Python + FastAPI
-- **Frontend:** React + Vite + TanStack Router + shadcn/ui
-- **Queue:** Temporal + Valkey
-- **Database:** SQLite (single file, zero config)
+- **Backend:** Python 3.14, FastAPI, uv
+- **Frontend:** React 19, Vite 8, TypeScript 7, TanStack Router, Tailwind 4, Bun
+- **Queue:** Temporal 1.32 (on Postgres 18) and Valkey 9
+- **Database:** SQLite, one file, no setup
 - **Observability:** OpenTelemetry (opt-in)
 
-## Mealie Integration (Optional)
+## Mealie (optional)
 
-If you use [Mealie](https://mealie.io/) as your recipe manager, Sous Clip can automatically forward extracted recipes to it.
+1. In Mealie, open **User Profile -> API Tokens** and create a token.
+2. In Sous Clip, open **Settings -> Mealie**, enter the URL and token, and click **Test connection**.
+3. Turn on **Also send to Mealie** when extracting, or send a saved recipe from its page.
 
-1. In Mealie, go to **User Profile → API Tokens** and generate a long-lived token
-2. In Sous Clip, go to **Settings → Mealie Integration**
-3. Enter your Mealie URL (e.g. `https://mealie.example.com`) and the API token
-4. Click **Test Connection** to verify
-5. When extracting a recipe, check **"Also send to Mealie"** to forward it
-
-If Mealie is not configured, no Mealie UI elements are shown. If forwarding fails (Mealie down, bad token, etc.), the recipe is still saved in Sous Clip — the error is shown in the queue progress but does not block the extraction.
+If forwarding fails the recipe is still saved, and the error shows in the queue.
 
 ## Updating
+
+Upgrading from 1.x? Read [Upgrading to 2.0](docs/upgrading-to-v2.md) first; it needs one extra step.
 
 ```bash
 docker compose pull && docker compose up -d
 ```
 
-Sous Clip checks GitHub once an hour and shows a notice when a new release is out (turn it off in **Settings → Updates**). The `:latest` image is also rebuilt weekly so yt-dlp stays current.
+Sous Clip checks GitHub once an hour and shows a notice when a release is out (turn it off in **Settings -> Updates**). The `:latest` image is also rebuilt weekly so yt-dlp stays current.
 
 **Update from the app (optional):** add these to `.env`, then `docker compose up -d`:
 
@@ -114,7 +112,7 @@ WATCHTOWER_HTTP_API_TOKEN=<any random string>
 COMPOSE_PROFILES=updater
 ```
 
-This starts a [Watchtower](https://github.com/nicholas-fedor/watchtower) container, and **Settings → Updates** gets an **Update** button that pulls the new image and restarts the app. Watchtower needs the Docker socket, which is root-equivalent on the host, so it only runs when you opt in, and it only touches the `app` and `worker` containers. Podman users also set `DOCKER_SOCKET=/run/user/$UID/podman/podman.sock` (best-effort).
+This starts a [Watchtower](https://github.com/nicholas-fedor/watchtower) container, and **Settings -> Updates** gets an **Update** button that pulls the new image and restarts the app. Watchtower needs the Docker socket, which is root-equivalent on the host, so it only runs when you opt in, and it only touches the `app` and `worker` containers. Podman users also set `DOCKER_SOCKET=/run/user/$UID/podman/podman.sock` (best-effort).
 
 ## Podman
 
@@ -127,34 +125,14 @@ podman compose up -d   # needs podman-compose >= 1.1, or docker-compose as the p
 - **GPU:** set up the NVIDIA CDI spec (`sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`), then use `devices: [nvidia.com/gpu=all]` on the `worker` service instead of the `deploy:` block.
 - **Ollama on the host:** use `http://host.containers.internal:11434` as the Ollama URL.
 
-## GPU Support
+## GPU
 
-The same Docker image works for CPU and GPU. For GPU acceleration:
-
-```yaml
-# Uncomment in docker-compose.yml:
-deploy:
-  resources:
-    reservations:
-      devices:
-        - driver: nvidia
-          count: all
-          capabilities: [gpu]
-```
-
-Whisper configuration in `.env`:
-
-```env
-WHISPER_MODEL_SIZE=base    # tiny, base, small, medium, large-v3
-WHISPER_DEVICE=auto        # auto, cpu, cuda
-WHISPER_COMPUTE_TYPE=auto  # auto, int8, float16, float32
-```
-
-You can also update these settings in the UI under Settings → Whisper Transcription.
+The image runs on CPU. For NVIDIA GPU, uncomment the `deploy:` block on the `worker` service in `docker-compose.yml`. The container also needs the CUDA libraries (cuBLAS and cuDNN); `WHISPER_DEVICE=auto` only picks the GPU when it finds them, otherwise CPU. See [Configuration](docs/configuration.md#whisper-transcription).
 
 ## Documentation
 
 - [Configuration Guide](docs/configuration.md)
+- [Upgrading to 2.0](docs/upgrading-to-v2.md)
 - [Reverse Proxy Setup](docs/reverse-proxy.md)
 - [PWA Installation](docs/pwa.md)
 - [Contributing](CONTRIBUTING.md)

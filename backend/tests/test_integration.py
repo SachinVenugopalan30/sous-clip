@@ -1,7 +1,4 @@
-"""
-End-to-end integration test that verifies the queue-based extraction flow
-with mocked external services.
-"""
+"""End-to-end queue extraction flow with mocked external services."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -60,18 +57,16 @@ def mock_queue():
 
 @patch("backend.routes.queue.Client")
 def test_extract_then_list_recipes(mock_client_cls, client, mock_queue, test_db, auth_headers):
-    # Mock Temporal client
     mock_client = AsyncMock()
     mock_client_cls.connect = AsyncMock(return_value=mock_client)
     mock_client.start_workflow = AsyncMock()
 
-    # 1. Submit extraction - now returns queue item, not recipe
     resp = client.post("/api/extract", json={"url": "https://youtube.com/shorts/test"}, headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["queue_item"]["id"] == "q-int-123"
     assert resp.json()["message"] == "Extraction queued and processing started"
 
-    # 2. Manually seed a recipe (since workflow runs async via Temporal)
+    # Seed a recipe directly; the workflow runs async via Temporal
     with Session(test_db) as session:
         recipe = Recipe(
             title="Integration Pasta",
@@ -84,21 +79,17 @@ def test_extract_then_list_recipes(mock_client_cls, client, mock_queue, test_db,
         session.refresh(recipe)
         recipe_id = recipe.id
 
-    # 3. List recipes
     resp = client.get("/api/recipes", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["total"] == 1
 
-    # 4. Get by ID
     resp = client.get(f"/api/recipes/{recipe_id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["title"] == "Integration Pasta"
 
-    # 5. Search
     resp = client.get("/api/recipes?search=pasta", headers=auth_headers)
     assert resp.json()["total"] == 1
 
-    # 6. Delete
     resp = client.delete(f"/api/recipes/{recipe_id}", headers=auth_headers)
     assert resp.status_code == 204
 

@@ -32,8 +32,16 @@ def _recipe_to_response(recipe: Recipe) -> RecipeResponse:
         notes=recipe.notes,
         share_token=recipe.share_token,
         thumbnail_url=f"/thumbnails/{recipe.thumbnail}" if recipe.thumbnail else None,
+        queue_item_id=recipe.queue_item_id,
         created_at=recipe.created_at.isoformat(),
     )
+
+
+def _get_or_404(session: Session, recipe_id: int) -> Recipe:
+    recipe = session.get(Recipe, recipe_id)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return recipe
 
 
 def _delete_recipe(session: Session, recipe: Recipe) -> None:
@@ -64,9 +72,7 @@ def list_recipes(
 
 @router.get("/{recipe_id}", response_model=RecipeResponse)
 def get_recipe(recipe_id: int, session: Session = Depends(get_session), _user: CurrentUser = Depends(get_current_user)):
-    recipe = session.get(Recipe, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe = _get_or_404(session, recipe_id)
     return _recipe_to_response(recipe)
 
 
@@ -80,9 +86,7 @@ def update_recipe(
     changes = body.model_dump(exclude_unset=True)
     if not changes:
         raise HTTPException(status_code=400, detail="No fields to update")
-    recipe = session.get(Recipe, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe = _get_or_404(session, recipe_id)
     for key, value in changes.items():
         if key in ("ingredients", "instructions", "tags"):
             setattr(recipe, f"{key}_json", json.dumps(value))
@@ -97,9 +101,7 @@ def update_recipe(
 
 @router.delete("/{recipe_id}", status_code=204)
 def delete_recipe(recipe_id: int, session: Session = Depends(get_session), _user: CurrentUser = Depends(get_current_user)):
-    recipe = session.get(Recipe, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe = _get_or_404(session, recipe_id)
     _delete_recipe(session, recipe)
     session.commit()
 
@@ -129,9 +131,7 @@ def share_recipe(
     session: Session = Depends(get_session),
     _user: CurrentUser = Depends(get_current_user),
 ):
-    recipe = session.get(Recipe, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe = _get_or_404(session, recipe_id)
     if not recipe.share_token:
         recipe.share_token = secrets.token_urlsafe(16)
         session.add(recipe)
@@ -146,9 +146,7 @@ async def send_to_mealie(
     session: Session = Depends(get_session),
     _user: CurrentUser = Depends(get_current_user),
 ):
-    recipe = session.get(Recipe, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe = _get_or_404(session, recipe_id)
 
     svc = SettingsService(session)
     mealie_url = svc.get("mealie_url", "")
@@ -181,15 +179,13 @@ def unshare_recipe(
     session: Session = Depends(get_session),
     _user: CurrentUser = Depends(get_current_user),
 ):
-    recipe = session.get(Recipe, recipe_id)
-    if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+    recipe = _get_or_404(session, recipe_id)
     recipe.share_token = None
     session.add(recipe)
     session.commit()
 
 
-# Separate router for public share access (no auth)
+# Public share links (no auth)
 share_router = APIRouter(prefix="/api/share", tags=["share"])
 
 
@@ -198,4 +194,4 @@ def get_shared_recipe(token: str, session: Session = Depends(get_session)):
     recipe = session.exec(select(Recipe).where(Recipe.share_token == token)).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Shared recipe not found")
-    return _recipe_to_response(recipe)
+    return _recipe_to_response(recipe).model_copy(update={"queue_item_id": None})  # internal id, not for the public

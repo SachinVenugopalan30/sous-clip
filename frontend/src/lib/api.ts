@@ -5,21 +5,22 @@ const API_BASE = "/api";
 async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
   const token = useAuthStore.getState().token;
   const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
-    ...options,
   });
-  if (res.status === 401) {
+  // A wrong password is also a 401; the sign-in form shows that itself instead of reloading
+  if (res.status === 401 && path !== "/auth/login") {
     useAuthStore.getState().logout();
     window.location.href = "/login";
     throw new Error("Session expired");
   }
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(error.detail || "API request failed");
+    throw Object.assign(new Error(error.detail || "API request failed"), { status: res.status });
   }
   if (res.status === 204) return undefined as T;
   return res.json();
@@ -32,7 +33,6 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ username, password }),
       }),
-    me: () => fetchAPI<{ username: string }>("/auth/me"),
   },
   recipes: {
     list: (search?: string) =>
@@ -99,11 +99,6 @@ export const api = {
     start: () => fetchAPI<{ ok: boolean; error?: string }>("/update", { method: "POST" }),
   },
   queue: {
-    enqueue: (urls: string[], userId: string) =>
-      fetchAPI<{ items: QueueItem[] }>("/queue", {
-        method: "POST",
-        body: JSON.stringify({ urls, user_id: userId }),
-      }),
     list: (userId: string) =>
       fetchAPI<{ items: QueueItem[] }>(`/queue/${userId}`),
     cancel: (userId: string, itemId: string) =>
@@ -144,6 +139,7 @@ export interface Recipe {
   notes: string | null;
   share_token: string | null;
   thumbnail_url: string | null;
+  queue_item_id: string | null;
   created_at: string;
 }
 

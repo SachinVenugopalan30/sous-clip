@@ -4,13 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/icons/icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#C2410C" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1C1917" />
     <meta name="description" content="Extract recipes from cooking videos" />
+    <script>
+      // Set the theme class before first paint; mirrors stores/theme.ts (persist key "sc-theme", default dark).
+      try {
+        var t = JSON.parse(localStorage.getItem("sc-theme")).state.theme;
+        var dark = t === "system" ? matchMedia("(prefers-color-scheme: dark)").matches : t !== "light";
+      } catch (e) { dark = true; }
+      document.documentElement.classList.toggle("dark", dark);
+    </script>
     <title>Sous Clip</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="root"></div>

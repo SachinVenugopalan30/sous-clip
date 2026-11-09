@@ -1,0 +1,5 @@
+{
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": { "react-hooks/rules-of-hooks": "error", "react-hooks/exhaustive-deps": "warn" },
+  "ignorePatterns": ["dist", "src/routeTree.gen.ts", "src/components/ui"]
+}

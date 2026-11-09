@@ -1,8 +1,7 @@
-import asyncio
 import json
 
 import redis.asyncio as aioredis
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from backend.config import settings
@@ -24,10 +23,6 @@ async def _progress_generator(user_id: str):
             if message and message["type"] == "message":
                 data = json.loads(message["data"])
                 yield {"event": "progress", "data": json.dumps(data)}
-            else:
-                # Send keepalive comment every second
-                yield {"comment": "keepalive"}
-            await asyncio.sleep(0.1)
     finally:
         await pubsub.unsubscribe(f"progress:{user_id}")
         await client.aclose()

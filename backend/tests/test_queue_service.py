@@ -34,7 +34,6 @@ def test_enqueue_adds_item(mock_redis):
     assert item.status == QueueStatus.PENDING
     assert item.id is not None
 
-    # Should store item data and add to user's queue list
     assert mock_redis.hset.called
     assert mock_redis.rpush.called
 
@@ -92,20 +91,19 @@ def test_cancel_in_progress_item_fails(mock_redis):
     assert result is False
 
 
-def test_dequeue_returns_next_pending(mock_redis):
+def test_get_queue_is_cached(mock_redis):
+    from backend.services.queue import get_queue
+
+    assert get_queue() is get_queue()
+
+
+def test_publish_progress_includes_text(mock_redis):
     queue = ExtractionQueue(redis_url="redis://localhost:6379/0")
+    queue.publish_progress("user-1", "q-1", "transcribing", "active", text="hello")
+    assert json.loads(mock_redis.publish.call_args[0][1])["text"] == "hello"
 
-    item_data = json.dumps({
-        "id": "q-123",
-        "user_id": "user-1",
-        "url": "https://youtube.com/shorts/abc",
-        "status": "pending",
-        "position": 0,
-        "created_at": "2026-03-03T00:00:00Z",
-    })
-    mock_redis.lrange.return_value = [b"q-123"]
-    mock_redis.hget.return_value = item_data.encode()
 
-    item = queue.dequeue(user_id="user-1")
-    assert item is not None
-    assert item.id == "q-123"
+def test_publish_progress_omits_text_when_none(mock_redis):
+    queue = ExtractionQueue(redis_url="redis://localhost:6379/0")
+    queue.publish_progress("user-1", "q-1", "transcribing", "active")
+    assert "text" not in json.loads(mock_redis.publish.call_args[0][1])

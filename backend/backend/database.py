@@ -4,6 +4,7 @@ import os
 from sqlmodel import Session, SQLModel, create_engine, text
 
 from backend.config import settings
+from backend.services.settings import MASK
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,8 @@ def _migrate(engine):
                 logger.info("Migrating: adding %s.%s", table, column)
                 session.exec(text(sql))
                 session.commit()
-        # Before v1.2.0 the Settings page saved masked keys ("••••••abcd") back as the real value.
-        # No real key starts with the mask; drop them so SettingsService falls back to .env.
-        session.exec(text("DELETE FROM appsetting WHERE value LIKE '••••••%'"))
+        # Old versions saved masked keys ("••••••abcd") as real ones; drop them so settings fall back to .env.
+        session.exec(text(f"DELETE FROM appsetting WHERE value LIKE '{MASK}%'"))
         session.commit()
 
 

@@ -1,222 +1,177 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Save, CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
-import { motion } from "motion/react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Separator } from "../components/ui/separator";
-import { Skeleton } from "../components/ui/skeleton";
+import { Field, Input, Select } from "../components/ui/input";
+import { useApplyUpdate } from "../hooks/useApplyUpdate";
+import { useTestResult } from "../hooks/useTestResult";
+import { AI_PROVIDERS, API_STYLE_LABELS, WHISPER_COMPUTE, WHISPER_DEVICES, WHISPER_MODELS } from "../lib/settingsOptions";
 import { useSettings, useUpdateSettings, useUpdateStatus } from "../hooks/useSettings";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-const AI_PROVIDERS = [
-  { value: "anthropic", label: "Anthropic (Claude)" },
-  { value: "openai", label: "OpenAI" },
-  { value: "ollama", label: "Ollama (Local)" },
-  { value: "custom", label: "Custom endpoint" },
-];
-const API_STYLE_LABELS: Record<string, string> = { openai: "OpenAI-compatible", anthropic: "Anthropic-compatible" };
+type FormProps = {
+  form: Record<string, string>;
+  setForm: (patch: Record<string, string>) => void;
+};
 
-const WHISPER_MODELS = ["tiny", "base", "small", "medium", "large-v3"];
-const WHISPER_DEVICES = ["auto", "cpu", "cuda"];
-const WHISPER_COMPUTE = ["auto", "int8", "float16", "float32"];
+const URL_ERROR = "Enter a full address starting with http:// or https://";
+const badUrl = (v?: string) => (v && !/^https?:\/\/\S+$/i.test(v) ? URL_ERROR : undefined);
 
 function SettingsPage() {
-  const { data: settings, isLoading } = useSettings();
+  const { data: settings, isLoading, isError, refetch } = useSettings();
   const update = useUpdateSettings();
-  const [form, setForm] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (settings) setForm(settings);
-  }, [settings]);
+  // Unsaved changes layered over the server settings; cleared once a save has refetched them
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [checked, setChecked] = useState(false);
+  const form = { ...settings, ...edits };
+  const setForm = (patch: Record<string, string>) => setEdits((p) => ({ ...p, ...patch }));
+  // Only edited URL fields are checked, so an old stored value never blocks an unrelated save; errors show after Save is pressed
+  const urlKeys = ["mealie_url", ...(form.ai_provider === "ollama" ? ["ollama_base_url"] : []), ...(form.ai_provider === "custom" ? ["custom_base_url"] : [])];
+  const found: Record<string, string | undefined> = {};
+  for (const k of urlKeys) if (k in edits) found[k] = badUrl(edits[k].trim());
+  const bad = Object.values(found).some(Boolean);
+  const errors = checked ? found : {};
 
   const handleSave = () => {
-    update.mutate(form, {
-      onSuccess: () => toast.success("Settings saved"),
+    setChecked(true);
+    if (bad) {
+      toast.error("Fix the highlighted fields first");
+      return;
+    }
+    // Edited URL fields go out trimmed
+    const body = { ...form };
+    for (const k of ["mealie_url", "ollama_base_url", "custom_base_url"]) if (k in edits) body[k] = edits[k].trim();
+    update.mutate(body, {
+      onSuccess: () => {
+        setEdits({});
+        setChecked(false);
+        toast.success("Settings saved");
+      },
       onError: () => toast.error("Failed to save settings"),
     });
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+      <div className="space-y-4" aria-busy="true">
+        <h1 className="sr-only">Loading settings</h1>
+        <div className="sk h-12 w-64" />
+        <div className="sk h-64 w-full" />
       </div>
     );
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className="max-w-2xl"
-    >
-      <h1 className="font-display text-2xl font-bold sm:text-3xl">Settings</h1>
+  // Without stored values to edit over, Save would overwrite them with blanks, so hide the form
+  if (isError && !settings) {
+    return (
+      <div className="none" role="alert">
+        <h1 className="sr-only">Settings</h1>
+        <h2>Can't reach <em>the kitchen</em></h2>
+        <p>The server isn't answering, so the house rules can't load. Check your connection, or that Sous Clip is running.</p>
+        <button type="button" onClick={() => refetch()} className="none-btn press">Try again</button>
+      </div>
+    );
+  }
 
-      {/* AI Provider */}
-      <section className="mt-8">
-        <h2 className="text-lg font-semibold">AI Provider</h2>
-        <div className="mt-4 space-y-4">
-          <div>
-            <label className="text-sm font-medium">Provider</label>
-            <select
-              value={form.ai_provider || ""}
-              onChange={(e) => setForm({ ...form, ai_provider: e.target.value })}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
-            >
+  const dirty = Object.keys(edits).length > 0;
+  const card = (i: number) => ({ className: "set-card in", style: { "--i": i } as React.CSSProperties });
+
+  return (
+    <div className="display">
+      <h1 className="in set-h1">
+        House <em>rules</em>
+        <span className="sr-only"> (settings)</span>
+      </h1>
+
+      <div className="set-grid">
+        <section {...card(1)}>
+          <h2>AI provider</h2>
+          <Field label="Provider">
+            <Select value={form.ai_provider || ""} onChange={(e) => setForm({ ai_provider: e.target.value })}>
               {AI_PROVIDERS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
               ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Model</label>
-            <Input
-              value={form.ai_model || ""}
-              onChange={(e) => setForm({ ...form, ai_model: e.target.value })}
-              placeholder="e.g. claude-sonnet-4-6, gpt-4o"
-              className="mt-1"
-            />
-          </div>
+            </Select>
+          </Field>
+          <Field label="Model">
+            <Input value={form.ai_model || ""} onChange={(e) => setForm({ ai_model: e.target.value })} placeholder="e.g. claude-sonnet-4-6, gpt-4o" />
+          </Field>
 
           {form.ai_provider === "anthropic" && (
-            <div>
-              <label className="text-sm font-medium">Anthropic API Key</label>
-              <Input
-                type="password"
-                value={form.anthropic_api_key || ""}
-                onChange={(e) => setForm({ ...form, anthropic_api_key: e.target.value })}
-                placeholder="sk-ant-..."
-                className="mt-1"
-              />
-            </div>
+            <Field label="Anthropic API key">
+              <Input type="password" autoComplete="off" value={form.anthropic_api_key || ""} onChange={(e) => setForm({ anthropic_api_key: e.target.value })} placeholder="sk-ant-..." />
+            </Field>
           )}
-
           {form.ai_provider === "openai" && (
-            <div>
-              <label className="text-sm font-medium">OpenAI API Key</label>
-              <Input
-                type="password"
-                value={form.openai_api_key || ""}
-                onChange={(e) => setForm({ ...form, openai_api_key: e.target.value })}
-                placeholder="sk-..."
-                className="mt-1"
-              />
-            </div>
+            <Field label="OpenAI API key">
+              <Input type="password" autoComplete="off" value={form.openai_api_key || ""} onChange={(e) => setForm({ openai_api_key: e.target.value })} placeholder="sk-..." />
+            </Field>
           )}
-
           {form.ai_provider === "ollama" && (
-            <div>
-              <label className="text-sm font-medium">Ollama Base URL</label>
-              <Input
-                value={form.ollama_base_url || ""}
-                onChange={(e) => setForm({ ...form, ollama_base_url: e.target.value })}
-                placeholder="http://localhost:11434"
-                className="mt-1"
-              />
-            </div>
+            <Field label="Ollama base URL" error={errors.ollama_base_url}>
+              <Input value={form.ollama_base_url || ""} onChange={(e) => setForm({ ollama_base_url: e.target.value })} placeholder="http://localhost:11434" />
+            </Field>
           )}
+          {form.ai_provider === "custom" && <CustomEndpointFields form={form} setForm={setForm} errors={errors} />}
+        </section>
 
-          {form.ai_provider === "custom" && <CustomEndpointFields form={form} setForm={setForm} />}
-        </div>
-      </section>
+        <section {...card(2)}>
+          <h2>Whisper transcription</h2>
+          <Field label="Model size" hint='Larger models are more accurate but slower. "base" is a good default.'>
+            <Select value={form.whisper_model_size || "base"} onChange={(e) => setForm({ whisper_model_size: e.target.value })}>
+              {WHISPER_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </Select>
+          </Field>
+          <Field label="Device" hint='"auto" detects GPU and falls back to CPU.'>
+            <Select value={form.whisper_device || "auto"} onChange={(e) => setForm({ whisper_device: e.target.value })}>
+              {WHISPER_DEVICES.map((d) => <option key={d} value={d}>{d}</option>)}
+            </Select>
+          </Field>
+          <Field label="Compute type" hint='"int8" for CPU speed, "float16" for GPU speed.'>
+            <Select value={form.whisper_compute_type || "auto"} onChange={(e) => setForm({ whisper_compute_type: e.target.value })}>
+              {WHISPER_COMPUTE.map((c) => <option key={c} value={c}>{c}</option>)}
+            </Select>
+          </Field>
+        </section>
 
-      <Separator className="my-8" />
-
-      {/* Whisper Configuration */}
-      <section>
-        <h2 className="text-lg font-semibold">Whisper Transcription</h2>
-        <div className="mt-4 space-y-4">
-          <div>
-            <label className="text-sm font-medium">Model Size</label>
-            <select
-              value={form.whisper_model_size || "base"}
-              onChange={(e) => setForm({ ...form, whisper_model_size: e.target.value })}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
-            >
-              {WHISPER_MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Larger models are more accurate but slower. "base" is a good default.
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Device</label>
-            <select
-              value={form.whisper_device || "auto"}
-              onChange={(e) => setForm({ ...form, whisper_device: e.target.value })}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
-            >
-              {WHISPER_DEVICES.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              "auto" detects GPU and falls back to CPU.
-            </p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Compute Type</label>
-            <select
-              value={form.whisper_compute_type || "auto"}
-              onChange={(e) => setForm({ ...form, whisper_compute_type: e.target.value })}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm"
-            >
-              {WHISPER_COMPUTE.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              "int8" for CPU speed, "float16" for GPU speed.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <Separator className="my-8" />
-
-      {/* Mealie Integration */}
-      <MealieSection form={form} setForm={setForm} />
-
-      <Separator className="my-8" />
-
-      <UpdatesSection form={form} setForm={setForm} />
-
-      <div className="mt-8">
-        <Button
-          onClick={handleSave}
-          disabled={update.isPending}
-          className="bg-accent text-white hover:bg-accent/90 active:scale-[0.97]"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          Save Settings
-        </Button>
+        <MealieSection form={form} setForm={setForm} errors={errors} card={card(3)} />
+        <UpdatesSection form={form} setForm={setForm} card={card(4)} />
       </div>
-    </motion.div>
+
+      <div className="set-bar">
+        <Button onClick={handleSave} disabled={update.isPending}>
+          {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Save settings
+        </Button>
+        {update.isError && <p role="alert" className="msg bad !mt-0"><XCircle className="h-4 w-4 shrink-0" />Failed to save settings</p>}
+        {update.isSuccess && !dirty && <p role="status" className="msg ok !mt-0"><CheckCircle2 className="h-4 w-4 shrink-0" />Settings saved</p>}
+        {Object.values(errors).some(Boolean) && <p role="alert" className="msg bad !mt-0"><XCircle className="h-4 w-4 shrink-0" />Fix the highlighted fields</p>}
+      </div>
+    </div>
   );
 }
 
-function MealieSection({
-  form,
-  setForm,
-}: {
-  form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
-}) {
-  const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [testMessage, setTestMessage] = useState("");
+type Errors = Record<string, string | undefined>;
+type Card = { className: string; style: React.CSSProperties };
+
+function TestMsg({ test }: { test: ReturnType<typeof useTestResult> }) {
+  if (test.status !== "success" && test.status !== "error") return null;
+  const ok = test.status === "success";
+  return (
+    <p role={ok ? "status" : "alert"} className={`msg ${ok ? "ok" : "bad"}`}>
+      {ok ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
+      {test.message}
+    </p>
+  );
+}
+
+function MealieSection({ form, setForm, errors, card }: FormProps & { errors: Errors; card: Card }) {
+  const test = useTestResult();
 
   const handleTest = async () => {
     const url = form.mealie_url || "";
@@ -225,152 +180,69 @@ function MealieSection({
       toast.error("Enter both Mealie URL and API key first");
       return;
     }
-    setTestStatus("loading");
+    test.set("loading");
     try {
       const result = await api.settings.testMealie(url, key);
-      if (result.ok) {
-        setTestStatus("success");
-        setTestMessage(`Connected (v${result.version})`);
-      } else {
-        setTestStatus("error");
-        setTestMessage(result.error || "Connection failed");
-      }
+      if (result.ok) test.set("success", `Connected (v${result.version})`);
+      else test.set("error", result.error || "Connection failed");
     } catch {
-      setTestStatus("error");
-      setTestMessage("Connection failed");
+      test.set("error", "Connection failed");
     }
   };
 
   return (
-    <section>
-      <h2 className="text-lg font-semibold">Mealie Integration</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
+    <section {...card}>
+      <h2>Mealie</h2>
+      <p className="hint mb-4">
         Optionally forward extracted recipes to a{" "}
         <a href="https://mealie.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent-text">
           Mealie
         </a>{" "}
         instance. Leave blank to skip.
       </p>
-      <div className="mt-4 space-y-4">
-        <div>
-          <label className="text-sm font-medium">Mealie URL</label>
-          <Input
-            value={form.mealie_url || ""}
-            onChange={(e) => {
-              setForm({ ...form, mealie_url: e.target.value });
-              setTestStatus("idle");
-            }}
-            placeholder="https://mealie.example.com"
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Mealie API Key</label>
-          <Input
-            type="password"
-            value={form.mealie_api_key || ""}
-            onChange={(e) => {
-              setForm({ ...form, mealie_api_key: e.target.value });
-              setTestStatus("idle");
-            }}
-            placeholder="Your Mealie API token"
-            className="mt-1"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Generate a token in Mealie at User Profile → API Tokens.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleTest}
-            disabled={testStatus === "loading"}
-            className="h-10 sm:h-8"
-          >
-            {testStatus === "loading" ? (
-              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-            ) : null}
-            Test Connection
-          </Button>
-          {testStatus === "success" && (
-            <span className="flex items-center gap-1 text-xs text-success">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {testMessage}
-            </span>
-          )}
-          {testStatus === "error" && (
-            <span className="flex items-center gap-1 text-xs text-destructive">
-              <XCircle className="h-3.5 w-3.5" />
-              {testMessage}
-            </span>
-          )}
-        </div>
-      </div>
+      <Field label="Mealie URL" error={errors.mealie_url}>
+        <Input
+          value={form.mealie_url || ""}
+          onChange={(e) => {
+            setForm({ mealie_url: e.target.value });
+            test.reset();
+          }}
+          placeholder="https://mealie.example.com"
+        />
+      </Field>
+      <Field label="Mealie API key" hint="Generate a token in Mealie at User Profile → API Tokens.">
+        <Input
+          type="password"
+          autoComplete="off"
+          value={form.mealie_api_key || ""}
+          onChange={(e) => {
+            setForm({ mealie_api_key: e.target.value });
+            test.reset();
+          }}
+          placeholder="Your Mealie API token"
+        />
+      </Field>
+      <Button variant="outline" size="sm" onClick={handleTest} disabled={test.status === "loading"}>
+        {test.status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
+        Test connection
+      </Button>
+      <TestMsg test={test} />
     </section>
   );
 }
 
-const UPDATE_TIMEOUT_MS = 5 * 60 * 1000;
-
-// Polls /health until the app comes back on a different version; false after the timeout
-async function waitForNewVersion(current: string): Promise<boolean> {
-  const deadline = Date.now() + UPDATE_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    try {
-      const res = await fetch("/health", { cache: "no-store" });
-      if (res.ok && (await res.json()).version !== current) return true;
-    } catch {
-      // app container is restarting
-    }
-  }
-  return false;
-}
-
-async function reloadFresh() {
-  // The PWA precache would otherwise serve the old bundle after the restart
-  const registrations = (await navigator.serviceWorker?.getRegistrations()) ?? [];
-  await Promise.all(registrations.map((r) => r.unregister()));
-  location.reload();
-}
-
-function UpdatesSection({
-  form,
-  setForm,
-}: {
-  form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
-}) {
+function UpdatesSection({ form, setForm, card }: FormProps & { card: Card }) {
   const { data: status } = useUpdateStatus();
-  const [phase, setPhase] = useState<"idle" | "updating" | "failed">("idle");
-
-  const handleUpdate = async () => {
-    if (!status) return;
-    setPhase("updating");
-    try {
-      const result = await api.update.start();
-      if (!result.ok) {
-        toast.error(result.error || "Update failed to start");
-        setPhase("idle");
-        return;
-      }
-    } catch {
-      // Connection dropped: Watchtower is most likely already replacing this container
-    }
-    if (await waitForNewVersion(status.current)) await reloadFresh();
-    else setPhase("failed");
-  };
+  const { phase, applyUpdate } = useApplyUpdate(status?.current);
 
   return (
-    <section>
-      <h2 className="text-lg font-semibold">Updates</h2>
-      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+    <section {...card}>
+      <h2>Updates</h2>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
         <dt className="text-muted-foreground">Current</dt>
-        <dd>{status?.current ?? "…"}</dd>
+        <dd className="mono !text-foreground">{status?.current ?? "…"}</dd>
         <dt className="text-muted-foreground">Latest</dt>
-        <dd>
+        <dd className="mono !text-foreground">
           {status?.latest ? (
             <a
               href={`https://github.com/SachinVenugopalan30/sous-clip/releases/tag/${status.latest}`}
@@ -383,42 +255,40 @@ function UpdatesSection({
           ) : (
             "Unknown"
           )}
-          {status?.update_available && <span className="ml-2 text-accent-text">Update available</span>}
         </dd>
       </dl>
-      {status?.update_available &&
-        (status.watchtower ? (
-          <div className="mt-4">
-            <Button onClick={handleUpdate} disabled={phase === "updating"}>
-              {phase === "updating" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              )}
-              {phase === "updating" ? "Updating…" : `Update to ${status.latest}`}
-            </Button>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Restarts the app; extractions in progress resume afterwards. If this errors, check that
-              WATCHTOWER_HTTP_API_TOKEN matches your .env.
-            </p>
-            {phase === "failed" && (
-              <p role="alert" className="mt-2 text-sm text-destructive">
-                The update didn't apply within 5 minutes. Check <code>docker compose logs watchtower</code>.
+      {status?.update_available && (
+        <div className="set-up" role="status">
+          <p className="font-medium">Update available{status.latest && `: ${status.latest}`}</p>
+          {status.watchtower ? (
+            <>
+              <Button onClick={applyUpdate} disabled={phase === "updating"} className="mt-3">
+                {phase === "updating" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {phase === "updating" ? "Updating…" : `Update to ${status.latest}`}
+              </Button>
+              <p className="hint mt-2">
+                Restarts the app; extractions in progress resume afterwards. If this errors, check that
+                WATCHTOWER_HTTP_API_TOKEN matches your .env.
               </p>
-            )}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm">
-            To update, run{" "}
-            <code className="rounded bg-bg px-1.5 py-0.5 text-xs">docker compose pull && docker compose up -d</code>
-          </p>
-        ))}
-      <label className="mt-4 flex min-h-11 items-center gap-3 text-sm sm:min-h-0">
+              {phase === "failed" && (
+                <p role="alert" className="msg bad">
+                  The update didn't apply within 5 minutes. Check <code>docker compose logs watchtower</code>.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="mt-1 text-sm">
+              To update, run <code>docker compose pull && docker compose up -d</code>
+            </p>
+          )}
+        </div>
+      )}
+      <label className="mt-4 flex min-h-11 items-center gap-3 text-sm">
         <input
           type="checkbox"
-          className="size-5 accent-[var(--color-accent)]"
+          className="size-5 shrink-0 accent-[var(--color-accent)]"
           checked={form.update_check !== "false"}
-          onChange={(e) => setForm({ ...form, update_check: e.target.checked ? "true" : "false" })}
+          onChange={(e) => setForm({ update_check: e.target.checked ? "true" : "false" })}
         />
         Check GitHub for new releases and stars (once an hour)
       </label>
@@ -426,18 +296,11 @@ function UpdatesSection({
   );
 }
 
-function CustomEndpointFields({
-  form,
-  setForm,
-}: {
-  form: Record<string, string>;
-  setForm: (f: Record<string, string>) => void;
-}) {
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+function CustomEndpointFields({ form, setForm, errors }: FormProps & { errors: Errors }) {
+  const test = useTestResult();
   const change = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
-    setStatus("idle");
+    setForm({ [key]: value });
+    test.reset();
   };
 
   const handleTest = async () => {
@@ -445,68 +308,42 @@ function CustomEndpointFields({
       toast.error("Enter the endpoint URL and a model first");
       return;
     }
-    setStatus("loading");
+    test.set("loading");
     try {
       const result = await api.settings.testAI(form.custom_base_url, form.ai_model, form.custom_api_key || "");
       if (result.ok && result.style) {
-        setForm({ ...form, custom_api_style: result.style });
-        setStatus("success");
-        setMessage(`Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
+        setForm({ custom_api_style: result.style });
+        test.set("success", `Works: ${API_STYLE_LABELS[result.style]} API. Save to use it.`);
       } else {
-        setStatus("error");
-        setMessage(result.error || "Connection failed");
+        test.set("error", result.error || "Connection failed");
       }
     } catch (e) {
-      setStatus("error");
-      setMessage(e instanceof Error ? e.message : "Connection failed");
+      test.set("error", e instanceof Error ? e.message : "Connection failed");
     }
   };
 
   return (
     <>
-      <label className="block text-sm font-medium">
-        Endpoint URL
-        <Input
-          value={form.custom_base_url || ""}
-          onChange={(e) => change("custom_base_url", e.target.value)}
-          placeholder="http://host.docker.internal:1234/v1"
-          className="mt-1"
-        />
-      </label>
-      <label className="block text-sm font-medium">
-        API Key <span className="font-normal text-muted-foreground">(optional)</span>
-        <Input
-          type="password"
-          value={form.custom_api_key || ""}
-          onChange={(e) => change("custom_api_key", e.target.value)}
-          placeholder="Leave blank if the endpoint needs no key"
-          className="mt-1"
-        />
-      </label>
-      <div>
-        <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={status === "loading"} className="h-10 sm:h-8">
-            {status === "loading" && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-            Test connection
-          </Button>
-          {status === "idle" && form.custom_api_style && form.custom_base_url && (
-            <span className="text-xs text-muted-foreground">Using the {API_STYLE_LABELS[form.custom_api_style]} API</span>
-          )}
-        </div>
-        {(status === "success" || status === "error") && (
-          <p
-            role={status === "error" ? "alert" : "status"}
-            className={`mt-2 flex items-start gap-1 text-xs ${status === "success" ? "text-success" : "text-destructive"}`}
-          >
-            {status === "success" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
-            {message}
-          </p>
+      <Field label="Endpoint URL" error={errors.custom_base_url}>
+        <Input value={form.custom_base_url || ""} onChange={(e) => change("custom_base_url", e.target.value)} placeholder="http://host.docker.internal:1234/v1" />
+      </Field>
+      <Field label={<>API key <span className="font-normal text-muted-foreground">(optional)</span></>}>
+        <Input type="password" autoComplete="off" value={form.custom_api_key || ""} onChange={(e) => change("custom_api_key", e.target.value)} placeholder="Leave blank if the endpoint needs no key" />
+      </Field>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" size="sm" onClick={handleTest} disabled={test.status === "loading"}>
+          {test.status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
+          Test connection
+        </Button>
+        {test.status === "idle" && form.custom_api_style && form.custom_base_url && (
+          <span className="hint">Using the {API_STYLE_LABELS[form.custom_api_style]} API</span>
         )}
-        <p className="mt-1 text-xs text-muted-foreground">
-          Sends one small request to work out whether the endpoint speaks the OpenAI or Anthropic API. From Docker, use
-          host.docker.internal instead of localhost.
-        </p>
       </div>
+      <TestMsg test={test} />
+      <p className="hint mt-2 mb-4">
+        Sends one small request to work out whether the endpoint speaks the OpenAI or Anthropic API. From Docker, use
+        host.docker.internal instead of localhost.
+      </p>
     </>
   );
 }

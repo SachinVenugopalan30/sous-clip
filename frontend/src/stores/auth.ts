@@ -6,12 +6,11 @@ interface AuthState {
   username: string | null;
   setAuth: (token: string, username: string) => void;
   logout: () => void;
-  isAuthenticated: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       token: null,
       username: null,
       setAuth: (token, username) => set({ token, username }),
@@ -19,7 +18,6 @@ export const useAuthStore = create<AuthState>()(
         set({ token: null, username: null });
         window.location.href = "/login";
       },
-      isAuthenticated: () => get().token !== null,
     }),
     { name: "sc-auth" }
   )

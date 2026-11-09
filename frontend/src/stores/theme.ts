@@ -6,44 +6,56 @@ type Theme = "light" | "dark" | "system";
 interface ThemeState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
+  toggleTheme: (origin?: Origin) => void;
 }
 
-function applyTheme(theme: Theme, animate = false) {
-  const isDark =
-    theme === "dark" ||
-    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+export function resolvesDark(theme: Theme): boolean {
+  return theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
 
+type Origin = { clientX: number; clientY: number };
+
+let vt: ViewTransition | undefined;
+
+function applyTheme(theme: Theme, origin?: Origin) {
   const root = document.documentElement;
+  const isDark = resolvesDark(theme);
+  const flip = () => root.classList.toggle("dark", isDark);
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (animate) {
-    root.classList.add("theme-transition");
-    root.classList.toggle("dark", isDark);
-    // Remove transition class after animation completes to avoid
-    // interfering with other transitions (e.g. hover effects)
-    setTimeout(() => root.classList.remove("theme-transition"), 600);
-  } else {
-    root.classList.toggle("dark", isDark);
+  if (!origin || reduced || !document.startViewTransition) return flip();
+
+  // Keyboard activation reports 0,0; wipe from the centre instead of the corner
+  const { clientX: x, clientY: y } = origin.clientX || origin.clientY
+    ? origin
+    : { clientX: innerWidth / 2, clientY: innerHeight / 2 };
+  root.style.setProperty("--tx", `${x}px`);
+  root.style.setProperty("--ty", `${y}px`);
+  root.classList.add("theme-flip");
+  try {
+    const t = (vt = document.startViewTransition(flip));
+    t.ready.catch(() => {});
+    t.finished.catch(() => {}).finally(() => {
+      if (vt === t) root.classList.remove("theme-flip");
+    });
+  } catch {
+    flip();
+    root.classList.remove("theme-flip");
   }
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      theme: "system",
+      theme: "dark",
       setTheme: (theme) => {
         set({ theme });
-        applyTheme(theme, true);
+        applyTheme(theme, { clientX: innerWidth / 2, clientY: innerHeight / 2 });
       },
-      toggleTheme: () => {
-        const current = get().theme;
-        const isDark =
-          current === "dark" ||
-          (current === "system" &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches);
-        const next = isDark ? "light" : "dark";
+      toggleTheme: (origin) => {
+        const next = resolvesDark(get().theme) ? "light" : "dark";
         set({ theme: next });
-        applyTheme(next, true);
+        applyTheme(next, origin);
       },
     }),
     { name: "sc-theme" }

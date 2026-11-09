@@ -1,34 +1,42 @@
 # Contributing to Sous Clip
 
-Thanks for your interest in contributing!
+1. Fork and clone the repo, then branch: `git checkout -b feat/your-feature`
+2. Make your change
+3. Run the tests (below)
+4. Commit and open a Pull Request
 
-## Getting Started
+## Development setup
 
-1. Fork the repo
-2. Clone your fork
-3. Create a branch: `git checkout -b feat/your-feature`
-4. Make your changes
-5. Run tests: `cd backend && pytest tests/ -v`
-6. Commit and push
-7. Open a Pull Request
-
-## Development Setup
+Whole stack in Docker, built from source, plus a Mealie to test against:
 
 ```bash
-# Backend
-cd backend
-uv venv .venv --python 3.13
-uv pip install -e ".[dev]"
-.venv/bin/uvicorn backend.main:app --reload
-
-# Frontend
-cd frontend
-npm install
-npm run dev
+cp .env.example .env
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-## Code Style
+Or run the code locally. The backend needs Valkey and Temporal running (the defaults point at `localhost`; see [Configuration](docs/configuration.md#infrastructure)):
 
-- Python: Follow existing patterns, type hints preferred
-- TypeScript: Follow existing patterns, strict mode
-- Commits: Conventional commits (`feat:`, `fix:`, `chore:`)
+```bash
+# Backend (Python 3.14, uv)
+cd backend
+uv sync --extra dev
+uv run uvicorn backend.main:app --reload
+uv run python -m backend.worker   # separate terminal
+
+# Frontend (Bun); proxies /api to localhost:8000
+cd frontend
+bun install
+bun run dev
+```
+
+## Tests
+
+```bash
+cd backend && uv run pytest tests/ -v
+cd frontend && bun test src && bun run lint
+```
+
+## Style
+
+- Follow the existing patterns; Python type hints preferred, TypeScript strict.
+- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`).

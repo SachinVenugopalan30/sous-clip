@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChefHat, LogIn } from "lucide-react";
-import { motion } from "motion/react";
+import { Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import { Field, Input } from "../components/ui/input";
 import { api } from "../lib/api";
 import { useAuthStore } from "../stores/auth";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
+
+// Static, CSS-only stand-in for the drifting reels: no recipe data or photos before sign-in
+const REELS = Array.from({ length: 6 }, (_, c) => Array.from({ length: 4 }, (_, r) => (c * 29 + r * 41) % 60));
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ function LoginPage() {
     try {
       const data = await api.auth.login(username, password);
       setAuth(data.token, data.username);
-      toast.success("Welcome!");
+      toast.success("Signed in");
       navigate({ to: "/" });
     } catch {
       setError("Invalid username or password");
@@ -37,42 +39,33 @@ function LoginPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mx-auto mt-20 max-w-sm"
-    >
-      <div className="flex flex-col items-center">
-        <ChefHat className="h-10 w-10 text-accent-text" />
-        <h1 className="mt-4 font-display text-2xl font-bold">Sous Clip</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Sign in to your instance</p>
+    <main className="login display">
+      <div className="login-reels" aria-hidden="true">
+        {REELS.map((col, c) => (
+          <div key={c}>
+            {col.map((m, r) => (
+              <i key={r} style={{ "--m": m } as React.CSSProperties} />
+            ))}
+          </div>
+        ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <Input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          autoFocus
-        />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {error && (
-          <p role="alert" className="text-sm text-destructive">{error}</p>
-        )}
-        <Button
-          type="submit"
-          disabled={loading || !username || !password}
-          className="w-full bg-accent text-white hover:bg-accent/90 active:scale-[0.97]"
-        >
-          <LogIn className="mr-2 h-4 w-4" />
-          Sign In
+      <form onSubmit={handleSubmit} className="lbox in">
+        <h1>
+          Sous <em>Clip</em>
+        </h1>
+        <p className="hint mb-5">Sign in to your instance</p>
+        <Field label="Username" invalid={!!error}>
+          <Input name="username" autoComplete="username" autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />
+        </Field>
+        <Field label="Password" error={error || undefined}>
+          <Input type="password" name="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+        <Button type="submit" disabled={loading || !username || !password} className="w-full">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+          {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
-    </motion.div>
+    </main>
   );
 }

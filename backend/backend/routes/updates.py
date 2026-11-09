@@ -28,7 +28,7 @@ async def update_status(
     }
 
 
-# Any logged-in user can restart the app; fine for a single-user install
+# Any logged-in user can restart the app (single-user install)
 @router.post("")
 async def start_update(_user: CurrentUser = Depends(get_current_user)):
     return await trigger_update()
