@@ -24,7 +24,7 @@ export function PipelineSteps({ currentStep, isComplete, showMealie }: PipelineS
   const pos = Math.min(1, Math.max(0, current) / (steps.length - 1));
 
   return (
-    <ol className="stn" style={{ "--n": steps.length, "--pos": pos } as React.CSSProperties}>
+    <ol className="stn" data-n={steps.length} style={{ "--n": steps.length, "--pos": pos } as React.CSSProperties}>
       {steps.map((step, i) => {
         const Icon = step.icon;
         const done = i < current;

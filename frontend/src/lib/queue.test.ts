@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { captionTail, formatDuration, rowState, serialNumbers } from "./queue.ts";
+import { captionTail, cleanTitle, formatDuration, rowState, serialNumbers } from "./queue.ts";
 
 test("formatDuration", () => {
   assert.equal(formatDuration(65), "1:05");
@@ -34,4 +34,15 @@ test("captionTail keeps the newest words within the limit", () => {
   const tail = captionTail("one two three four five", 12);
   assert.equal(tail, "four five");
   assert.ok(captionTail("x".repeat(500), 20).length <= 20);
+});
+
+test("cleanTitle drops trailing hashtags and keeps the rest", () => {
+  assert.equal(cleanTitle("Creamy Sausage & Cabbage Soup #oldscoolkevmo..."), "Creamy Sausage & Cabbage Soup");
+  assert.equal(cleanTitle("Soup   for  two #soup #easy   #dinner"), "Soup for two");
+  assert.equal(cleanTitle("Top #1 pizza"), "Top #1 pizza");
+  assert.equal(cleanTitle("Plain title"), "Plain title");
+  assert.equal(cleanTitle("Pasta #レシピ"), "Pasta");
+  assert.equal(cleanTitle("#fyp #food"), "#fyp #food");
+  assert.equal(cleanTitle("Soup #recipe #2024"), "Soup");
+  assert.equal(cleanTitle("Best pizza #1"), "Best pizza #1");
 });
